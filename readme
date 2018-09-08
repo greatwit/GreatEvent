@@ -1,0 +1,7 @@
+rely on libevent-1.1b  address:		https://github.com/downloads/libevent/libevent/libevent-1.1b.tar.gz
+how to do:
+./configure --prefix=/home/great/libevent/
+make
+make install
+
+export LD_LIBRARY_PATH=/home/great/libevent/lib

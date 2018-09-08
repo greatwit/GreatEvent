@@ -131,7 +131,7 @@ int SP_DefaultIOChannel :: init( int fd )
 
 int SP_DefaultIOChannel :: receive( SP_Session * session )
 {
-	return evbuffer_read( getEvBuffer( session->getInBuffer() ), mFd, 100 );
+	return evbuffer_read( getEvBuffer( session->getInBuffer() ), mFd, 1400 );
 }
 
 int SP_DefaultIOChannel :: write_vec( struct iovec * iovArray, int iovSize )

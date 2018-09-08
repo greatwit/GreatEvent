@@ -39,7 +39,7 @@ SP_Server :: SP_Server( const char * bindIP, int port )
 	mIsRunning = 0;
 
 	//mHandlerFactory = handlerFactory;
-	//mIOChannelFactory = NULL;
+	mIOChannelFactory = NULL;
 
 	mTimeout = 600;
 	mMaxThreads = 64;
@@ -53,10 +53,10 @@ SP_Server :: ~SP_Server()
 /*
 	if( NULL != mHandlerFactory ) delete mHandlerFactory;
 	mHandlerFactory = NULL;
-
+*/
 	if( NULL != mIOChannelFactory ) delete mIOChannelFactory;
 	mIOChannelFactory = NULL;
-*/
+
 	if( NULL != mRefusedMsg ) free( mRefusedMsg );
 	mRefusedMsg = NULL;
 }

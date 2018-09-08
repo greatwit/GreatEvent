@@ -126,7 +126,6 @@ printf( "clientIP: %s\n",clientIP);
 
 	if( NULL != session ) {
 		eventArg->getSessionManager()->put( sid.mKey, session, &sid.mSeq );
-
 		//session->setHandler( acceptArg->mHandlerFactory->create() );
 		SP_IOChannel* channel = acceptArg->mIOChannelFactory->create();
 		channel->init(clientFD);
