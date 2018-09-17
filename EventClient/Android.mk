@@ -1,6 +1,6 @@
 LOCAL_PATH := $(call my-dir)
 
-LOCAL_PROJECT_ROOT := $(subst $(LOCAL_PATH)/,,$(wildcard $(LOCAL_PATH)))
+LOCAL_PROJECT_ROOT := $(LOCAL_PATH)#$(subst $(LOCAL_PATH)/,,$(wildcard $(LOCAL_PATH)))
 
 
 
@@ -19,8 +19,6 @@ LOCAL_SRC_FILES := NALDecoder.cpp \
 				   gthread/gmutex.cpp \
 				   gthread/gthread.cpp \
 				   spioutils.cpp \
-				   RtpSender.cpp \
-				   H264Sender.cpp \
 				   TcpSender.cpp
 
 #LOCAL_STATIC_LIBRARIES := libMediaStream

@@ -121,10 +121,10 @@ int GThread::Kill()
 		runningmutex.Unlock();
 		return ERR_JTHREAD_NOTRUNNING;
 	}
-#ifdef __linux__
-	pthread_cancel(threadid);
-#else	//__ANDROID__
+#ifdef __ANDROID__
 	pthread_kill(threadid,SIGUSR1);
+#elif __linux__
+	pthread_cancel(threadid);
 #endif
 	running = false;
 	runningmutex.Unlock();
