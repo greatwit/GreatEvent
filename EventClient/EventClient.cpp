@@ -1,6 +1,8 @@
 
 #include "TcpSender.h"
-#define FILE_NAME "camera_640x480.h264"
+
+#define FILE_NAME "h264/camera_640x480.h264"
+
 int main(int argc, char **argv) {
 	int bRes = 0;
 	TcpSender *mpTcpSender = new TcpSender();

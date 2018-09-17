@@ -1,4 +1,4 @@
-EventClient/h264/*		# 忽略 h264/ 目录下的所有文件
+EventClient/h264		# 忽略 h264/ 目录下的所有文件
 EventClient/*.[oa]		#忽略EventClient所有以 .o 或 .a 结尾的文件
 EventServer/*.[oa]		#忽略EventServer所有以 .o 或 .a 结尾的文件
 *~				#忽略~的所有文件

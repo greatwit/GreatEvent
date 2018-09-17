@@ -21,7 +21,7 @@ LDFLAGS += $(LIBEVENT_LIB)
 
 LIBOBJS = 
 
-TARGET = EventServer testclient
+TARGET = EventServer
 
 #--------------------------------------------------------------------
 
@@ -30,9 +30,6 @@ all: $(TARGET)
 
 EventServer: spbuffer.o spiochannel.o sputils.o spioutils.o spsession.o speventcb.o spserver.o EventServer.o
 	$(LINKER) $(LDFLAGS) $^ -L. -levent -lpthread -o $@
-
-testclient:testclient.o spioutils.o
-	$(LINKER) $(LDFLAGS) $^ -L. -o $@
 
 clean:
 	@( $(RM) *.o vgcore.* core core.* $(TARGET) )
