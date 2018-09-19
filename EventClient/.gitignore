@@ -1,3 +1,4 @@
 /build
 /obj
+/h264
 *.o
