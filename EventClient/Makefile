@@ -5,7 +5,7 @@ OBJS = EventClient.o TcpSender.o NALDecoder.o spioutils.o gthread/gmutex.o gthre
 
 CFLAGS += -g
 
-GTHREAD_INCL = -I$(PROJECT_ROOT)/gthread
+GTHREAD_INCL = -I$(PROJECT_ROOT)/gthread -I../common
 CFLAGS  += $(GTHREAD_INCL)
 
 all:	EventClient

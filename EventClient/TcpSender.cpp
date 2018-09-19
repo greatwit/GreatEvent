@@ -14,6 +14,7 @@ TcpSender::TcpSender()
 		,mRunning(false)
 		,mSockId(-1)
 		,mSid(0)
+		,mPackHeadLen(sizeof(PACK_HEAD))
 {
 	GLOGD("TcpSender::TcpSender construct.");
 }
@@ -65,37 +66,44 @@ bool TcpSender::stopFileSend(){
 	return true;
 }
 
-void TcpSender::packetHead(short len, int &id, bool mark, LPPACK_HEAD lpPack) {
+void TcpSender::packetHead(int fid, short pid, int len, bool mark, LPPACK_HEAD lpPack) {
 	memset(lpPack, 0, sizeof(PACK_HEAD));
 	lpPack->type.M 	= (mark==true)?1:0;
-	lpPack->id 		= htonl(id);
-	lpPack->len 	= htons(len);
-	id++;
+	lpPack->fid 		= htonl(fid);
+	lpPack->pid			= htons(pid);
+	lpPack->len 		= htonl(len);
 }
 
 int TcpSender::tcpSendData(char*data, int len){
-	int sendLen = len, iRet = 0;
+	int leftLen = len, sendLen = len + mPackHeadLen, iRet = 0, pid = 0;
 	char sendData[1500] = {0};
+	mSid++;
+
 	if(len <= MAX_LEN) {
-		packetHead(len+8, mSid, true, (LPPACK_HEAD)sendData);
-		memcpy(sendData+8, data, len);
-		iRet += send(mSockId, sendData, len+8, 0);
+		pid++;
+		packetHead( mSid, pid, sendLen, true, (LPPACK_HEAD)sendData);
+		memcpy(sendData+mPackHeadLen, data, len);
+		iRet += send(mSockId, sendData, len+mPackHeadLen, 0);
+		printf("fid:%d pid:%d len:%d\n", mSid, pid, len);
 	}
 	else {
 		bool bFirstPack = true;
-		while(sendLen>0){
-			if(sendLen<=MAX_LEN) {
-					packetHead(sendLen+8, mSid, false, (LPPACK_HEAD)sendData);
-					memcpy(sendData+8, data+len-sendLen, sendLen);
-		     		iRet += send(mSockId, sendData, sendLen+8,0);
+		while(leftLen>0){
+			pid++;
+			if(leftLen<=MAX_LEN) {
+					packetHead(mSid, pid, sendLen, false, (LPPACK_HEAD)sendData);
+					memcpy(sendData+mPackHeadLen, data+len-leftLen, leftLen);
+		     		iRet += send(mSockId, sendData, leftLen+mPackHeadLen,0);
+		     		printf("fid:%d pid:%d len:%d\n", mSid, pid, len);
 			}
 			else {
-				packetHead(MAX_MTU, mSid, bFirstPack, (LPPACK_HEAD)sendData);
-				memcpy(sendData+8, data+len-sendLen, MAX_LEN);
+				packetHead(mSid, pid, sendLen, bFirstPack, (LPPACK_HEAD)sendData);
+				memcpy(sendData+mPackHeadLen, data+len-leftLen, MAX_LEN);
 				iRet += send(mSockId, sendData, MAX_MTU,0);
 				bFirstPack = false;
+				printf("fid:%d pid:%d len:%d\n", mSid, pid, len);
 			}
-			sendLen -= MAX_LEN;
+			leftLen -= MAX_LEN;
 		}
 	}
 	return iRet;
@@ -117,7 +125,7 @@ void *TcpSender::Thread(){
 			break;
 		}
 		int size=GetAnnexbNALU(mFile, n);//每执行一次，文件的指针指向本次找到的NALU的末尾，下一个位置即为下个NALU的起始码0x000001
-		GLOGE("GetAnnexbNALU size:%d", size);
+		GLOGE("GetAnnexbNALU size:%d", n->len);
 		if(size<4)
 		{
 			printf("get nul error!\n");

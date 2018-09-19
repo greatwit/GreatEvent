@@ -171,9 +171,9 @@ int GetAnnexbNALU (FILE *file, NALU_t *nalu)
 
 	  nalu->len = (pos+rewind)-nalu->startcodeprefix_len;
 	  memcpy (nalu->buf, &Buf[nalu->startcodeprefix_len], nalu->len);//拷贝一个完整NALU，不拷贝起始前缀0x000001或0x00000001
-	  nalu->forbidden_bit = nalu->buf[0] & 0x80; //1 bit
-	  nalu->nal_reference_idc = nalu->buf[0] & 0x60; // 2 bit
-	  nalu->nal_unit_type = (nalu->buf[0]) & 0x1f;// 5 bit
+	  nalu->forbidden_bit = nalu->buf[0] & 0x80; 		//1 bit
+	  nalu->nal_reference_idc = nalu->buf[0] & 0x60; 	// 2 bit
+	  nalu->nal_unit_type = (nalu->buf[0]) & 0x1f;		// 5 bit
 	  free(Buf);
 
 	  return (pos+rewind);//返回两个开始字符之间间隔的字节数，即包含有前缀的NALU的长度

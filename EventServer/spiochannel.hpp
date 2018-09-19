@@ -43,14 +43,6 @@ public:
 	virtual SP_IOChannel * create() const = 0;
 };
 
-class SP_DefaultIOChannelFactory : public SP_IOChannelFactory {
-public:
-	SP_DefaultIOChannelFactory();
-	virtual ~SP_DefaultIOChannelFactory();
-
-	virtual SP_IOChannel * create() const;
-};
-
 class SP_DefaultIOChannel : public SP_IOChannel {
 public:
 	SP_DefaultIOChannel();
@@ -62,6 +54,16 @@ public:
 protected:
 	virtual int write_vec( struct iovec * iovArray, int iovSize );
 	int mFd;
+	int mLen;
+	int mPackHeadLen;
+};
+
+class SP_DefaultIOChannelFactory : public SP_IOChannelFactory {
+public:
+	SP_DefaultIOChannelFactory();
+	virtual ~SP_DefaultIOChannelFactory();
+
+	virtual SP_IOChannel * create() const;
 };
 
 #endif

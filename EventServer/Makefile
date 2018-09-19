@@ -11,7 +11,7 @@ LINKER = $(CC)
 LINT = lint -c
 RM = /bin/rm -f
 
-LIBEVENT_INCL = -I$(HOME)/libevent/include
+LIBEVENT_INCL = -I$(HOME)/libevent/include -I../common
 LIBEVENT_LIB  = -L$(HOME)/libevent/lib -levent
 
 CFLAGS  += $(LIBEVENT_INCL)

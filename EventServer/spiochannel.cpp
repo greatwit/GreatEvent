@@ -40,70 +40,7 @@ int SP_IOChannel :: transmit( SP_Session * session )
 #else
 	const static int SP_MAX_IOV = 8;
 #endif
-/*
-	SP_EventArg * eventArg = (SP_EventArg*)session->getArg();
 
-	SP_ArrayList * outList = session->getOutList();
-	size_t outOffset = session->getOutOffset();
-
-	struct iovec iovArray[ SP_MAX_IOV ];
-	memset( iovArray, 0, sizeof( iovArray ) );
-
-	int iovSize = 0;
-
-	for( int i = 0; i < outList->getCount() && iovSize < SP_MAX_IOV; i++ ) {
-		SP_Message * msg = (SP_Message*)outList->getItem( i );
-
-		if( outOffset >= msg->getMsg()->getSize() ) {
-			outOffset -= msg->getMsg()->getSize();
-		} else {
-			iovArray[ iovSize ].iov_base = (char*)msg->getMsg()->getBuffer() + outOffset;
-			iovArray[ iovSize++ ].iov_len = msg->getMsg()->getSize() - outOffset;
-			outOffset = 0;
-		}
-
-		SP_MsgBlockList * blockList = msg->getFollowBlockList();
-		for( int j = 0; j < blockList->getCount() && iovSize < SP_MAX_IOV; j++ ) {
-			SP_MsgBlock * block = (SP_MsgBlock*)blockList->getItem( j );
-
-			if( outOffset >= block->getSize() ) {
-				outOffset -= block->getSize();
-			} else {
-				iovArray[ iovSize ].iov_base = (char*)block->getData() + outOffset;
-				iovArray[ iovSize++ ].iov_len = block->getSize() - outOffset;
-				outOffset = 0;
-			}
-		}
-	}
-
-	int len = write_vec( iovArray, iovSize );
-
-	if( len > 0 ) {
-		outOffset = session->getOutOffset() + len;
-
-		for( ; outList->getCount() > 0; ) {
-			SP_Message * msg = (SP_Message*)outList->getItem( 0 );
-			if( outOffset >= msg->getTotalSize() ) {
-				msg = (SP_Message*)outList->takeItem( 0 );
-				outOffset = outOffset - msg->getTotalSize();
-
-				int index = msg->getToList()->find( session->getSid() );
-				if( index >= 0 ) msg->getToList()->take( index );
-				msg->getSuccess()->add( session->getSid() );
-
-				if( msg->getToList()->getCount() <= 0 ) {
-					eventArg->getOutputResultQueue()->push( msg );
-				}
-			} else {
-				break;
-			}
-		}
-
-		session->setOutOffset( outOffset );
-	}
-
-	if( len > 0 && outList->getCount() > 0 ) transmit( session );
-*/
 	return 0;//len;
 }
 
@@ -116,6 +53,7 @@ SP_IOChannelFactory :: ~SP_IOChannelFactory()
 //---------------------------------------------------------
 
 SP_DefaultIOChannel :: SP_DefaultIOChannel()
+	:mPackHeadLen(sizeof(PACK_HEAD))
 {
 	mFd = -1;
 }
@@ -140,8 +78,14 @@ int SP_DefaultIOChannel :: receive( SP_Session * session )
 	char readBuff[1500]={0};
 	ret = recv(mFd, readBuff,1308,0);
 	if(ret>0) {
+		 mLen += ret;
 		LPPACK_HEAD head = (LPPACK_HEAD)readBuff;
-		printf("read ret:%d len:%d id:%d mark:%d\n",ret, htons(head->len), htonl(head->id), head->type.M);
+		printf("fid:%d pid:%d len:%d ret:%d\n", htonl(head->fid), htons(head->pid), htonl(head->len) - mPackHeadLen, ret);
+//		if(head->type.M == -1){
+//			printf("package len:%d\n", mLen);
+//			mLen = 0;
+//		}
+		//printf("read ret:%d len:%d id:%d mark:%d\n",ret, htons(head->len), htonl(head->id), head->type.M);
 	}
 	return ret;
 }

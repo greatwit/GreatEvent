@@ -26,12 +26,13 @@ class TcpSender : private GThread
 		void *Thread();
 
 	protected:
-		void packetHead(short len, int &id, bool mark, LPPACK_HEAD lpPack);
+		void packetHead(int fid, short pid, int len, bool mark, LPPACK_HEAD lpPack);
 		int tcpSendData(char*data, int len);
 
 	private:
 		int 			mSockId;
 		int				mSid;
+		int 			mPackHeadLen;
 		FILE			*mFile;
 		bool 			mRunning;
 		bool			mInited;
