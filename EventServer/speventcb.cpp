@@ -16,14 +16,9 @@
 #include "speventcb.hpp"
 //#include "spexecutor.hpp"
 #include "spsession.hpp"
-//#include "spresponse.hpp"
-//#include "sphandler.hpp"
 #include "spbuffer.hpp"
 //#include "spmsgdecoder.hpp"
 #include "sputils.hpp"
-//#include "sprequest.hpp"
-//#include "spmsgblock.hpp"
-#include "spiochannel.hpp"
 #include "spioutils.hpp"
 
 #include "config.h"   // from libevent, for event.h
@@ -122,15 +117,11 @@ void SP_EventCallback :: onAccept( int fd, short events, void * arg )
 
 	char clientIP[ 32 ] = { 0 };
 	SP_IOUtils::inetNtoa( &( clientAddr.sin_addr ), clientIP, sizeof( clientIP ) );
-printf( "clientIP: %s\n",clientIP);
+	printf( "clientIP: %s\n",clientIP);
 	//session->getRequest()->setClientIP( clientIP );
 
 	if( NULL != session ) {
 		eventArg->getSessionManager()->put( sid.mKey, session, &sid.mSeq );
-		//session->setHandler( acceptArg->mHandlerFactory->create() );
-		SP_IOChannel* channel = acceptArg->mIOChannelFactory->create();
-		channel->init(clientFD);
-		session->setIOChannel( channel );
 		session->setArg( eventArg );
 
 		event_set( session->getReadEvent(), clientFD, EV_READ, onRead, session );
@@ -165,22 +156,29 @@ printf( "clientIP: %s\n",clientIP);
 void SP_EventCallback :: onRead( int fd, short events, void * arg )
 {
 	SP_Session * session = (SP_Session*)arg;
-
 	session->setReading( 0 );
-
 	SP_Sid_t sid = session->getSid();
-	//printf("onRead:%d\n",fd);
 
 	if( EV_READ & events ) {
-		int len = session->getIOChannel()->receive( session );
-		if(len == 0){
-			printf("read zero:%d\n",len);
-			close(fd);
+		int ret = session->readBuffer();
+		if(ret==0)
+		{
+					SP_EventArg * eventArg = (SP_EventArg*)session->getArg();
+					eventArg->getSessionManager()->remove( fd );
+					event_del( session->getReadEvent() );
+
+					delete session;
+					session = NULL;
+					close( fd );
+
+					printf("read zero:%d\n",ret);
+
+					return;
 		}
-		//LPPACK_HEAD head = (LPPACK_HEAD)getEvBuffer(session->getInBuffer());
-		//printf("read len:%d mark:%d\n",head->len, head->type.M);
-		addEvent( session, EV_READ, -1 );
 	}
+
+	addEvent( session, EV_READ, -1 );
+
 /*
 	if( EV_READ & events ) {
 		int len = session->getIOChannel()->receive( session );

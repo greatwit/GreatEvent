@@ -3,3 +3,8 @@ ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./
 
 build for linux:
 make
+
+
+run usage:
+./EventClient h264/camera_640x480.h264
+./EventClient h264/camera_1280x720.h264

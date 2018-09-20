@@ -20,7 +20,6 @@
 
 #include "speventcb.hpp"
 #include "spsession.hpp"
-#include "spiochannel.hpp"
 
 #include "sputils.hpp"
 #include "spioutils.hpp"
@@ -183,12 +182,7 @@ int SP_Server :: start()
 		SP_AcceptArg_t acceptArg;
 		memset( &acceptArg, 0, sizeof( SP_AcceptArg_t ) );
 
-		if( NULL == mIOChannelFactory ) {
-			mIOChannelFactory = new SP_DefaultIOChannelFactory();
-		}
 		acceptArg.mEventArg = &eventArg;
-		//acceptArg.mHandlerFactory = mHandlerFactory;
-		acceptArg.mIOChannelFactory = mIOChannelFactory;
 		acceptArg.mReqQueueSize = mReqQueueSize;
 		acceptArg.mMaxConnections = mMaxConnections;
 		acceptArg.mRefusedMsg = mRefusedMsg;

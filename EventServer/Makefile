@@ -28,7 +28,7 @@ TARGET = EventServer
 all: $(TARGET)
 
 
-EventServer: spbuffer.o spiochannel.o sputils.o spioutils.o spsession.o speventcb.o spserver.o EventServer.o
+EventServer: spbuffer.o sputils.o spioutils.o spsession.o speventcb.o spserver.o EventServer.o
 	$(LINKER) $(LDFLAGS) $^ -L. -levent -lpthread -o $@
 
 clean:

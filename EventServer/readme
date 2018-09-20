@@ -5,3 +5,18 @@ make
 make install
 
 export LD_LIBRARY_PATH=/home/great/libevent/lib
+
+
+
+
+save data to file:
+
+FILE			*mFile;
+mFile = fopen("w.h264", "w");
+
+char tag[4] = {0x00, 0x00, 0x00, 0x01};
+fwrite(tag, 1, 4, mwFile);
+fwrite(mInBuffer->getBuffer(), 1, mInBuffer->getSize(), mwFile);
+
+if(mFile != NULL)
+	fclose(mFile);

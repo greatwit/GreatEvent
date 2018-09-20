@@ -7,7 +7,6 @@
 #ifndef __spsession_hpp__
 #define __spsession_hpp__
 
-//#include "spresponse.hpp"
 
 
 #include <stdint.h>
@@ -16,8 +15,7 @@
 class SP_Buffer;
 class SP_Session;
 class SP_ArrayList;
-//class SP_Request;
-class SP_IOChannel;
+
 
 struct event;
 
@@ -58,6 +56,8 @@ public:
 	void setStatus( int status );
 	int getStatus();
 
+	int readBuffer();
+
 	int getRunning();
 	void setRunning( int running );
 
@@ -66,9 +66,6 @@ public:
 
 	int getWriting();
 	void setWriting( int writing );
-
-	SP_IOChannel * getIOChannel();
-	void setIOChannel( SP_IOChannel * ioChannel );
 
 private:
 
@@ -84,7 +81,7 @@ private:
 	void * mArg;
 
 	SP_Buffer * mInBuffer;
-	//SP_Request * mRequest;
+	FILE			*mwFile;
 
 	int mOutOffset;
 	SP_ArrayList * mOutList;
@@ -94,7 +91,7 @@ private:
 	char mWriting;
 	char mReading;
 
-	SP_IOChannel * mIOChannel;
+	int mPackHeadLen;
 };
 
 typedef struct tagSP_SessionEntry SP_SessionEntry_t;

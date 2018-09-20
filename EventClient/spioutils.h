@@ -7,14 +7,9 @@
 #define __spioutils_hpp__
 
 #include <netinet/in.h>
+#include "h264.h"
 
-#ifndef  MAX_MTU
-#define  MAX_MTU 1308
-#endif
 
-#ifndef  MAX_LEN
-#define  MAX_LEN 1300
-#endif
 
 class SP_IOUtils {
 public:

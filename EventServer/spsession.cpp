@@ -8,18 +8,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 #include "spsession.hpp"
-//#include "sphandler.hpp"
 #include "spbuffer.hpp"
 #include "sputils.hpp"
-//#include "sprequest.hpp"
-#include "spiochannel.hpp"
+#include "spioutils.hpp"
 
 #include "config.h"
 #include "event.h"
+#include "h264.h"
 
-//-------------------------------------------------------------------
+
+//---------------------------sessionManager----------------------------------------
 
 typedef struct tagSP_SessionEntry {
 	uint16_t mSeq;
@@ -109,20 +111,19 @@ SP_Session * SP_SessionManager :: remove( uint16_t key, uint16_t * seq )
 	return ret;
 }
 
-//-------------------------------------------------------------------
+//----------------------------------session---------------------------------
 
 SP_Session :: SP_Session( SP_Sid_t sid )
+			:mPackHeadLen(sizeof(PACK_HEAD))
+			,mSid(sid)
 {
-	mSid = sid;
-
-	mReadEvent = (struct event*)malloc( sizeof( struct event ) );
+	mReadEvent  = (struct event*)malloc( sizeof( struct event ) );
 	mWriteEvent = (struct event*)malloc( sizeof( struct event ) );
 
 	//mHandler = NULL;
 	mArg = NULL;
 
 	mInBuffer = new SP_Buffer();
-	//mRequest = new SP_Request();
 
 	mOutOffset = 0;
 	mOutList = new SP_ArrayList();
@@ -132,7 +133,7 @@ SP_Session :: SP_Session( SP_Sid_t sid )
 	mWriting = 0;
 	mReading = 0;
 
-	mIOChannel = NULL;
+	mwFile = fopen("w.h264", "w");
 }
 
 SP_Session :: ~SP_Session()
@@ -142,25 +143,56 @@ SP_Session :: ~SP_Session()
 
 	free( mWriteEvent );
 	mWriteEvent = NULL;
-/*
-	if( NULL != mHandler ) {
-		delete mHandler;
-		mHandler = NULL;
-	}
 
-	delete mRequest;
-	mRequest = NULL;
-*/
 	delete mInBuffer;
 	mInBuffer = NULL;
 
 	delete mOutList;
 	mOutList = NULL;
 
-	if( NULL != mIOChannel ) {
-		delete mIOChannel;
-		mIOChannel = NULL;
+	if(mwFile != NULL)
+		fclose(mwFile);
+}
+
+int SP_Session :: readBuffer(){
+	int ret = 0;
+	char readBuff[1500]={0};
+	ret = recv(mSid.mKey, readBuff, MAX_MTU, 0);
+	if(ret>0)
+	{
+		LPPACK_HEAD head = (LPPACK_HEAD)readBuff;
+		int packLen = htonl(head->len);
+		mInBuffer->append(readBuff+mPackHeadLen, ret - mPackHeadLen);
+		if(head->type.M != 0)
+		{
+			int leftLen 	= mInBuffer->getSize();
+			char tag[4] = {0x00, 0x00, 0x00, 0x01};
+			if(packLen == (leftLen + mPackHeadLen))
+			{
+				fwrite(tag, 1, 4, mwFile);
+				fwrite(mInBuffer->getBuffer(), 1, mInBuffer->getSize(), mwFile);
+				//printf("buffer size:%d\n", mInBuffer->getSize());
+				//printf("fid:%d pid:%d len:%d buffsize:%d\n", htonl(head->fid), htons(head->pid), htonl(head->len) - mPackHeadLen, mInBuffer->getSize());
+			}
+			else
+			{
+				printf("packLen:%d bufflen:%d\n", packLen, mInBuffer->getSize());
+				int dataIndex 	= 0;
+				const char *buff 	= (const char *)mInBuffer->getBuffer();
+				while((packLen-mPackHeadLen) < leftLen) {
+					fwrite(tag, 1, 4, mwFile);
+					fwrite(buff+dataIndex, 1, packLen-mPackHeadLen, mwFile);
+					printf("fid:%d pid:%d len:%d buffsize:%d\n", htonl(head->fid), htons(head->pid), htonl(head->len) - mPackHeadLen, mInBuffer->getSize());
+					head = (LPPACK_HEAD)(buff+packLen-mPackHeadLen+dataIndex);
+					packLen =  htonl(head->len);
+					leftLen -= packLen;
+					dataIndex += packLen + mPackHeadLen;
+				}
+			}
+			mInBuffer->reset();
+		}
 	}
+	return ret;
 }
 
 struct event * SP_Session :: getReadEvent()
@@ -172,17 +204,7 @@ struct event * SP_Session :: getWriteEvent()
 {
 	return mWriteEvent;
 }
-/*
-void SP_Session :: setHandler( SP_Handler * handler )
-{
-	mHandler = handler;
-}
 
-SP_Handler * SP_Session :: getHandler()
-{
-	return mHandler;
-}
-*/
 void SP_Session :: setArg( void * arg )
 {
 	mArg = arg;
@@ -202,12 +224,7 @@ SP_Buffer * SP_Session :: getInBuffer()
 {
 	return mInBuffer;
 }
-/*
-SP_Request * SP_Session :: getRequest()
-{
-	return mRequest;
-}
-*/
+
 void SP_Session :: setOutOffset( int offset )
 {
 	mOutOffset = offset;
@@ -263,13 +280,5 @@ void SP_Session :: setReading( int reading )
 	mReading = reading;
 }
 
-SP_IOChannel * SP_Session :: getIOChannel()
-{
-	return mIOChannel;
-}
 
-void SP_Session :: setIOChannel( SP_IOChannel * ioChannel )
-{
-	mIOChannel = ioChannel;
-}
 

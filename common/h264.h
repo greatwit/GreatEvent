@@ -15,6 +15,8 @@
 
 #define H264                    96
 
+
+
 typedef struct 
 {
     /**//* byte 0 */
@@ -83,6 +85,14 @@ typedef struct
   unsigned char *buf;                    //! contains the first byte followed by the EBSP
   unsigned short lost_packets;  //! true, if packet loss is detected
 } NALU_t;
+
+#ifndef  MAX_LEN
+#define  MAX_LEN 1300
+#endif
+
+#ifndef  MAX_MTU
+const int  MAX_MTU  = MAX_LEN+sizeof(PACK_HEAD);
+#endif
 
 //extern FILE *bits;
 
