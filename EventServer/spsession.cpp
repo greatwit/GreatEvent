@@ -165,7 +165,7 @@ int SP_Session :: readBuffer(){
 		mInBuffer->append(readBuff+mPackHeadLen, ret - mPackHeadLen);
 		if(head->type.M != 0)
 		{
-			int leftLen 	= mInBuffer->getSize();
+			int leftLen = mInBuffer->getSize();
 			char tag[4] = {0x00, 0x00, 0x00, 0x01};
 			if(packLen == (leftLen + mPackHeadLen))
 			{

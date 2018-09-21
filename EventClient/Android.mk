@@ -12,6 +12,7 @@ LOCAL_MODULE    := netcodec
 LOCAL_C_INCLUDES += \
 				   $(LOCAL_PROJECT_ROOT)/gthread \
 				   $(LOCAL_PROJECT_ROOT)/includes \
+				   $(LOCAL_PROJECT_ROOT)/../common \
 				   external/stlport/stlport bionic
 
 LOCAL_SRC_FILES := NALDecoder.cpp \

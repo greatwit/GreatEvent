@@ -57,6 +57,8 @@
 #define        howmany(x, y)   (((x)+((y)-1))/(y))
 #endif
 
+typedef long int fd_mask;
+
 extern volatile sig_atomic_t evsignal_caught;
 
 struct selectop {
