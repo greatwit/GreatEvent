@@ -75,7 +75,7 @@ void TcpSender::packetHead(int fid, short pid, int len, bool mark, LPPACK_HEAD l
 }
 
 int TcpSender::tcpSendData(char*data, int len){
-	int leftLen = len, sendLen = len + mPackHeadLen, iRet = 0, pid = 0;
+	int leftLen = len, dataLen = len, iRet = 0, pid = 0;
 	char sendData[1500] = {0};
 	mSid++;
 
@@ -83,13 +83,13 @@ int TcpSender::tcpSendData(char*data, int len){
 		while(leftLen>0) {
 			pid++;
 			if(leftLen<=MAX_LEN) {
-				packetHead(mSid, pid, sendLen, true, (LPPACK_HEAD)sendData);
+				packetHead(mSid, pid, dataLen, true, (LPPACK_HEAD)sendData);
 				memcpy(sendData+mPackHeadLen, data+len-leftLen, leftLen);
 				iRet += send(mSockId, sendData, leftLen+mPackHeadLen, 0);
 				printf("fid:%d pid:%d len:%d\n", mSid, pid, len);
 			}
 			else {
-				packetHead(mSid, pid, sendLen, false, (LPPACK_HEAD)sendData);
+				packetHead(mSid, pid, dataLen, false, (LPPACK_HEAD)sendData);
 				memcpy(sendData+mPackHeadLen, data+len-leftLen, MAX_LEN);
 				iRet += send(mSockId, sendData, MAX_MTU,0);
 				//printf("fid:%d pid:%d len:%d\n", mSid, pid, len);
@@ -99,7 +99,7 @@ int TcpSender::tcpSendData(char*data, int len){
 	}
 	else {
 		pid++;
-		packetHead( mSid, pid, sendLen, true, (LPPACK_HEAD)sendData);
+		packetHead( mSid, pid, dataLen, true, (LPPACK_HEAD)sendData);
 		memcpy(sendData+mPackHeadLen, data, len);
 		iRet += send(mSockId, sendData, len+mPackHeadLen, 0);
 		printf("fid:%d pid:%d len:%d\n", mSid, pid, len);

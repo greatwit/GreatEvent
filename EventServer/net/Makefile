@@ -1,18 +1,17 @@
 
 #--------------------------------------------------------------------
 
-CC 	= gcc
-CPP = g++
+CC = gcc
 AR = ar cru
 CFLAGS = -Wall -D_REENTRANT -DHAVE_CONFIG_H -g -fPIC
 SOFLAGS = -shared
-LDFLAGS = -lstdc++ -lpthread -lresolv
+LDFLAGS = -shared
 
-LINKER = $(CPP)
+LINKER = $(CC)
 LINT = lint -c
 RM = /bin/rm -f
 
-LIBEVENT_INCL = -I./net -I../common
+LIBEVENT_INCL = -I./
 #LIBEVENT_INCL = -I$(HOME)/libevent/include -I../common
 #LIBEVENT_LIB  = -L$(HOME)/libevent/lib -levent
 
@@ -23,18 +22,18 @@ LDFLAGS += $(LIBEVENT_LIB)
 
 LIBOBJS = 
 
-TARGET = EventServer
+TARGET = libnet.so
 
 #--------------------------------------------------------------------
 
 all: $(TARGET)
 
 
-EventServer: net/buffer.o net/epoll.o net/epoll_sub.o net/event.o net/evbuffer.o net/signal.o net/log.o spbuffer.o sputils.o spioutils.o spsession.o speventcb.o spserver.o EventServer.o
-	$(LINKER) $(LDFLAGS) $^ -L. -lpthread -o $@
+libnet.so: buffer.o epoll.o epoll_sub.o event.o evbuffer.o signal.o log.o
+	$(LINKER) $(LDFLAGS) $^ -o $@
 
 clean:
-	@( $(RM) net/*.o *.o vgcore.* core core.* $(TARGET) )
+	@( $(RM) *.o vgcore.* core core.* $(TARGET) )
 
 #--------------------------------------------------------------------
 
@@ -43,4 +42,5 @@ clean:
 	$(CC) $(CFLAGS) -c $^ -o $@	
 
 %.o : %.cpp
-	$(CPP) $(CFLAGS) -c $^ -o $@	
+	$(CC) $(CFLAGS) -c $^ -o $@	
+

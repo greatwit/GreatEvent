@@ -11,10 +11,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-//class SP_HandlerFactory;
+
 class SP_Session;
 //class SP_Executor;
-class SP_IOChannelFactory;
 
 struct event;
 
@@ -28,7 +27,6 @@ public:
 	void setMaxConnections( int maxConnections );
 	void setMaxThreads( int maxThreads );
 	void setReqQueueSize( int reqQueueSize, const char * refusedMsg );
-	//void setIOChannelFactory( SP_IOChannelFactory * ioChannelFactory );
 
 	void shutdown();
 	int isRunning();
@@ -36,8 +34,6 @@ public:
 	void runForever();
 
 private:
-	//SP_HandlerFactory * mHandlerFactory;
-	SP_IOChannelFactory * mIOChannelFactory;
 
 	char mBindIP[ 64 ];
 	int mPort;

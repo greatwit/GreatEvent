@@ -161,32 +161,43 @@ int SP_Session :: readBuffer(){
 	if(ret>0)
 	{
 		LPPACK_HEAD head = (LPPACK_HEAD)readBuff;
-		int packLen = htonl(head->len);
 		mInBuffer->append(readBuff+mPackHeadLen, ret - mPackHeadLen);
 		if(head->type.M != 0)
 		{
-			int leftLen = mInBuffer->getSize();
+			int frameLen = htonl(head->len);
+			int allPackLen = mInBuffer->getSize() ;//completed first package head
 			char tag[4] = {0x00, 0x00, 0x00, 0x01};
-			if(packLen == (leftLen + mPackHeadLen))
+			if(frameLen == allPackLen)
 			{
 				fwrite(tag, 1, 4, mwFile);
 				fwrite(mInBuffer->getBuffer(), 1, mInBuffer->getSize(), mwFile);
 				//printf("buffer size:%d\n", mInBuffer->getSize());
 				//printf("fid:%d pid:%d len:%d buffsize:%d\n", htonl(head->fid), htons(head->pid), htonl(head->len) - mPackHeadLen, mInBuffer->getSize());
 			}
-			else
+			else if(allPackLen > frameLen)
 			{
-				printf("packLen:%d bufflen:%d\n", packLen, mInBuffer->getSize());
+				printf("packLen:%d bufflen:%d\n", frameLen, mInBuffer->getSize());
 				int dataIndex 	= 0;
 				const char *buff 	= (const char *)mInBuffer->getBuffer();
-				while((packLen-mPackHeadLen) < leftLen) {
+				while(allPackLen>0) {
 					fwrite(tag, 1, 4, mwFile);
-					fwrite(buff+dataIndex, 1, packLen-mPackHeadLen, mwFile);
+					fwrite(buff+dataIndex, 1, frameLen, mwFile);
+					mInBuffer->erase(frameLen+dataIndex);
+					allPackLen -= frameLen;
 					printf("fid:%d pid:%d len:%d buffsize:%d\n", htonl(head->fid), htons(head->pid), htonl(head->len) - mPackHeadLen, mInBuffer->getSize());
-					head = (LPPACK_HEAD)(buff+packLen-mPackHeadLen+dataIndex);
-					packLen =  htonl(head->len);
-					leftLen -= packLen;
-					dataIndex += packLen + mPackHeadLen;
+					if(allPackLen<=0)
+						break;
+
+					buff	= (const char *)mInBuffer->getBuffer();
+					head 	= (LPPACK_HEAD)(buff);
+					frameLen =  htonl(head->len);
+					printf("next packLen:%d\n", frameLen);
+
+					dataIndex = mPackHeadLen;
+					if(head->type.M == 0) {
+						printf("mark is 0. \n");
+						//return ret;
+					}
 				}
 			}
 			mInBuffer->reset();
