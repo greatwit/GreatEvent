@@ -28,7 +28,8 @@ LOCAL_SRC_FILES := net/buffer.c \
 				spioutils.cpp \
 				spsession.cpp \
 				speventcb.cpp \
-				spserver.cpp
+				spserver.cpp \
+				NativeApi.cpp
 
 #LOCAL_STATIC_LIBRARIES := libMediaStream
 

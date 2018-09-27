@@ -57,6 +57,7 @@ public:
 	int getStatus();
 
 	int readBuffer();
+	int recvEx(char*pData, int len);
 
 	int getRunning();
 	void setRunning( int running );
@@ -92,6 +93,11 @@ private:
 	char mReading;
 
 	int mPackHeadLen;
+
+	int  mRecvDataLen;
+	int  mRecvHeadLen;
+	int  mTotalLen;
+	char mReadBuff[1500];
 };
 
 typedef struct tagSP_SessionEntry SP_SessionEntry_t;

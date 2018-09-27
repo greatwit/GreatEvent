@@ -3,11 +3,14 @@
  * For license terms, see the file COPYING along with this library.
  */
 
-#include <sys/time.h>
-#include <sys/types.h>
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
+
+#include <sys/time.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
@@ -18,8 +21,15 @@
 
 #include "config.h"
 #include "event.h"
-#include "h264.h"
 
+#include "h264.h"
+#include "common.h"
+
+#ifdef 	__ANDROID__
+#define	FILE_PATH	"/sdcard/w.h264"
+#else
+#define	FILE_PATH	"w.h264"
+#endif
 
 //---------------------------sessionManager----------------------------------------
 
@@ -116,7 +126,11 @@ SP_Session * SP_SessionManager :: remove( uint16_t key, uint16_t * seq )
 SP_Session :: SP_Session( SP_Sid_t sid )
 			:mPackHeadLen(sizeof(PACK_HEAD))
 			,mSid(sid)
+			,mRecvDataLen(0)
+			,mRecvHeadLen(0)
+			,mTotalLen(0)
 {
+	memset(mReadBuff, 1500, 0);
 	mReadEvent  = (struct event*)malloc( sizeof( struct event ) );
 	mWriteEvent = (struct event*)malloc( sizeof( struct event ) );
 
@@ -133,7 +147,7 @@ SP_Session :: SP_Session( SP_Sid_t sid )
 	mWriting = 0;
 	mReading = 0;
 
-	mwFile = fopen("w.h264", "w");
+	mwFile = fopen(FILE_PATH, "w");
 }
 
 SP_Session :: ~SP_Session()
@@ -154,55 +168,55 @@ SP_Session :: ~SP_Session()
 		fclose(mwFile);
 }
 
-int SP_Session :: readBuffer(){
+int SP_Session :: recvEx(char*pData, int len) {
+	int recvCount = 0, recvRet = 0;
+	do{
+		recvRet = recv(mSid.mKey, pData+recvCount, len-recvCount, 0);
+		if(recvRet<=0)
+			return recvRet;
+		recvCount += recvRet;
+	}while(recvCount<len);
+}
+
+int SP_Session :: readBuffer() {
 	int ret = 0;
-	char readBuff[1500]={0};
-	ret = recv(mSid.mKey, readBuff, MAX_MTU, 0);
-	if(ret>0)
-	{
-		LPPACK_HEAD head = (LPPACK_HEAD)readBuff;
-		mInBuffer->append(readBuff+mPackHeadLen, ret - mPackHeadLen);
-		if(head->type.M != 0)
-		{
-			int frameLen = htonl(head->len);
-			int allPackLen = mInBuffer->getSize() ;//completed first package head
-			char tag[4] = {0x00, 0x00, 0x00, 0x01};
-			if(frameLen == allPackLen)
-			{
+	int leftLent = mTotalLen - mRecvDataLen;
+	if(leftLent>0) {
+
+		if(leftLent < MAX_MTU)
+			ret = recv(mSid.mKey, mReadBuff, leftLent, 0);
+		else
+			ret = recv(mSid.mKey, mReadBuff, MAX_MTU, 0);
+
+		if(ret>0 ) {
+			mRecvDataLen += ret;
+			mInBuffer->append(mReadBuff, ret);
+
+			if(mRecvDataLen == mTotalLen) {
+				//printf("frameLen:%d buffsize:%d\n", mTotalLen, mInBuffer->getSize());
+				char tag[4] = {0x00, 0x00, 0x00, 0x01};
 				fwrite(tag, 1, 4, mwFile);
 				fwrite(mInBuffer->getBuffer(), 1, mInBuffer->getSize(), mwFile);
-				//printf("buffer size:%d\n", mInBuffer->getSize());
-				//printf("fid:%d pid:%d len:%d buffsize:%d\n", htonl(head->fid), htons(head->pid), htonl(head->len) - mPackHeadLen, mInBuffer->getSize());
+				mRecvDataLen  	= 0;
+				mTotalLen 		= 0;
+				mInBuffer->reset();
 			}
-			else if(allPackLen > frameLen)
-			{
-				printf("packLen:%d bufflen:%d\n", frameLen, mInBuffer->getSize());
-				int dataIndex 	= 0;
-				const char *buff 	= (const char *)mInBuffer->getBuffer();
-				while(allPackLen>0) {
-					fwrite(tag, 1, 4, mwFile);
-					fwrite(buff+dataIndex, 1, frameLen, mwFile);
-					mInBuffer->erase(frameLen+dataIndex);
-					allPackLen -= frameLen;
-					printf("fid:%d pid:%d len:%d buffsize:%d\n", htonl(head->fid), htons(head->pid), htonl(head->len) - mPackHeadLen, mInBuffer->getSize());
-					if(allPackLen<=0)
-						break;
-
-					buff	= (const char *)mInBuffer->getBuffer();
-					head 	= (LPPACK_HEAD)(buff);
-					frameLen =  htonl(head->len);
-					printf("next packLen:%d\n", frameLen);
-
-					dataIndex = mPackHeadLen;
-					if(head->type.M == 0) {
-						printf("mark is 0. \n");
-						//return ret;
-					}
-				}
-			}
-			mInBuffer->reset();
 		}
 	}
+	else
+	{
+		ret = recv(mSid.mKey, mReadBuff+mRecvHeadLen, mPackHeadLen-mRecvHeadLen, 0);
+		if(ret>0) {
+			mRecvHeadLen+=ret;
+			if(mRecvHeadLen==mPackHeadLen) {
+				LPPACK_HEAD head = (LPPACK_HEAD)mReadBuff;
+				mTotalLen = htonl(head->len);
+				mRecvHeadLen = 0;
+				GLOGE("---fid:%d frameLen:%d ret:%d", htonl(head->fid), mTotalLen, ret);
+			}
+		}
+	}
+
 	return ret;
 }
 

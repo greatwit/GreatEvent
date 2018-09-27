@@ -27,6 +27,7 @@
 #include "config.h"
 
 #include "event.h"
+#include "common.h"
 
 //#include "event_msgqueue.h"
 
@@ -101,10 +102,10 @@ int SP_Server :: run()
 	ret = pthread_create( &thread, &attr, reinterpret_cast<void*(*)(void*)>(eventLoop), this );
 	pthread_attr_destroy( &attr );
 	if( 0 == ret ) {
-		syslog( LOG_NOTICE, "Thread #%ld has been created to listen on port [%d]", thread, mPort );
+		GLOGE( "Thread #%ld has been created to listen on port [%d]", thread, mPort );
 	} else {
 		mIsRunning = 0;
-		syslog( LOG_WARNING, "Unable to create a thread for TCP server on port [%d], %s",
+		GLOGE( "Unable to create a thread for TCP server on port [%d], %s",
 			mPort, strerror( errno ) ) ;
 	}
 
@@ -113,7 +114,8 @@ int SP_Server :: run()
 
 void SP_Server :: runForever()
 {
-	eventLoop( this );
+	//eventLoop( this );
+	run();
 }
 
 void * SP_Server :: eventLoop( void * arg )

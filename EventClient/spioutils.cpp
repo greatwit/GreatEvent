@@ -20,12 +20,12 @@
 
 void SP_IOUtils :: inetNtoa( in_addr * addr, char * ip, int size )
 {
-#if defined (linux) || defined (__sgi) || defined (__hpux) || defined (__FreeBSD__)
-	const unsigned char *p = ( const unsigned char *) addr;
-	snprintf( ip, size, "%i.%i.%i.%i", p[0], p[1], p[2], p[3] );
-#else
-	snprintf( ip, size, "%i.%i.%i.%i", addr->s_net, addr->s_host, addr->s_lh, addr->s_impno );
-#endif
+	#if defined (linux) || defined (__sgi) || defined (__hpux) || defined (__FreeBSD__)
+		const unsigned char *p = ( const unsigned char *) addr;
+		snprintf( ip, size, "%i.%i.%i.%i", p[0], p[1], p[2], p[3] );
+	#else
+		snprintf( ip, size, "%i.%i.%i.%i", addr->s_net, addr->s_host, addr->s_lh, addr->s_impno );
+	#endif
 }
 
 int SP_IOUtils :: setNonblock( int fd )
@@ -63,9 +63,6 @@ int SP_IOUtils :: tcpConnect(const char *destip, int destport, int * fd, int tcp
 		return -1; 
     	}
 
-
-
-
     	struct sockaddr_in addr;
     
     	addr.sin_family = AF_INET;
@@ -75,6 +72,7 @@ int SP_IOUtils :: tcpConnect(const char *destip, int destport, int * fd, int tcp
     	if((ret = connect(sockid, (struct sockaddr*)&addr, sizeof(addr)) ) < 0) {
     		printf("connect() failure ret:%d\n", ret);
     	}
+
 	if( 0 != ret && sockid >= 0 )
 		close( sockid );
 	else
@@ -93,7 +91,7 @@ int SP_IOUtils :: tcpConnect(const char *destip, int destport, int * fd, int tcp
 	return ret;
 }
 
-int SP_IOUtils :: tcpSendData(int fd, char*data, int len){
+int SP_IOUtils :: tcpSendData(int fd, char*data, int len) {
 	int sendLen = len, iRet = 0;
 	if(len<= MAX_MTU)
 		iRet += send(fd, data, len,0);

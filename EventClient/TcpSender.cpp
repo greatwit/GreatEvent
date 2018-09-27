@@ -4,6 +4,7 @@
 #include "spioutils.h"
 #include <unistd.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 
 using namespace std;
@@ -74,36 +75,38 @@ void TcpSender::packetHead(int fid, short pid, int len, bool mark, LPPACK_HEAD l
 	lpPack->len 		= htonl(len);
 }
 
-int TcpSender::tcpSendData(char*data, int len){
-	int leftLen = len, dataLen = len, iRet = 0, pid = 0;
+int TcpSender::sendEx(char*data,int len) {
+	int leftLen = len, iRet = 0;
+	fd_set fdSend;
+	struct timeval timeout;
+	do {
+		FD_ZERO(&fdSend);
+		FD_SET(mSockId, &fdSend);
+		timeout.tv_sec 	= 1;
+		timeout.tv_usec = 0;
+		iRet = select(mSockId+1, NULL, &fdSend, NULL, &timeout);
+		if(!(iRet>0 && FD_ISSET(mSockId, &fdSend))) {
+			if(iRet==0)
+				continue;
+			return -1;
+		}
+		if(leftLen<=MAX_MTU)
+			iRet = send(mSockId, data+len-leftLen, leftLen, 0);
+		else
+			iRet = send(mSockId, data+len-leftLen, MAX_MTU, 0);
+		leftLen -= iRet;
+	}while(leftLen>0);
+
+	return len - leftLen;
+}
+
+int TcpSender::tcpSendData(char*data, int len) {
+	int leftLen = len,  iRet = 0;
 	char sendData[1500] = {0};
 	mSid++;
-
-	if(len > MAX_LEN) {
-		while(leftLen>0) {
-			pid++;
-			if(leftLen<=MAX_LEN) {
-				packetHead(mSid, pid, dataLen, true, (LPPACK_HEAD)sendData);
-				memcpy(sendData+mPackHeadLen, data+len-leftLen, leftLen);
-				iRet += send(mSockId, sendData, leftLen+mPackHeadLen, 0);
-				printf("fid:%d pid:%d len:%d\n", mSid, pid, len);
-			}
-			else {
-				packetHead(mSid, pid, dataLen, false, (LPPACK_HEAD)sendData);
-				memcpy(sendData+mPackHeadLen, data+len-leftLen, MAX_LEN);
-				iRet += send(mSockId, sendData, MAX_MTU,0);
-				//printf("fid:%d pid:%d len:%d\n", mSid, pid, len);
-			}
-			leftLen -= MAX_LEN;
-		}
-	}
-	else {
-		pid++;
-		packetHead( mSid, pid, dataLen, true, (LPPACK_HEAD)sendData);
-		memcpy(sendData+mPackHeadLen, data, len);
-		iRet += send(mSockId, sendData, len+mPackHeadLen, 0);
-		printf("fid:%d pid:%d len:%d\n", mSid, pid, len);
-	}
+	packetHead(mSid, 0, len, true, (LPPACK_HEAD)sendData);
+	iRet = sendEx(sendData, mPackHeadLen);
+	iRet = sendEx(data, len);
 	return iRet;
 }
 
@@ -123,7 +126,7 @@ void *TcpSender::Thread(){
 			break;
 		}
 		int size=GetAnnexbNALU(mFile, n);//每执行一次，文件的指针指向本次找到的NALU的末尾，下一个位置即为下个NALU的起始码0x000001
-		GLOGE("GetAnnexbNALU size:%d", n->len);
+		//GLOGE("GetAnnexbNALU size:%d", n->len);
 		if(size<4)
 		{
 			printf("get nul error!\n");

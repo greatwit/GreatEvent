@@ -46,6 +46,10 @@ int main( int argc, char * argv[] )
 
 	server.runForever();
 
+	getchar();
+
+	server.shutdown();
+
 	return 0;
 }
 

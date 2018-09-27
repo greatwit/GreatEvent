@@ -6,9 +6,10 @@
 
 #include <iostream>
 
-#define TAG "H264Sender"
+
 #include "common.h"
 
+#define TAG "H264Sender"
 
 
 class TcpSender : private GThread
@@ -28,6 +29,7 @@ class TcpSender : private GThread
 	protected:
 		void packetHead(int fid, short pid, int len, bool mark, LPPACK_HEAD lpPack);
 		int tcpSendData(char*data, int len);
+		int sendEx(char*data,int len);
 
 	private:
 		int 			mSockId;

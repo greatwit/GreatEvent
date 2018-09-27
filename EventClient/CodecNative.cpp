@@ -2,9 +2,6 @@
 #include "common.h"
 #include "TcpSender.h"
 
-#ifndef NELEM
-#define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
-#endif
 
 #define REG_PATH "com/great/happyness/mediacodecmy/NativeCodec"
 
@@ -31,7 +28,7 @@ static jboolean TcpConnect(JNIEnv *env, jobject, jstring destip, jint destport)
 	return bRet;
 }
 
-static jboolean TcpDisconnect(JNIEnv *env, jobject){
+static jboolean TcpDisconnect(JNIEnv *env, jobject) {
 	bool bRes = false;
 	if(mpTcpSender) {
 		bRes = mpTcpSender->disConnect();
