@@ -127,6 +127,7 @@ struct eventop {
 #define TIMEOUT_DEFAULT	{5, 0}
 
 void *event_init(void);
+void event_destroy();
 int event_dispatch(void);
 int event_base_dispatch(struct event_base *);
 

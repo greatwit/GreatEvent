@@ -48,6 +48,7 @@ SP_EventArg :: ~SP_EventArg()
 	//delete mOutputResultQueue;
 
 	delete mSessionManager;
+	mSessionManager = NULL;
 
 	//msgqueue_destroy( (struct event_msgqueue*)mResponseQueue );
 	//event_base_free( mEventBase );
@@ -88,7 +89,7 @@ int SP_EventArg :: getTimeout() const
 	return mTimeout;
 }
 
-//-------------------------------------------------------------------
+//-------------------------------callback------------------------------------
 
 void SP_EventCallback :: onAccept( int fd, short events, void * arg )
 {
@@ -113,13 +114,14 @@ void SP_EventCallback :: onAccept( int fd, short events, void * arg )
 	sid.mKey = clientFD;
 	eventArg->getSessionManager()->get( sid.mKey, &sid.mSeq );
 
-	SP_Session * session = new SP_Session( sid );
+
 
 	char clientIP[ 32 ] = { 0 };
 	SP_IOUtils::inetNtoa( &( clientAddr.sin_addr ), clientIP, sizeof( clientIP ) );
 	printf( "clientIP: %s\n",clientIP);
 	//session->getRequest()->setClientIP( clientIP );
 
+	SP_Session * session = new SP_Session( sid );
 	if( NULL != session ) {
 		eventArg->getSessionManager()->put( sid.mKey, session, &sid.mSeq );
 		session->setArg( eventArg );
@@ -178,41 +180,6 @@ void SP_EventCallback :: onRead( int fd, short events, void * arg )
 	}
 
 	addEvent( session, EV_READ, -1 );
-
-/*
-	if( EV_READ & events ) {
-		int len = session->getIOChannel()->receive( session );
-
-		if( len > 0 ) {
-			if( 0 == session->getRunning() ) {
-				SP_MsgDecoder * decoder = session->getRequest()->getMsgDecoder();
-				if( SP_MsgDecoder::eOK == decoder->decode( session->getInBuffer() ) ) {
-					SP_EventHelper::doWork( session );
-				}
-			}
-			addEvent( session, EV_READ, -1 );
-		} else {
-			if( EINTR != errno && EAGAIN != errno ) {
-				if( 0 == session->getRunning() ) {
-					syslog( LOG_NOTICE, "session(%d.%d) read error", sid.mKey, sid.mSeq );
-					SP_EventHelper::doError( session );
-				} else {
-					addEvent( session, EV_READ, -1 );
-					syslog( LOG_NOTICE, "session(%d.%d) busy, process session error later",
-							sid.mKey, sid.mSeq );
-				}
-			}
-		}
-	} else {
-		if( 0 == session->getRunning() ) {
-			SP_EventHelper::doTimeout( session );
-		} else {
-			addEvent( session, EV_READ, -1 );
-			syslog( LOG_NOTICE, "session(%d.%d) busy, process session timeout later",
-					sid.mKey, sid.mSeq );
-		}
-	}
-*/
 }
 
 void SP_EventCallback :: onWrite( int fd, short events, void * arg )
@@ -312,15 +279,17 @@ void SP_EventCallback :: addEvent( SP_Session * session, short events, int fd )
 	if( ( events & EV_WRITE ) && 0 == session->getWriting() ) {
 		session->setWriting( 1 );
 
-		if( fd < 0 ) fd = EVENT_FD( session->getWriteEvent() );
+		struct event*pEvent=session->getWriteEvent();
 
-		event_set( session->getWriteEvent(), fd, events, onWrite, session );
-		event_base_set( eventArg->getEventBase(), session->getWriteEvent() );
+		if( fd < 0 ) fd = EVENT_FD( pEvent );
+
+		event_set( pEvent, fd, events, onWrite, session );
+		event_base_set( eventArg->getEventBase(), pEvent );
 
 		struct timeval timeout;
 		memset( &timeout, 0, sizeof( timeout ) );
 		timeout.tv_sec = eventArg->getTimeout();
-		event_add( session->getWriteEvent(), &timeout );
+		event_add( pEvent, &timeout );
 	}
 
 	if( events & EV_READ && 0 == session->getReading() ) {
@@ -328,13 +297,14 @@ void SP_EventCallback :: addEvent( SP_Session * session, short events, int fd )
 
 		if( fd < 0 ) fd = EVENT_FD( session->getWriteEvent() );
 
-		event_set( session->getReadEvent(), fd, events, onRead, session );
-		event_base_set( eventArg->getEventBase(), session->getReadEvent() );
+		struct event*pEvent=session->getReadEvent();
+		event_set( pEvent, fd, events, onRead, session );
+		event_base_set( eventArg->getEventBase(), pEvent );
 
 		struct timeval timeout;
 		memset( &timeout, 0, sizeof( timeout ) );
 		timeout.tv_sec = eventArg->getTimeout();
-		event_add( session->getReadEvent(), &timeout );
+		event_add( pEvent, &timeout );
 	}
 }
 
@@ -386,7 +356,7 @@ void SP_EventHelper :: worker( void * arg )
 
 void SP_EventHelper :: doError( SP_Session * session )
 {
-/*
+
 	SP_EventArg * eventArg = (SP_EventArg *)session->getArg();
 
 	event_del( session->getWriteEvent() );
@@ -394,45 +364,45 @@ void SP_EventHelper :: doError( SP_Session * session )
 
 	SP_Sid_t sid = session->getSid();
 
-	SP_ArrayList * outList = session->getOutList();
-	for( ; outList->getCount() > 0; ) {
-		SP_Message * msg = ( SP_Message * ) outList->takeItem( SP_ArrayList::LAST_INDEX );
-
-		int index = msg->getToList()->find( sid );
-		if( index >= 0 ) msg->getToList()->take( index );
-		msg->getFailure()->add( sid );
-
-		if( msg->getToList()->getCount() <= 0 ) {
-			doCompletion( eventArg, msg );
-		}
-	}
+//	SP_ArrayList * outList = session->getOutList();
+//	for( ; outList->getCount() > 0; ) {
+//		SP_Message * msg = ( SP_Message * ) outList->takeItem( SP_ArrayList::LAST_INDEX );
+//
+//		int index = msg->getToList()->find( sid );
+//		if( index >= 0 ) msg->getToList()->take( index );
+//		msg->getFailure()->add( sid );
+//
+//		if( msg->getToList()->getCount() <= 0 ) {
+//			doCompletion( eventArg, msg );
+//		}
+//	}
 
 	// remove session from SessionManager, onResponse will ignore this session
 	eventArg->getSessionManager()->remove( sid.mKey );
 
-	eventArg->getInputResultQueue()->push( new SP_SimpleTask( error, session, 1 ) );
-*/
+	//eventArg->getInputResultQueue()->push( new SP_SimpleTask( error, session, 1 ) );
+
 }
 
 void SP_EventHelper :: error( void * arg )
 {
-/*
+
 	SP_Session * session = ( SP_Session * )arg;
 	SP_EventArg * eventArg = (SP_EventArg*)session->getArg();
 
 	SP_Sid_t sid = session->getSid();
 
-	SP_Response * response = new SP_Response( sid );
-	session->getHandler()->error( response );
-
-	msgqueue_push( (struct event_msgqueue*)eventArg->getResponseQueue(), response );
-
-	// onResponse will ignore this session, so it's safe to destroy session here
-	session->getHandler()->close();
+//	SP_Response * response = new SP_Response( sid );
+//	session->getHandler()->error( response );
+//
+//	msgqueue_push( (struct event_msgqueue*)eventArg->getResponseQueue(), response );
+//
+//	// onResponse will ignore this session, so it's safe to destroy session here
+//	session->getHandler()->close();
 	close( EVENT_FD( session->getWriteEvent() ) );
 	delete session;
 	syslog( LOG_WARNING, "session(%d.%d) error, exit", sid.mKey, sid.mSeq );
-*/
+
 }
 
 void SP_EventHelper :: doTimeout( SP_Session * session )

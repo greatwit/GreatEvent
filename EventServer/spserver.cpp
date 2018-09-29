@@ -167,9 +167,11 @@ int SP_Server :: start()
 		signal_set( &evSigInt, SIGINT,  sigHandler, this );
 		event_base_set( eventArg.getEventBase(), &evSigInt );
 		signal_add( &evSigInt, NULL);
+
 		signal_set( &evSigTerm, SIGTERM, sigHandler, this );
 		event_base_set( eventArg.getEventBase(), &evSigTerm );
 		signal_add( &evSigTerm, NULL);
+
 
 		SP_AcceptArg_t acceptArg;
 		memset( &acceptArg, 0, sizeof( SP_AcceptArg_t ) );
@@ -212,7 +214,7 @@ int SP_Server :: start()
 
 		syslog( LOG_NOTICE, "Server is shutdown." );
 
-		//event_del( &evAccept );
+		event_del( &evAccept );
 
 		signal_del( &evSigTerm );
 		signal_del( &evSigInt );

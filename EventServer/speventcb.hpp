@@ -39,7 +39,6 @@ private:
 	struct event_base * mEventBase;
 /*
 	void * mResponseQueue;
-
 	SP_BlockingQueue * mInputResultQueue;
 	SP_BlockingQueue * mOutputResultQueue;
 */
@@ -57,6 +56,7 @@ typedef struct tagSP_AcceptArg {
 	int mMaxConnections;
 	char * mRefusedMsg;
 } SP_AcceptArg_t;
+
 
 class SP_EventCallback {
 public:

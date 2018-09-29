@@ -183,6 +183,11 @@ event_init(void)
 	return (current_base);
 }
 
+void
+event_destroy(){
+
+}
+
 int
 event_priority_init(int npriorities)
 {

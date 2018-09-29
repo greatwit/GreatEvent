@@ -121,6 +121,8 @@ SP_Session * SP_SessionManager :: remove( uint16_t key, uint16_t * seq )
 	return ret;
 }
 
+
+
 //----------------------------------session---------------------------------
 
 SP_Session :: SP_Session( SP_Sid_t sid )
