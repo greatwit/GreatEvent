@@ -1,7 +1,4 @@
-/*
- * Copyright 2007 Stephen Liu
- * For license terms, see the file COPYING along with this library.
- */
+
 
 #ifndef __sputils_hpp__
 #define __sputils_hpp__

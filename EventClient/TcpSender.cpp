@@ -67,9 +67,9 @@ bool TcpSender::stopFileSend(){
 	return true;
 }
 
-void TcpSender::packetHead(int fid, short pid, int len, bool mark, LPPACK_HEAD lpPack) {
+void TcpSender::packetHead(int fid, short pid, int len, unsigned char type, LPPACK_HEAD lpPack) {
 	memset(lpPack, 0, sizeof(PACK_HEAD));
-	lpPack->type.M 	= (mark==true)?1:0;
+	lpPack->type 		= type;
 	lpPack->fid 		= htonl(fid);
 	lpPack->pid			= htons(pid);
 	lpPack->len 		= htonl(len);
@@ -100,11 +100,19 @@ int TcpSender::sendEx(char*data,int len) {
 	return len - leftLen;
 }
 
+int TcpSender::tpcSendMsg(unsigned char msg) {
+	int iRet = 0;
+	char sendData[1500] = {0};
+	packetHead(0, 0, mPackHeadLen, msg, (LPPACK_HEAD)sendData);
+	iRet = sendEx(sendData, mPackHeadLen);
+	return iRet;
+}
+
 int TcpSender::tcpSendData(char*data, int len) {
 	int leftLen = len,  iRet = 0;
 	char sendData[1500] = {0};
 	mSid++;
-	packetHead(mSid, 0, len, true, (LPPACK_HEAD)sendData);
+	packetHead(mSid, 0, len, VIDEO_RECV_STREAM, (LPPACK_HEAD)sendData);
 	iRet = sendEx(sendData, mPackHeadLen);
 	iRet = sendEx(data, len);
 	return iRet;
@@ -113,8 +121,10 @@ int TcpSender::tcpSendData(char*data, int len) {
 void *TcpSender::Thread(){
 	GThread::ThreadStarted();
 
+	tpcSendMsg(VIDEO_RECV_MSG);
+
 	int status = 0;
-	NALU_HEADER		*nalu_hdr;
+	//NALU_HEADER		*nalu_hdr;
 	FU_INDICATOR	*fu_ind;
 	FU_HEADER		*fu_hdr;
 	//char sendbuf[1500];

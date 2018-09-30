@@ -15,7 +15,7 @@ static int FindStartCode3 (unsigned char *Buf);//查找开始字符0x00000001
 static int info2=0, info3=0;
 RTP_FIXED_HEADER        *rtp_hdr;
 
-NALU_HEADER		*nalu_hdr;
+//NALU_HEADER		*nalu_hdr;
 FU_INDICATOR	*fu_ind;
 FU_HEADER		*fu_hdr;
 

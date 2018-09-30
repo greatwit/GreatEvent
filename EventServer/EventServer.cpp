@@ -10,7 +10,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "spserver.hpp"
+#include "TcpServer.hpp"
 
 int main( int argc, char * argv[] )
 {
@@ -38,7 +38,7 @@ int main( int argc, char * argv[] )
 		}
 	}
 
-	SP_Server server( "", port );
+	TcpServer server( "", port );
 
 	server.setTimeout( 60 );
 	server.setMaxThreads( maxThreads );

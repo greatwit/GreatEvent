@@ -30,7 +30,9 @@ TARGET = EventServer
 all: $(TARGET)
 
 
-EventServer: net/buffer.o net/epoll.o net/epoll_sub.o net/event.o net/evbuffer.o net/signal.o net/log.o spbuffer.o sputils.o spioutils.o spsession.o speventcb.o spserver.o EventServer.o
+EventServer: net/buffer.o net/epoll.o net/epoll_sub.o net/event.o net/evbuffer.o net/signal.o net/log.o \
+			TaskBase.o TaskVideoRecv.o TaskFileRecv.o BufferCache.o sputils.o Ioutils.o Session.o \
+			EventCall.o TcpClient.o TcpServer.o EventServer.o
 	$(LINKER) $(LDFLAGS) $^ -L. -lpthread -o $@
 
 clean:

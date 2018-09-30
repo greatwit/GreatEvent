@@ -1,14 +1,11 @@
-/*
- * Copyright 2007 Stephen Liu
- * For license terms, see the file COPYING along with this library.
- */
 
-#ifndef __spioutils_hpp__
-#define __spioutils_hpp__
+
+#ifndef __ioutils_hpp__
+#define __ioutils_hpp__
 
 #include <netinet/in.h>
 
-class SP_IOUtils {
+class IOUtils {
 public:
 	static void inetNtoa( in_addr * addr, char * ip, int size );
 
@@ -23,7 +20,7 @@ public:
 	static int tcpSendData(int fd, char*data, int len);
 
 private:
-	SP_IOUtils();
+	IOUtils();
 };
 
 #endif

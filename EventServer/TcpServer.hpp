@@ -1,27 +1,21 @@
-/*
- * Copyright 2007 Stephen Liu
- * For license terms, see the file COPYING along with this library.
- */
 
 
-#ifndef __spserver_hpp__
-#define __spserver_hpp__
+
+#ifndef __tcpserver_hpp__
+#define __tcpserver_hpp__
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
 
-class SP_Session;
-//class SP_Executor;
-
 struct event;
 
 // half-sync/half-async thread pool server
-class SP_Server {
+class TcpServer {
 public:
-	SP_Server( const char * bindIP, int port );
-	~SP_Server();
+	TcpServer( const char * bindIP, int port );
+	~TcpServer();
 
 	void setTimeout( int timeout );
 	void setMaxConnections( int maxConnections );

@@ -27,8 +27,9 @@ class TcpSender : private GThread
 		void *Thread();
 
 	protected:
-		void packetHead(int fid, short pid, int len, bool mark, LPPACK_HEAD lpPack);
+		void packetHead(int fid, short pid, int len, unsigned char type, LPPACK_HEAD lpPack);
 		int tcpSendData(char*data, int len);
+		int tpcSendMsg(unsigned char msg);
 		int sendEx(char*data,int len);
 
 	private:

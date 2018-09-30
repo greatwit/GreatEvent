@@ -1,7 +1,4 @@
-/*
- * Copyright 2007 Stephen Liu
- * For license terms, see the file COPYING along with this library.
- */
+
 
 #include <stdio.h>
 #include <string.h>
@@ -13,16 +10,16 @@
 #include <signal.h>
 #include <netinet/tcp.h>
 
-#include "spserver.hpp"
+#include "TcpServer.hpp"
 
 //#include "sphandler.hpp"
 //#include "spexecutor.hpp"
 
-#include "speventcb.hpp"
-#include "spsession.hpp"
+#include "EventCall.hpp"
+#include "Session.hpp"
 
 #include "sputils.hpp"
-#include "spioutils.hpp"
+#include "Ioutils.hpp"
 
 #include "config.h"
 
@@ -31,7 +28,7 @@
 
 //#include "event_msgqueue.h"
 
-SP_Server :: SP_Server( const char * bindIP, int port )
+TcpServer :: TcpServer( const char * bindIP, int port )
 {
 	snprintf( mBindIP, sizeof( mBindIP ), "%s", bindIP );
 	mPort = port;
@@ -45,33 +42,28 @@ SP_Server :: SP_Server( const char * bindIP, int port )
 	mRefusedMsg = strdup( "System busy, try again later." );
 }
 
-SP_Server :: ~SP_Server()
+TcpServer :: ~TcpServer()
 {
 	if( NULL != mRefusedMsg ) free( mRefusedMsg );
 	mRefusedMsg = NULL;
 }
-/*
-void SP_Server :: setIOChannelFactory( SP_IOChannelFactory * ioChannelFactory )
-{
-	mIOChannelFactory = ioChannelFactory;
-}
-*/
-void SP_Server :: setTimeout( int timeout )
+
+void TcpServer :: setTimeout( int timeout )
 {
 	mTimeout = timeout > 0 ? timeout : mTimeout;
 }
 
-void SP_Server :: setMaxThreads( int maxThreads )
+void TcpServer :: setMaxThreads( int maxThreads )
 {
 	mMaxThreads = maxThreads > 0 ? maxThreads : mMaxThreads;
 }
 
-void SP_Server :: setMaxConnections( int maxConnections )
+void TcpServer :: setMaxConnections( int maxConnections )
 {
 	mMaxConnections = maxConnections > 0 ? maxConnections : mMaxConnections;
 }
 
-void SP_Server :: setReqQueueSize( int reqQueueSize, const char * refusedMsg )
+void TcpServer :: setReqQueueSize( int reqQueueSize, const char * refusedMsg )
 {
 	mReqQueueSize = reqQueueSize > 0 ? reqQueueSize : mReqQueueSize;
 
@@ -79,17 +71,17 @@ void SP_Server :: setReqQueueSize( int reqQueueSize, const char * refusedMsg )
 	mRefusedMsg = strdup( refusedMsg );
 }
 
-void SP_Server :: shutdown()
+void TcpServer :: shutdown()
 {
 	mIsShutdown = 1;
 }
 
-int SP_Server :: isRunning()
+int TcpServer :: isRunning()
 {
 	return mIsRunning;
 }
 
-int SP_Server :: run()
+int TcpServer :: run()
 {
 	int ret = -1;
 
@@ -112,15 +104,15 @@ int SP_Server :: run()
 	return ret;
 }
 
-void SP_Server :: runForever()
+void TcpServer :: runForever()
 {
 	//eventLoop( this );
 	run();
 }
 
-void * SP_Server :: eventLoop( void * arg )
+void * TcpServer :: eventLoop( void * arg )
 {
-	SP_Server * server = (SP_Server*)arg;
+	TcpServer * server = (TcpServer*)arg;
 
 	server->mIsRunning = 1;
 
@@ -131,13 +123,13 @@ void * SP_Server :: eventLoop( void * arg )
 	return NULL;
 }
 
-void SP_Server :: sigHandler( int, short, void * arg )
+void TcpServer :: sigHandler( int, short, void * arg )
 {
-	SP_Server * server = (SP_Server*)arg;
+	TcpServer * server = (TcpServer*)arg;
 	server->shutdown();
 }
 
-void SP_Server :: outputCompleted( void * arg )
+void TcpServer :: outputCompleted( void * arg )
 {
 /*
 	SP_CompletionHandler * handler = ( SP_CompletionHandler * ) ((void**)arg)[0];
@@ -148,7 +140,7 @@ void SP_Server :: outputCompleted( void * arg )
 	free( arg );
 }
 
-int SP_Server :: start()
+int TcpServer :: start()
 {
 	/* Don't die with SIGPIPE on remote read shutdown. That's dumb. */
 	signal( SIGPIPE, SIG_IGN );
@@ -156,11 +148,11 @@ int SP_Server :: start()
 	int ret = 0;
 	int listenFD = -1;
 
-	ret = SP_IOUtils::tcpListen( mBindIP, mPort, &listenFD, 0 );
+	ret = IOUtils::tcpListen( mBindIP, mPort, &listenFD, 0 );
 
 	if( 0 == ret ) {
 
-		SP_EventArg eventArg( mTimeout );
+		EventArg eventArg( mTimeout );
 
 		// Clean close on SIGINT or SIGTERM.
 		struct event evSigInt, evSigTerm;
@@ -173,16 +165,16 @@ int SP_Server :: start()
 		signal_add( &evSigTerm, NULL);
 
 
-		SP_AcceptArg_t acceptArg;
-		memset( &acceptArg, 0, sizeof( SP_AcceptArg_t ) );
+		AcceptArg_t acceptArg;
+		memset( &acceptArg, 0, sizeof( AcceptArg_t ) );
 
-		acceptArg.mEventArg = &eventArg;
-		acceptArg.mReqQueueSize = mReqQueueSize;
-		acceptArg.mMaxConnections = mMaxConnections;
-		acceptArg.mRefusedMsg = mRefusedMsg;
+		acceptArg.mEventArg 		= &eventArg;
+		acceptArg.mReqQueueSize 	= mReqQueueSize;
+		acceptArg.mMaxConnections 	= mMaxConnections;
+		acceptArg.mRefusedMsg 		= mRefusedMsg;
 
 		struct event evAccept;
-		event_set( &evAccept, listenFD, EV_READ|EV_PERSIST, SP_EventCallback::onAccept, &acceptArg );
+		event_set( &evAccept, listenFD, EV_READ|EV_PERSIST, EventCall::onAccept, &acceptArg );
 		event_base_set( eventArg.getEventBase(), &evAccept );
 		event_add( &evAccept, NULL );
 

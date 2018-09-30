@@ -1,23 +1,19 @@
-/*
- * Copyright 2007 Stephen Liu
- * For license terms, see the file COPYING along with this library.
- */
 
 
-#ifndef __spbuffer_hpp__
-#define __spbuffer_hpp__
+#ifndef __buffercache_hpp__
+#define __buffercache_hpp__
 
 #include <stdlib.h>
 
 struct evbuffer;
 
-class SP_Buffer {
+class BufferCache {
 public:
-	SP_Buffer();
-	~SP_Buffer();
+	BufferCache();
+	~BufferCache();
 
 	int append( const void * buffer, int len = 0 );
-	int append( const SP_Buffer * buffer );
+	int append( const BufferCache * buffer );
 	void erase( int len );
 	void reset();
 	const void * getBuffer() const;
@@ -27,7 +23,7 @@ public:
 	char * getLine();
 	const void * find( const void * key, size_t len );
 
-	SP_Buffer * take();
+	BufferCache * take();
 
 private:
 	struct evbuffer * mBuffer;

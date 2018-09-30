@@ -35,13 +35,37 @@ typedef struct
     unsigned long ssrc;            /**//* stream number is used here. */
 } RTP_FIXED_HEADER;
 
+typedef enum MSG_TYPE {
+	VIDEO_RECV_MSG = 1,
+	VIDEO_RECV_STREAM,
+	VIDEO_SEND_MSG,
+	VIDEO_SEND_STREAM,
+	FILE_RECV_MSG,
+	FILE_RECV_STREAM,
+	FILE_SEND_MSG,
+	FILE_SEND_STREAM
+}MSG_TYPE_t;
+
 typedef struct {
     //byte 0
 	unsigned char TYPE:5;
     unsigned char NRI:2;
 	unsigned char F:1;    
-         
-} NALU_HEADER; /**//* 1 BYTES */
+} MSG_HEADER; /**//* 1 BYTES */
+
+typedef struct {
+    //byte 0
+	unsigned char TYPE:5;
+    unsigned char NRI:2;
+	unsigned char F:1;
+} NALU_HEADER;
+
+typedef struct {
+    //byte 0
+    unsigned char TYPE:5;
+	unsigned char NRI:2; 
+	unsigned char F:1;    
+} FU_INDICATOR; /**//* 1 BYTES */
 
 typedef struct {
 	char CC:4;
@@ -53,22 +77,14 @@ typedef struct {
 typedef struct {
     //byte 0
     unsigned char TYPE:5;
-	unsigned char NRI:2; 
-	unsigned char F:1;    
-
-} FU_INDICATOR; /**//* 1 BYTES */
-
-typedef struct {
-    //byte 0
-    unsigned char TYPE:5;
 	unsigned char R:1;
 	unsigned char E:1;
 	unsigned char S:1;    
 } FU_HEADER; /**//* 1 BYTES */
 
 typedef struct {
-	NALU_HEADER head;	//1
-	PACK_TYPE	type;	//1
+	MSG_HEADER  	head;	//1
+	unsigned char	type;	//1
 	unsigned short 	pid;	//2  every transmit package id
 	unsigned int 	fid;	//4	 every media frame id
 	unsigned int    len;	//4  len for every frame

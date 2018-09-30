@@ -1,7 +1,4 @@
-/*
- * Copyright 2007 Stephen Liu
- * For license terms, see the file COPYING along with this library.
- */
+
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -14,11 +11,11 @@
 #include <errno.h>
 #include <string.h>
 
-#include "spioutils.hpp"
+#include "Ioutils.hpp"
 
 #define  MAX_MTU 1400
 
-void SP_IOUtils :: inetNtoa( in_addr * addr, char * ip, int size )
+void IOUtils :: inetNtoa( in_addr * addr, char * ip, int size )
 {
 #if defined (linux) || defined (__sgi) || defined (__hpux) || defined (__FreeBSD__)
 	const unsigned char *p = ( const unsigned char *) addr;
@@ -28,7 +25,7 @@ void SP_IOUtils :: inetNtoa( in_addr * addr, char * ip, int size )
 #endif
 }
 
-int SP_IOUtils :: setNonblock( int fd )
+int IOUtils :: setNonblock( int fd )
 {
 	int flags;
 
@@ -41,7 +38,7 @@ int SP_IOUtils :: setNonblock( int fd )
 	return 0;
 }
 
-int SP_IOUtils :: setBlock( int fd )
+int IOUtils :: setBlock( int fd )
 {
 	int flags;
 
@@ -54,7 +51,7 @@ int SP_IOUtils :: setBlock( int fd )
 	return 0;
 }
 
-int SP_IOUtils :: tcpConnect(const char *destip, int destport, int * fd, int tcpdelay)
+int IOUtils :: tcpConnect(const char *destip, int destport, int * fd, int tcpdelay)
 {
 	int ret = 0;
     	int sockid = socket(AF_INET, SOCK_STREAM, 0);
@@ -89,7 +86,7 @@ int SP_IOUtils :: tcpConnect(const char *destip, int destport, int * fd, int tcp
 	return ret;
 }
 
-int SP_IOUtils :: tcpSendData(int fd, char*data, int len){
+int IOUtils :: tcpSendData(int fd, char*data, int len){
 	int sendLen = len, iRet = 0;
 	if(len<= MAX_MTU)
 		iRet += send(fd, data, len,0);
@@ -105,7 +102,7 @@ int SP_IOUtils :: tcpSendData(int fd, char*data, int len){
 	return iRet;
 }
 
-int SP_IOUtils :: tcpListen( const char * ip, int port, int * fd, int blocking )
+int IOUtils :: tcpListen( const char * ip, int port, int * fd, int blocking )
 {
 	int ret = 0;
 

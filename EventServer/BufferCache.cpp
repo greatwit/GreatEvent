@@ -1,7 +1,4 @@
-/*
- * Copyright 2007 Stephen Liu
- * For license terms, see the file COPYING along with this library.
- */
+
 
 #include <string.h>
 #include <unistd.h>
@@ -10,30 +7,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "spbuffer.hpp"
+#include "BufferCache.hpp"
 
 #include "config.h"
 #include "event.h"
 
-SP_Buffer :: SP_Buffer()
+BufferCache :: BufferCache()
 {
 	mBuffer = evbuffer_new();
 }
 
-SP_Buffer :: ~SP_Buffer()
+BufferCache :: ~BufferCache()
 {
 	evbuffer_free( mBuffer );
 	mBuffer = NULL;
 }
 
-int SP_Buffer :: append( const void * buffer, int len )
+int BufferCache :: append( const void * buffer, int len )
 {
 	len = len <= 0 ? strlen( (char*)buffer ) : len;
 
 	return evbuffer_add( mBuffer, (void*)buffer, len );
 }
 
-int SP_Buffer :: append( const SP_Buffer * buffer )
+int BufferCache :: append( const BufferCache * buffer )
 {
 	if( buffer->getSize() > 0 ) {
 		return append( buffer->getBuffer(), buffer->getSize() );
@@ -42,17 +39,17 @@ int SP_Buffer :: append( const SP_Buffer * buffer )
 	}
 }
 
-void SP_Buffer :: erase( int len )
+void BufferCache :: erase( int len )
 {
 	evbuffer_drain( mBuffer, len );
 }
 
-void SP_Buffer :: reset()
+void BufferCache :: reset()
 {
 	erase( getSize() );
 }
 
-const void * SP_Buffer :: getBuffer() const
+const void * BufferCache :: getBuffer() const
 {
 	if( NULL != EVBUFFER_DATA( mBuffer ) ) {
 		((char*)(EVBUFFER_DATA( mBuffer )))[ getSize() ] = '\0';
@@ -62,17 +59,17 @@ const void * SP_Buffer :: getBuffer() const
 	}
 }
 
-size_t SP_Buffer :: getSize() const
+size_t BufferCache :: getSize() const
 {
 	return EVBUFFER_LENGTH( mBuffer );
 }
 
-char * SP_Buffer :: getLine()
+char * BufferCache :: getLine()
 {
 	return evbuffer_readline( mBuffer );
 }
 
-int SP_Buffer :: take( char * buffer, int len )
+int BufferCache :: take( char * buffer, int len )
 {
 	len = evbuffer_remove( mBuffer, buffer, len - 1);
 	buffer[ len ] = '\0';
@@ -80,9 +77,9 @@ int SP_Buffer :: take( char * buffer, int len )
 	return len;
 }
 
-SP_Buffer * SP_Buffer :: take()
+BufferCache * BufferCache :: take()
 {
-	SP_Buffer * ret = new SP_Buffer();
+	BufferCache * ret = new BufferCache();
 
 	struct evbuffer * tmp = ret->mBuffer;
 	ret->mBuffer = mBuffer;
@@ -91,7 +88,7 @@ SP_Buffer * SP_Buffer :: take()
 	return ret;
 }
 
-const void * SP_Buffer :: find( const void * key, size_t len )
+const void * BufferCache :: find( const void * key, size_t len )
 {
 	//return (void*)evbuffer_find( mBuffer, (u_char*)key, len );
 
