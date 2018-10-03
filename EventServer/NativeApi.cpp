@@ -1,6 +1,7 @@
 
-
-#include "spserver.hpp"
+#include "ActorStation.hpp"
+#include "TcpClient.hpp"
+#include "TcpServer.hpp"
 
 #include <jni.h>
 #include "common.h"
@@ -8,7 +9,9 @@
 #define REG_PATH "com/great/happyness/mediacodecmy/NativeCodec"
 
 JavaVM*		g_javaVM		= NULL;
-SP_Server	*mpServer		= NULL;
+ActorStation mStatiion;
+TcpClient	 *mpClient		= NULL;
+TcpServer	 *mpServer		= NULL;
 
 
 /////////////////////////////////////////////////////Server////////////////////////////////////////////////////////
@@ -16,10 +19,9 @@ SP_Server	*mpServer		= NULL;
 static jboolean StartServer(JNIEnv *env, jobject, jstring destip, jint destport)
 {
 	if(mpServer==NULL){
-		mpServer = new SP_Server("", destport);
-		mpServer->setTimeout( 60 );
+		mpServer = new TcpServer("", destport);
 		mpServer->setMaxThreads( 10 );
-		mpServer->runForever();
+		mpServer->registerEvent(mStatiion.getEventArg());
 	}
 	return true;
 }
@@ -27,7 +29,6 @@ static jboolean StartServer(JNIEnv *env, jobject, jstring destip, jint destport)
 static jboolean StopServer(JNIEnv *env, jobject)
 {
 	if(mpServer!=NULL){
-		mpServer->shutdown();
 		delete mpServer;
 		mpServer = NULL;
 	}

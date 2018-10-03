@@ -1,6 +1,5 @@
 
 
-
 #ifndef __tcpserver_hpp__
 #define __tcpserver_hpp__
 
@@ -8,8 +7,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#include "EventCall.hpp"
+#include "TaskBase.hpp"
 
-struct event;
+#include "event.h"
 
 // half-sync/half-async thread pool server
 class TcpServer {
@@ -17,15 +18,19 @@ public:
 	TcpServer( const char * bindIP, int port );
 	~TcpServer();
 
-	void setTimeout( int timeout );
+	int registerEvent(const EventArg& evarg);
+
+
 	void setMaxConnections( int maxConnections );
 	void setMaxThreads( int maxThreads );
 	void setReqQueueSize( int reqQueueSize, const char * refusedMsg );
 
+/*	const EventArg& getEventArg();
+
 	void shutdown();
 	int isRunning();
 	int run();
-	void runForever();
+	void runForever();*/
 
 private:
 
@@ -33,20 +38,21 @@ private:
 	int mPort;
 	int mIsShutdown;
 	int mIsRunning;
+	int mListenFD;
 
-	int mTimeout;
+
 	int mMaxThreads;
 	int mMaxConnections;
 	int mReqQueueSize;
 	char * mRefusedMsg;
 
-	static void * eventLoop( void * arg );
+	AcceptArg_t mAcceptArg;
+	struct event mEvAccept;
 
-	int start();
-
-	static void sigHandler( int, short, void * arg );
-
-	static void outputCompleted( void * arg );
+//	static void * eventLoop( void * arg );
+//	int start();
+//	static void sigHandler( int, short, void * arg );
+//	static void outputCompleted( void * arg );
 };
 
 #endif

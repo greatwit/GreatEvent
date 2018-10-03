@@ -11,17 +11,21 @@
 #include <sys/socket.h>
 
 #include "EventCall.hpp"
-//#include "spexecutor.hpp"
 #include "Session.hpp"
 #include "BufferCache.hpp"
-//#include "spmsgdecoder.hpp"
-#include "sputils.hpp"
-#include "Ioutils.hpp"
+
+#include "IOUtils.hpp"
 
 #include "config.h"   // from libevent, for event.h
 //#include "event_msgqueue.h"
 #include "event.h"
 
+EventArg :: EventArg()
+		:mTimeout(0)
+{
+	mEventBase = (struct event_base*)event_init();
+	mSessionManager = new SessionManager();
+}
 
 EventArg :: EventArg( int timeout )
 {
@@ -72,6 +76,7 @@ SP_BlockingQueue * SP_EventArg :: getOutputResultQueue() const
 	return mOutputResultQueue;
 }
 */
+
 SessionManager * EventArg :: getSessionManager() const
 {
 	return mSessionManager;
@@ -94,7 +99,7 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 	int clientFD;
 	struct sockaddr_in clientAddr;
 	socklen_t clientLen = sizeof( clientAddr );
-	printf( "id:%d\n",fd);
+	printf( "accept id:%d\n",fd);
 	AcceptArg_t * acceptArg = (AcceptArg_t*)arg;
 	EventArg * eventArg = acceptArg->mEventArg;
 
@@ -116,7 +121,7 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 
 	char clientIP[ 32 ] = { 0 };
 	IOUtils::inetNtoa( &( clientAddr.sin_addr ), clientIP, sizeof( clientIP ) );
-	printf( "clientIP: %s\n",clientIP);
+	printf( "clientIP: %s clientFD:%d\n",clientIP, clientFD);
 	//session->getRequest()->setClientIP( clientIP );
 
 	Session * session = new Session( sid );
@@ -127,7 +132,7 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 		event_set( session->getReadEvent(), clientFD, EV_READ, onRead, session );
 		event_set( session->getWriteEvent(), clientFD, EV_WRITE, onWrite, session );
 		addEvent( session, EV_READ, clientFD );
-		addEvent( session, EV_WRITE, clientFD );
+		//addEvent( session, EV_WRITE, clientFD );
 
 		if( eventArg->getSessionManager()->getCount() > acceptArg->mMaxConnections
 				/*|| eventArg->getInputResultQueue()->getLength() >= acceptArg->mReqQueueSize*/ ) {
@@ -183,6 +188,7 @@ void EventCall :: onRead( int fd, short events, void * arg )
 
 void EventCall :: onWrite( int fd, short events, void * arg )
 {
+	int ret = 0;
 	Session * session = (Session*)arg;
 
 	EventArg * eventArg = (EventArg*)session->getArg();
@@ -190,9 +196,14 @@ void EventCall :: onWrite( int fd, short events, void * arg )
 	session->setWriting( 0 );
 
 	Sid_t sid = session->getSid();
-	printf("onWrite fd:%d\n",fd);
+	printf("onWrite fd:%d sid:%d\n",fd,session->getSid().mKey);
 
-	//addEvent( session, EV_WRITE, -1 );
+	if( EV_WRITE & events ) {
+		ret = session->writeBuffer();
+	}
+
+	if(ret>0)
+		addEvent( session, EV_WRITE, -1 );
 
 /*
 	if( EV_WRITE & events ) {
@@ -312,7 +323,7 @@ void EventCall :: addEvent( Session * session, short events, int fd )
 
 
 
-//-------------------------------------------------------------------
+//----------------------------------EventHelper---------------------------------
 
 int EventHelper :: isSystemSid( Sid_t * sid )
 {

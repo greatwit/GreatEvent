@@ -6,8 +6,7 @@
 
 
 
-#include <stdint.h>
-
+#include <unistd.h>
 #include "TaskBase.hpp"
 
 //class SP_Handler;
@@ -41,6 +40,7 @@ public:
 
 	int readBuffer();
 	int recvEx(char*pData, int len);
+	int writeBuffer();
 
 	int getRunning();
 	void setRunning( int running );

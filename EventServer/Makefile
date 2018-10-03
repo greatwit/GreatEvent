@@ -23,7 +23,7 @@ LDFLAGS += $(LIBEVENT_LIB)
 
 LIBOBJS = 
 
-TARGET = EventServer
+TARGET = EventServer EventClient
 
 #--------------------------------------------------------------------
 
@@ -31,8 +31,13 @@ all: $(TARGET)
 
 
 EventServer: net/buffer.o net/epoll.o net/epoll_sub.o net/event.o net/evbuffer.o net/signal.o net/log.o \
-			TaskBase.o TaskVideoRecv.o TaskFileRecv.o BufferCache.o sputils.o Ioutils.o Session.o \
-			EventCall.o TcpClient.o TcpServer.o EventServer.o
+			TaskBase.o TaskVideoRecv.o TaskVideoSend.o TaskFileRecv.o BufferCache.o DataUtils.o IOUtils.o \
+			Session.o EventCall.o NALDecoder.o ActorStation.o TcpClient.o TcpServer.o EventServer.o
+	$(LINKER) $(LDFLAGS) $^ -L. -lpthread -o $@
+
+EventClient: net/buffer.o net/epoll.o net/epoll_sub.o net/event.o net/evbuffer.o net/signal.o net/log.o \
+			TaskBase.o TaskVideoRecv.o TaskVideoSend.o TaskFileRecv.o BufferCache.o DataUtils.o IOUtils.o \
+			Session.o EventCall.o NALDecoder.o ActorStation.o TcpClient.o TcpServer.o EventClient.o
 	$(LINKER) $(LDFLAGS) $^ -L. -lpthread -o $@
 
 clean:

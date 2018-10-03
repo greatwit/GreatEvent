@@ -12,8 +12,9 @@
 #include <netinet/in.h>
 
 #include "TaskVideoRecv.hpp"
+#include "TaskVideoSend.hpp"
 #include "Session.hpp"
-#include "sputils.hpp"
+
 
 #include "config.h"
 #include "event.h"
@@ -153,7 +154,7 @@ Session :: Session( Sid_t sid, short type)
 	mReading 	= 0;
 	switch(type) {
 		case VIDEO_SEND_MSG:
-			mTaskBase = new TaskVideoRecv( mSid );
+			mTaskBase = new TaskVideoSend( mSid );
 			break;
 		case FILE_SEND_MSG:
 			break;
@@ -214,6 +215,14 @@ int Session :: readBuffer() {
 		}
 	}
 
+	return ret;
+}
+
+int Session :: writeBuffer() {
+	int ret = 0;
+	if(mTaskBase!=NULL) {
+		ret = mTaskBase->writeBuffer();
+	}
 	return ret;
 }
 

@@ -14,7 +14,7 @@ TcpSender::TcpSender()
 		,mFile(NULL)
 		,mRunning(false)
 		,mSockId(-1)
-		,mSid(0)
+		,mSeqid(0)
 		,mPackHeadLen(sizeof(PACK_HEAD))
 {
 	GLOGD("TcpSender::TcpSender construct.");
@@ -67,14 +67,6 @@ bool TcpSender::stopFileSend(){
 	return true;
 }
 
-void TcpSender::packetHead(int fid, short pid, int len, unsigned char type, LPPACK_HEAD lpPack) {
-	memset(lpPack, 0, sizeof(PACK_HEAD));
-	lpPack->type 		= type;
-	lpPack->fid 		= htonl(fid);
-	lpPack->pid			= htons(pid);
-	lpPack->len 		= htonl(len);
-}
-
 int TcpSender::sendEx(char*data,int len) {
 	int leftLen = len, iRet = 0;
 	fd_set fdSend;
@@ -100,6 +92,14 @@ int TcpSender::sendEx(char*data,int len) {
 	return len - leftLen;
 }
 
+void TcpSender::packetHead(int fid, short pid, int len, unsigned char type, LPPACK_HEAD lpPack) {
+	memset(lpPack, 0, sizeof(PACK_HEAD));
+	lpPack->type 		= type;
+	lpPack->fid 		= htonl(fid);
+	lpPack->pid			= htons(pid);
+	lpPack->len 		= htonl(len);
+}
+
 int TcpSender::tpcSendMsg(unsigned char msg) {
 	int iRet = 0;
 	char sendData[1500] = {0};
@@ -111,8 +111,8 @@ int TcpSender::tpcSendMsg(unsigned char msg) {
 int TcpSender::tcpSendData(char*data, int len) {
 	int leftLen = len,  iRet = 0;
 	char sendData[1500] = {0};
-	mSid++;
-	packetHead(mSid, 0, len, VIDEO_RECV_STREAM, (LPPACK_HEAD)sendData);
+	mSeqid++;
+	packetHead(mSeqid, 0, len, VIDEO_RECV_STREAM, (LPPACK_HEAD)sendData);
 	iRet = sendEx(sendData, mPackHeadLen);
 	iRet = sendEx(data, len);
 	return iRet;
@@ -143,7 +143,7 @@ void *TcpSender::Thread(){
 			continue;
 		}
 		tcpSendData((char*)n->buf, n->len);
-		usleep(1*1000);
+		//usleep(1*1000);
 	}
 	return 0;
 }

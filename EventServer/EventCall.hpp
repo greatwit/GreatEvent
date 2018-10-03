@@ -7,6 +7,9 @@ class SP_HandlerFactory;
 class SP_BlockingQueue;
 class SP_Message;
 */
+
+#include "TaskBase.hpp"
+
 class SP_IOChannelFactory;
 
 
@@ -14,10 +17,10 @@ class SessionManager;
 class Session;
 
 struct event_base;
-typedef struct tagSid Sid_t;
 
 class EventArg {
 public:
+	EventArg();
 	EventArg( int timeout );
 	~EventArg();
 

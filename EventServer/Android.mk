@@ -23,12 +23,18 @@ LOCAL_SRC_FILES := net/buffer.c \
 				net/evbuffer.c \
 				net/signal.c \
 				net/log.c \
-				spbuffer.cpp \
-				sputils.cpp \
-				spioutils.cpp \
-				spsession.cpp \
-				speventcb.cpp \
-				spserver.cpp \
+				ActorStation.cpp \
+				BufferCache.cpp \
+				DataUtils.cpp \
+				EventCall.cpp \
+				IOUtils.cpp \
+				Session.cpp \
+				TaskBase.cpp \
+				TaskVideoRecv.cpp \
+				TaskVideoSend.cpp \
+				TcpClient.cpp \
+				TcpServer.cpp \
+				NALDecoder.cpp \
 				NativeApi.cpp
 
 #LOCAL_STATIC_LIBRARIES := libMediaStream

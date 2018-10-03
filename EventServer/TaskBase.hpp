@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 typedef struct tagSid {
-	uint16_t mKey;
+	uint16_t mKey;//sockid
 	uint16_t mSeq;
 
 	enum {

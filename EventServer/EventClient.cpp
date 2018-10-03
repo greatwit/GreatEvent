@@ -41,13 +41,13 @@ int main( int argc, char * argv[] )
 		}
 	}
 
+
 	ActorStation statiion;
 	statiion.runForever();
 
-	TcpServer server( "", port );
-	server.setMaxThreads( maxThreads );
-	server.setReqQueueSize( 100, "HTTP/1.1 500 Sorry, server is busy now!\r\n" );
-	server.registerEvent(statiion.getEventArg());
+	TcpClient client;
+	client.connect("127.0.0.1", 8080);
+	client.registerEvent(statiion.getEventArg());
 
 	getchar();
 

@@ -34,7 +34,7 @@ class TcpSender : private GThread
 
 	private:
 		int 			mSockId;
-		int				mSid;
+		int				mSeqid;
 		int 			mPackHeadLen;
 		FILE			*mFile;
 		bool 			mRunning;

@@ -5,7 +5,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#include "EventCall.hpp"
 
+class Session;
 
 // half-sync/half-async thread pool server
 class TcpClient {
@@ -15,9 +17,12 @@ public:
 
 	int connect(const char* destIp, unsigned short destPort);
 	int disConnect();
+	int registerEvent(const EventArg& evarg);
 
 private:
 	int 			mSockId;
+	Sid_t 			mSid;
+	Session			*mSession;
 };
 
 
