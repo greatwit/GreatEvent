@@ -67,13 +67,13 @@
 	}
 
 	void * ActorStation :: eventLoop( void * arg ) {
-		ActorStation * server = (ActorStation*)arg;
+		ActorStation * station = (ActorStation*)arg;
 
-		server->mIsRunning = 1;
+		station->mIsRunning = 1;
 
-		server->start();
+		station->start();
 
-		server->mIsRunning = 0;
+		station->mIsRunning = 0;
 
 		return NULL;
 	}
@@ -111,7 +111,7 @@
 	}
 
 	void ActorStation :: sigHandler( int, short, void * arg ) {
-		ActorStation * server = (ActorStation*)arg;
-		server->shutdown();
+		ActorStation * station = (ActorStation*)arg;
+		station->shutdown();
 	}
 

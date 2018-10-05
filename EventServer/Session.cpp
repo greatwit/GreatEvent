@@ -194,7 +194,7 @@ int Session :: readBuffer() {
 	}
 	else
 	{
-		int leftLent = mTotalLen - mRecvDataLen;
+		//int leftLent = mTotalLen - mRecvDataLen;
 		ret = recv(mSid.mKey, mReadBuff+mRecvHeadLen, mPackHeadLen-mRecvHeadLen, 0);
 		if(ret>0) {
 			mRecvHeadLen+=ret;

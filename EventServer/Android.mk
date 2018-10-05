@@ -9,7 +9,7 @@ include $(CLEAR_VARS)
 
 LOCAL_CFLAGS := -D__ANDROID__ -DHAVE_CONFIG_H
 
-LOCAL_MODULE    := netserver
+LOCAL_MODULE    := netcodec
 
 LOCAL_C_INCLUDES += \
 				   $(LOCAL_PROJECT_ROOT)/net \

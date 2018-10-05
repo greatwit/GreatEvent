@@ -13,9 +13,9 @@
 
 
 #ifdef 	__ANDROID__
-#define	FILE_PATH	"/sdcard/w.h264"
+#define	FILE_PATH	"/sdcard/camera_640x480.h264"
 #else
-#define	FILE_PATH	"w.h264"
+#define	FILE_PATH	"h264/camera_640x480.h264"
 #endif
 
 	TaskVideoSend::TaskVideoSend( Sid_t sid )
@@ -26,9 +26,13 @@
 				,mTotalLen(0)
 				,mSeqid(0)
 	{
+		GLOGD("TaskVideoSend filename:%s.", FILE_PATH);
 		memset(mReadBuff, 1500, 0);
 		mInBuffer = new BufferCache();
-		mwFile = OpenBitstreamFile("h264/camera_1280x720.h264"); //camera_640x480.h264 //camera_1280x720.h264
+		mwFile = OpenBitstreamFile( FILE_PATH ); //camera_640x480.h264 //camera_1280x720.h264
+		if(mwFile==NULL) {
+			GLOGE("open file:%s failed.", FILE_PATH);
+		}
 		mNALU  = AllocNALU(8000000);
 
 		tpcSendMsg(VIDEO_RECV_MSG);
@@ -87,7 +91,7 @@
 	}
 
 	int TaskVideoSend::tcpSendData(char*data, int len) {
-		int leftLen = len,  iRet = 0;
+		int iRet = 0;
 		char sendData[1500] = {0};
 		mSeqid++;
 		packetHead(mSeqid, 0, len, VIDEO_RECV_STREAM, (LPPACK_HEAD)sendData);

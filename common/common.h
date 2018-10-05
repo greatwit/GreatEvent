@@ -26,6 +26,9 @@
                             printf("\n");
 #define GLOGE(...) printf(__VA_ARGS__); \
 							printf("\n");
+#define GLOGI GLOGE
+#define GLOGW GLOGE
+#define GLOGV GLOGE
 #endif
 
 #endif

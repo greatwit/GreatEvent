@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "IOUtils.hpp"
+#include "common.h"
 
 #define  MAX_MTU 1400
 
@@ -56,15 +57,15 @@ int IOUtils :: tcpConnect(const char *destip, int destport, int * fd, int tcpdel
 	int ret = 0;
     	int sockid = socket(AF_INET, SOCK_STREAM, 0);
     	if(sockid < 0) {
-		printf("socket() failure!\n");
-		return -1; 
+    		GLOGE("socket() failure val:%d", sockid);
+    		return -1;
     	}
 
 
 	if( 0 == tcpdelay ) {
 		int flags = 1;
 		if( setsockopt( sockid, IPPROTO_TCP, TCP_NODELAY, (char*)&flags, sizeof(flags) ) < 0 ) {
-			syslog( LOG_WARNING, "failed to set socket to nodelay" );
+			GLOGE("failed to set socket to nodelay" );
 			ret = -1;
 		}
 	}
@@ -76,7 +77,7 @@ int IOUtils :: tcpConnect(const char *destip, int destport, int * fd, int tcpdel
     	addr.sin_addr.s_addr = inet_addr(destip);
 
     	if((ret = connect(sockid, (struct sockaddr*)&addr, sizeof(addr)) ) < 0) {
-		printf("connect() failure ret:%d\n", ret);
+    		GLOGE("connect() failure ret:%d\n", ret);
     	}
 	if( 0 != ret && sockid >= 0 ) close( sockid );
 

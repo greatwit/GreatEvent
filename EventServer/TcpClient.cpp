@@ -18,7 +18,15 @@ TcpClient :: TcpClient( )
 
 TcpClient :: ~TcpClient()
 {
+	if(mSockId > 0) {
+		close(mSockId);
+		mSockId = 0;
+	}
 
+	if(mSession != NULL) {
+		//delete mSession;
+		//mSession = NULL;
+	}
 }
 
 int TcpClient :: connect(const char* destIp, unsigned short destPort) {
@@ -32,11 +40,17 @@ int TcpClient :: connect(const char* destIp, unsigned short destPort) {
 }
 
 int TcpClient :: disConnect() {
+	if(mSockId > 0) {
+		close(mSockId);
+		mSockId = 0;
+	}
 	return 0;
 }
 
 int TcpClient :: registerEvent(const EventArg& evarg) {
+
 	if(mSession!=NULL) {
+
 		evarg.getSessionManager()->get( mSid.mKey, &mSid.mSeq );
 		evarg.getSessionManager()->put( mSid.mKey, mSession, &mSid.mSeq );
 		mSession->setArg( (void*)&evarg );
@@ -45,6 +59,7 @@ int TcpClient :: registerEvent(const EventArg& evarg) {
 		event_set( mSession->getWriteEvent(), mSockId, EV_WRITE, EventCall::onWrite, mSession );
 		EventCall::addEvent( mSession, EV_READ, mSockId );
 		EventCall::addEvent( mSession, EV_WRITE, mSockId );
+
 	}
 	return 0;
 }

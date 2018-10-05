@@ -119,6 +119,6 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* reserved)
 			REG_PATH, video_method_table,
 			NELEM(video_method_table));
 
-	return JNI_VERSION_1_6;
+	return JNI_VERSION_1_4;
 }
 

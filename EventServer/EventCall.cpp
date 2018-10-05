@@ -19,6 +19,7 @@
 #include "config.h"   // from libevent, for event.h
 //#include "event_msgqueue.h"
 #include "event.h"
+#include "common.h"
 
 EventArg :: EventArg()
 		:mTimeout(0)
@@ -99,7 +100,7 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 	int clientFD;
 	struct sockaddr_in clientAddr;
 	socklen_t clientLen = sizeof( clientAddr );
-	printf( "accept id:%d\n",fd);
+	GLOGW( "accept id:%d\n",fd);
 	AcceptArg_t * acceptArg = (AcceptArg_t*)arg;
 	EventArg * eventArg = acceptArg->mEventArg;
 
@@ -110,7 +111,7 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 	}
 
 	if( IOUtils::setNonblock( clientFD ) < 0 ) {
-		syslog( LOG_WARNING, "failed to set client socket non-blocking" );
+		GLOGE("failed to set client socket non-blocking" );
 	}
 
 	Sid_t sid;
@@ -121,7 +122,7 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 
 	char clientIP[ 32 ] = { 0 };
 	IOUtils::inetNtoa( &( clientAddr.sin_addr ), clientIP, sizeof( clientIP ) );
-	printf( "clientIP: %s clientFD:%d\n",clientIP, clientFD);
+	GLOGW( "clientIP: %s clientFD:%d\n",clientIP, clientFD);
 	//session->getRequest()->setClientIP( clientIP );
 
 	Session * session = new Session( sid );
@@ -154,7 +155,7 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 		}
 	} else {
 		close( clientFD );
-		syslog( LOG_WARNING, "Out of memory, cannot allocate session object!" );
+		GLOGE("Out of memory, cannot allocate session object!" );
 	}
 
 }
@@ -177,7 +178,7 @@ void EventCall :: onRead( int fd, short events, void * arg )
 					session = NULL;
 					close( fd );
 
-					printf("read zero:%d\n",ret);
+					GLOGD("read zero:%d\n",ret);
 
 					return;
 		}
@@ -196,7 +197,7 @@ void EventCall :: onWrite( int fd, short events, void * arg )
 	session->setWriting( 0 );
 
 	Sid_t sid = session->getSid();
-	printf("onWrite fd:%d sid:%d\n",fd,session->getSid().mKey);
+	GLOGW("onWrite fd:%d sid:%d\n",fd,session->getSid().mKey);
 
 	if( EV_WRITE & events ) {
 		ret = session->writeBuffer();
@@ -277,12 +278,11 @@ void EventCall :: onWrite( int fd, short events, void * arg )
 void EventCall :: onResponse( void * queueData, void * arg )
 {
 	//SP_Response * response = (SP_Response*)queueData;
-	EventArg * eventArg = (EventArg*)arg;
-	SessionManager * manager = eventArg->getSessionManager();
+	//EventArg * eventArg = (EventArg*)arg;
+	//SessionManager * manager = eventArg->getSessionManager();
 
 	//Sid_t fromSid = response->getFromSid();
-	u_int16_t seq = 0;
-
+	//u_int16_t seq = 0;
 }
 
 void EventCall :: addEvent( Session * session, short events, int fd )
@@ -399,7 +399,7 @@ void EventHelper :: doError( Session * session )
 void EventHelper :: error( void * arg )
 {
 	Session * session = ( Session * )arg;
-	EventArg * eventArg = (EventArg*)session->getArg();
+	//EventArg * eventArg = (EventArg*)session->getArg();
 
 	Sid_t sid = session->getSid();
 
@@ -469,8 +469,8 @@ void EventHelper :: timeout( void * arg )
 
 void EventHelper :: doStart( Session * session )
 {
-	session->setRunning( 1 );
-	EventArg * eventArg = (EventArg*)session->getArg();
+	//session->setRunning( 1 );
+	//EventArg * eventArg = (EventArg*)session->getArg();
 	printf("doStart.\n");
 	//eventArg->getInputResultQueue()->push( new SP_SimpleTask( start, session, 1 ) );
 }
