@@ -18,7 +18,7 @@ TcpServer	 *mpServer		= NULL;
 
 static jboolean StartNetWork(JNIEnv *env, jobject) {
 	if(mStatiion.isRunning() == 0) {
-		mStatiion.runForever();
+		mStatiion.startup();
 		return true;
 	}
 	return false;
@@ -45,6 +45,7 @@ static jboolean StartServer(JNIEnv *env, jobject, jstring localip, jint destport
 static jboolean StopServer(JNIEnv *env, jobject)
 {
 	if(mpServer!=NULL){
+		mpServer->shutdown();
 		delete mpServer;
 		mpServer = NULL;
 	}
@@ -53,12 +54,20 @@ static jboolean StopServer(JNIEnv *env, jobject)
 
 static jboolean StartSend(JNIEnv *env, jobject, jstring destip, jint destport)
 {
+	int ret = 0;
 	if(mpClient==NULL) {
 
 		jboolean isOk = JNI_FALSE;
 		const char *ip = env->GetStringUTFChars(destip, &isOk);
 		mpClient = new TcpClient();
-		mpClient->connect( ip, destport );
+		ret = mpClient->connect( ip, destport );
+
+		if(ret < 0) {
+			delete mpClient;
+			mpClient = NULL;
+			return false;
+		}
+
 		mpClient->registerEvent(mStatiion.getEventArg());
 		env->ReleaseStringUTFChars(destip, ip);
 
@@ -70,6 +79,7 @@ static jboolean StartSend(JNIEnv *env, jobject, jstring destip, jint destport)
 static jboolean StopSend(JNIEnv *env, jobject)
 {
 	if(mpClient!=NULL){
+		mpClient->disConnect();
 		delete mpClient;
 		mpClient = NULL;
 	}

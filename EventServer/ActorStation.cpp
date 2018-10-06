@@ -17,11 +17,11 @@
 		:mIsShutdown(0)
 		,mIsRunning(0)
 		,mTimeout(60) {
-		mEventArg.setTimeout(mTimeout);
 	}
 
 	ActorStation :: ~ActorStation() {
-
+		//mEventArg.Destroy();
+		GLOGV("ActorStation Destroy.");
 	}
 
 	void ActorStation :: setTimeout( int timeout )
@@ -33,8 +33,27 @@
 		return mEventArg;
 	}
 
+	int ActorStation :: startup() {
+		if(isRunning()==0) {
+			mIsShutdown = 0;
+			mEventArg.setTimeout(mTimeout);
+			mEventArg.Create();
+			run();
+			return 0;
+		}
+		return -1;
+	}
+
 	void ActorStation :: shutdown() {
-		mIsShutdown = 1;
+		if(isRunning()==1) {
+			mIsShutdown = 1;
+			struct timeval tv;
+			tv.tv_sec=0;
+			tv.tv_usec=10;
+			event_loopexit(&tv);
+
+			GLOGV("ActorStation shutdown function.");
+		}
 	}
 
 	int ActorStation :: isRunning() {
@@ -58,12 +77,8 @@
 			mIsRunning = 0;
 			GLOGE( "Unable to create a thread for TCP server, %s", strerror( errno ) ) ;
 		}
-
+		GLOGI("ActorStation run ret:%d", ret);
 		return ret;
-	}
-
-	void ActorStation :: runForever() {
-		run();
 	}
 
 	void * ActorStation :: eventLoop( void * arg ) {
@@ -101,8 +116,8 @@
 				event_base_loop( mEventArg.getEventBase(), EVLOOP_ONCE );
 			}
 
-
-			printf("Server is shutdown.\n");
+			mEventArg.Destroy();
+			GLOGV("ActorStation is shutdown.");
 
 			signal_del( &evSigTerm );
 			signal_del( &evSigInt );

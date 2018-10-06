@@ -17,9 +17,10 @@ class ActorStation {
 
 		const EventArg& getEventArg();
 
+		int startup();
 		int isRunning();
-		void runForever();
 		void shutdown();
+		void releaseSessions();
 
 		void setTimeout( int timeout );
 

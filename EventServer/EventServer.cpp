@@ -42,7 +42,7 @@ int main( int argc, char * argv[] )
 	}
 
 	ActorStation statiion;
-	statiion.runForever();
+	statiion.startup();
 
 	TcpServer server( "", port );
 	server.setMaxThreads( maxThreads );
@@ -51,8 +51,8 @@ int main( int argc, char * argv[] )
 
 	getchar();
 
+	server.shutdown();
 	statiion.shutdown();
-
 	return 0;
 }
 

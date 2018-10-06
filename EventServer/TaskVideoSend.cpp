@@ -68,6 +68,8 @@
 				iRet = send(sockId, data+len-leftLen, leftLen, 0);
 			else
 				iRet = send(sockId, data+len-leftLen, MAX_MTU, 0);
+			if(iRet<0)
+				GLOGE("send data error ret:%d.", iRet);
 			leftLen -= iRet;
 		}while(leftLen>0);
 
@@ -146,13 +148,14 @@
 		int ret = 0;
 		if(feof(mwFile)) {
 			//mRunning = false;
+			GLOGW("read file done.");
 			return 0;
 		}
 		int size=GetAnnexbNALU(mwFile, mNALU);//每执行一次，文件的指针指向本次找到的NALU的末尾，下一个位置即为下个NALU的起始码0x000001
 		//GLOGE("GetAnnexbNALU size:%d", n->len);
 		if(size<4)
 		{
-			printf("get nul error!\n");
+			GLOGE("get nul error!\n");
 			//continue;
 		}
 		ret = tcpSendData((char*)mNALU->buf, mNALU->len);

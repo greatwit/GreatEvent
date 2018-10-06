@@ -43,14 +43,15 @@ int main( int argc, char * argv[] )
 
 
 	ActorStation statiion;
-	statiion.runForever();
+	statiion.startup();
 
 	TcpClient client;
-	client.connect("127.0.0.1", 8080);
+	client.connect("127.0.0.1", 8080);//127.0.0.1 192.168.1.108
 	client.registerEvent(statiion.getEventArg());
 
 	getchar();
 
+	client.disConnect();
 	statiion.shutdown();
 
 	return 0;

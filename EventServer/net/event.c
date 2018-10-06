@@ -185,7 +185,10 @@ event_init(void)
 
 void
 event_destroy(){
-
+	if(current_base!=NULL) {
+		free(current_base);
+		current_base = NULL;
+	}
 }
 
 int
@@ -382,7 +385,8 @@ event_base_loop(struct event_base *base, int flags)
 			event_process_active(base);
 			if (!base->event_count_active && (flags & EVLOOP_ONCE))
 				done = 1;
-		} else if (flags & EVLOOP_NONBLOCK)
+		}
+		else if (flags & EVLOOP_NONBLOCK)
 			done = 1;
 	}
 

@@ -25,6 +25,8 @@
 		memset(mReadBuff, 1500, 0);
 		mInBuffer = new BufferCache();
 		mwFile = fopen(FILE_PATH, "w");
+		if(mwFile==NULL)
+			GLOGE("fopen filename:%s failed.", FILE_PATH);
 	}
 
 
@@ -60,7 +62,7 @@
 				mInBuffer->append(mReadBuff, ret);
 
 				if(mRecvDataLen == mTotalLen) {
-					//printf("frameLen:%d buffsize:%d\n", mTotalLen, mInBuffer->getSize());
+					//GLOGW("frameLen:%d buffsize:%d\n", mTotalLen, mInBuffer->getSize());
 					char tag[4] = {0x00, 0x00, 0x00, 0x01};
 					fwrite(tag, 1, 4, mwFile);
 					fwrite(mInBuffer->getBuffer(), 1, mInBuffer->getSize(), mwFile);

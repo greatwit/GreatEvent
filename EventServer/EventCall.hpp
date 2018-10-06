@@ -23,6 +23,8 @@ public:
 	EventArg();
 	EventArg( int timeout );
 	~EventArg();
+	int Create();
+	int Destroy();
 
 	struct event_base * getEventBase() const;
 /*

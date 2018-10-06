@@ -19,7 +19,7 @@ public:
 	~TcpServer();
 
 	int registerEvent(const EventArg& evarg);
-
+	void shutdown();
 
 	void setMaxConnections( int maxConnections );
 	void setMaxThreads( int maxThreads );

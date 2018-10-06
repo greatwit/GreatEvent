@@ -23,25 +23,16 @@
 
 EventArg :: EventArg()
 		:mTimeout(0)
+		,mEventBase(NULL)
+		,mSessionManager(NULL)
 {
-	mEventBase = (struct event_base*)event_init();
-	mSessionManager = new SessionManager();
 }
 
 EventArg :: EventArg( int timeout )
+			:mTimeout(timeout)
+			,mEventBase(NULL)
+			,mSessionManager(NULL)
 {
-	mEventBase = (struct event_base*)event_init();
-/*
-	mResponseQueue = msgqueue_new( mEventBase, 0,
-			EventCall::onResponse, this );
-
-	mInputResultQueue = new SP_BlockingQueue();
-
-	mOutputResultQueue = new SP_BlockingQueue();
-*/
-	mSessionManager = new SessionManager();
-
-	mTimeout = timeout;
 }
 
 EventArg :: ~EventArg()
@@ -54,6 +45,24 @@ EventArg :: ~EventArg()
 
 	//msgqueue_destroy( (struct event_msgqueue*)mResponseQueue );
 	//event_base_free( mEventBase );
+}
+
+int EventArg ::Create() {
+	if(mEventBase==NULL)
+		mEventBase = (struct event_base*)event_init();
+	if(mSessionManager==NULL)
+		mSessionManager = new SessionManager();
+
+	return 0;
+}
+
+int EventArg ::Destroy() {
+	event_destroy();
+	if(mSessionManager!=NULL) {
+		delete mSessionManager;
+		mSessionManager = NULL;
+	}
+	return 0;
 }
 
 struct event_base * EventArg :: getEventBase() const
@@ -178,7 +187,7 @@ void EventCall :: onRead( int fd, short events, void * arg )
 					session = NULL;
 					close( fd );
 
-					GLOGD("read zero:%d\n",ret);
+					GLOGE("read zero:%d\n",ret);
 
 					return;
 		}
@@ -197,7 +206,7 @@ void EventCall :: onWrite( int fd, short events, void * arg )
 	session->setWriting( 0 );
 
 	Sid_t sid = session->getSid();
-	GLOGW("onWrite fd:%d sid:%d\n",fd,session->getSid().mKey);
+	GLOGW("onWrite fd:%d sid:%d",fd,session->getSid().mKey);
 
 	if( EV_WRITE & events ) {
 		ret = session->writeBuffer();
