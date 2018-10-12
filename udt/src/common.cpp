@@ -105,7 +105,7 @@ void CTimer::rdtsc(uint64_t &x)
       uint32_t lval, hval;
       //asm volatile ("push %eax; push %ebx; push %ecx; push %edx");
       //asm volatile ("xor %eax, %eax; cpuid");
-      asm volatile ("rdtsc" : "=a" (lval), "=d" (hval));
+      //asm volatile ("rdtsc" : "=a" (lval), "=d" (hval));
       //asm volatile ("pop %edx; pop %ecx; pop %ebx; pop %eax");
       x = hval;
       x = (x << 32) | lval;

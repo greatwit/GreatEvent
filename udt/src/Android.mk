@@ -30,7 +30,10 @@ LOCAL_SRC_FILES := \
 		md5.cpp \
 		packet.cpp \
 		queue.cpp \
-		window.cpp
+		window.cpp \
+		recvfile.cpp \
+		sendfile.cpp \
+		NativeApi.cpp
 
 #LOCAL_STATIC_LIBRARIES := libMediaStream
 

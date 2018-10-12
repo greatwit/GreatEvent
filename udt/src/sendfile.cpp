@@ -21,7 +21,7 @@ DWORD WINAPI sendfile(LPVOID);
 
 UDTSOCKET mSendSock;
 
-int createServer(UDTSOCKET &serv, string port) {
+int createServer(UDTSOCKET &serv, char* port) {
 	   // use this function to initialize the UDT library
 	   UDT::startup();
 
@@ -33,7 +33,7 @@ int createServer(UDTSOCKET &serv, string port) {
 	   hints.ai_family 		= AF_INET;
 	   hints.ai_socktype 	= SOCK_STREAM;//SOCK_STREAM SOCK_DGRAM
 
-	   if (0 != getaddrinfo(NULL, port.c_str(), &hints, &res))
+	   if (0 != getaddrinfo(NULL, port, &hints, &res))
 	   {
 	      cout << "illegal port number or port is busy.\n" << endl;
 	      return 0;
@@ -103,22 +103,6 @@ void* acceptEvent(void* addr) {
 }
 
 
-int main(int argc, char* argv[])
-{
-
-
-	createServer(mSendSock, "9000");
-
-	start(acceptEvent);
-
-    getchar();
-
-    stop();
-    releaseServer();
-
-    return 0;
-}
-
 #ifndef WIN32
 void* sendfile(void* usocket)
 #else
@@ -183,3 +167,30 @@ DWORD WINAPI sendfile(LPVOID usocket)
       return 0;
    #endif
 }
+
+int startFileSend(char*port) {
+	createServer(mSendSock, port);
+	start(acceptEvent);
+	return 0;
+}
+
+int stopFileSend() {
+    stop();
+    releaseServer();
+	return 0;
+}
+
+
+#ifndef __ANDROID__
+int main(int argc, char* argv[])
+{
+	startFileSend("9000");
+
+    getchar();
+
+    stopFileSend();
+
+    return 0;
+}
+#endif
+

@@ -30,10 +30,15 @@ ifeq ($(arch), AMD64)
    CCFLAGS += -DAMD64
 endif
 
+D_OBJ = obj
 OBJS = api.o buffer.o cache.o ccc.o channel.o common.o core.o epoll.o list.o md5.o packet.o queue.o window.o
 DIR = $(shell pwd)
 
-all: libudt.so libudt.a udt
+APP = sendfile recvfile
+
+LDFLAGS = -L./ -ludt -lstdc++ -lpthread -lm
+
+all: libudt.so libudt.a udt $(APP) mvobj
 
 %.o: %.cpp %.h udt.h
 	$(C++) $(CCFLAGS) $< -c
@@ -51,8 +56,17 @@ libudt.a: $(OBJS)
 udt:
 	cp udt.h udt
 
+mvobj:
+	mv *.o obj
+
+sendfile: sendfile.o
+	$(C++) $^ -o $@ $(LDFLAGS)
+
+recvfile: recvfile.o
+	$(C++) $^ -o $@ $(LDFLAGS)
+
 clean:
-	rm -f *.o *.so *.dylib *.a udt
+	rm -f obj/*.o *.o *.so *.dylib *.a udt
 
 install:
 	export LD_LIBRARY_PATH=$(DIR):$$LD_LIBRARY_PATH

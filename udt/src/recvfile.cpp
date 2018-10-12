@@ -104,6 +104,20 @@ int stopRecv() {
 	return 0;
 }
 
+int startFileRecv(char*ipaddr, char*port, char*needFile, char*saveFile) {
+	createConnect(mRecvSock, ipaddr, port);
+	startRecv(mRecvSock, needFile, saveFile);
+
+	return 0;
+}
+
+int stopFileRecv() {
+	stopRecv();
+	releaseConnect(mRecvSock);
+	return 0;
+}
+
+#ifndef __ANDROID__
 int main(int argc, char* argv[])
 {
    if ((argc != 5) || (0 == atoi(argv[2])))
@@ -112,13 +126,13 @@ int main(int argc, char* argv[])
       return -1;
    }
 
-   createConnect(mRecvSock, argv[1], argv[2]);
-   startRecv(mRecvSock, argv[3], argv[4]);
+   startFileRecv(argv[1],argv[2],argv[3],argv[4]);
 
    getchar();
 
-   stopRecv();
-   releaseConnect(mRecvSock);
+   stopFileRecv();
 
    return 0;
 }
+#endif
+
