@@ -9,6 +9,7 @@
 
 
 #include "recvfile.h"
+#include "basedef.h"
 
 
 UDTSOCKET mRecvSock;
@@ -29,14 +30,14 @@ int createConnect(UDTSOCKET &sockHandle, char*ipaddr, char*port) {
 
 	   if (0 != getaddrinfo(ipaddr, port, &hints, &peer))
 	   {
-	      cout << "incorrect server/peer address. " << ipaddr << ":" << port << endl;
+		   GLOGE("incorrect server/peer address ip:%s port:%s. ", ipaddr, port);
 	      return -1;
 	   }
 
 	   // connect to the server, implict bind
 	   if (UDT::ERROR == UDT::connect(sockHandle, peer->ai_addr, peer->ai_addrlen))
 	   {
-	      cout << "connect: " << UDT::getlasterror().getErrorMessage() << endl;
+		   GLOGE("connect error:%s ", UDT::getlasterror().getErrorMessage());
 	      return -1;
 	   }
 
@@ -49,6 +50,7 @@ int releaseConnect(UDTSOCKET fhandle) {
 	UDT::close(fhandle);
     // use this function to release the UDT library
     UDT::cleanup();
+    GLOGW("releaseConnect.");
 	return 0;
 }
 
@@ -58,13 +60,13 @@ int startRecv(UDTSOCKET fhandle, char*needFile, char*saveFile) {
 
 	   if (UDT::ERROR == UDT::send(fhandle, (char*)&len, sizeof(int), 0))
 	   {
-	      cout << "send: " << UDT::getlasterror().getErrorMessage() << endl;
+		   GLOGE("send error:%s ", UDT::getlasterror().getErrorMessage());
 	      return -1;
 	   }
 
 	   if (UDT::ERROR == UDT::send(fhandle, needFile, len, 0))
 	   {
-	      cout << "send: " << UDT::getlasterror().getErrorMessage() << endl;
+		   GLOGE("send error:%s ", UDT::getlasterror().getErrorMessage());
 	      return -1;
 	   }
 
@@ -73,16 +75,16 @@ int startRecv(UDTSOCKET fhandle, char*needFile, char*saveFile) {
 
 	   if (UDT::ERROR == UDT::recv(fhandle, (char*)&size, sizeof(int64_t), 0))
 	   {
-	      cout << "send: " << UDT::getlasterror().getErrorMessage() << endl;
+		   GLOGE("send error:%s ", UDT::getlasterror().getErrorMessage());
 	      return -1;
 	   }
 
 	   if (size < 0)
 	   {
-	      cout << "no such file " << needFile << " on the server\n";
+		   GLOGE("no such file %s on the server\n", needFile);
 	      return -1;
 	   }
-	   cout << "size:" << size << endl;
+	   GLOGW("prepare recv total size:%d", size);
 
 
 	   // receive the file
@@ -92,7 +94,7 @@ int startRecv(UDTSOCKET fhandle, char*needFile, char*saveFile) {
 
 	   if (UDT::ERROR == (recvsize = UDT::recvfile(fhandle, mrecvStream, offset, size)))
 	   {
-	      cout << "recvfile: " << UDT::getlasterror().getErrorMessage() << endl;
+		   GLOGE("recvfile error:%s ", UDT::getlasterror().getErrorMessage());
 	      return -1;
 	   }
 	   //outFst = ofs;
@@ -101,19 +103,21 @@ int startRecv(UDTSOCKET fhandle, char*needFile, char*saveFile) {
 
 int stopRecv() {
 	mrecvStream.close();
+	GLOGW("stopRecv.");
 	return 0;
 }
 
 int startFileRecv(char*ipaddr, char*port, char*needFile, char*saveFile) {
 	createConnect(mRecvSock, ipaddr, port);
 	startRecv(mRecvSock, needFile, saveFile);
-
+	GLOGW("startFileRecv.");
 	return 0;
 }
 
 int stopFileRecv() {
 	stopRecv();
 	releaseConnect(mRecvSock);
+	GLOGW("stopFileRecv.");
 	return 0;
 }
 
@@ -122,7 +126,7 @@ int main(int argc, char* argv[])
 {
    if ((argc != 5) || (0 == atoi(argv[2])))
    {
-      cout << "usage: recvfile server_ip server_port remote_filename local_filename" << endl;
+	   GLOGE("usage: recvfile server_ip server_port remote_filename local_filename");
       return -1;
    }
 
