@@ -34,7 +34,7 @@ D_OBJ = obj
 OBJS = api.o buffer.o cache.o ccc.o channel.o common.o core.o epoll.o list.o md5.o packet.o queue.o window.o
 DIR = $(shell pwd)
 
-APP = sendfile recvfile
+APP = sendfile recvfile sendvideo recvvideo
 
 LDFLAGS = -L./ -ludt -lstdc++ -lpthread -lm
 
@@ -63,6 +63,12 @@ sendfile: sendfile.o
 	$(C++) $^ -o $@ $(LDFLAGS)
 
 recvfile: recvfile.o
+	$(C++) $^ -o $@ $(LDFLAGS)
+	
+sendvideo: sendvideo.o NALDecoder.o
+	$(C++) $^ -o $@ $(LDFLAGS)
+
+recvvideo: recvvideo.o
 	$(C++) $^ -o $@ $(LDFLAGS)
 
 clean:

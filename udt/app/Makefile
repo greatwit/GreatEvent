@@ -38,7 +38,7 @@ endif
 
 DIR = $(shell pwd)
 
-APP = appserver appclient sendfile recvfile test
+APP = appserver appclient sendfile recvfile udp_client udp_server test
 
 all: $(APP)
 
@@ -52,6 +52,10 @@ appclient: appclient.o
 sendfile: sendfile.o
 	$(C++) $^ -o $@ $(LDFLAGS)
 recvfile: recvfile.o
+	$(C++) $^ -o $@ $(LDFLAGS)
+udp_client: udp_client.o
+	$(C++) $^ -o $@ $(LDFLAGS)
+udp_server: udp_server.o
 	$(C++) $^ -o $@ $(LDFLAGS)
 test: test.o
 	$(C++) $^ -o $@ $(LDFLAGS)

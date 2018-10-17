@@ -105,8 +105,6 @@ void* acceptEvent(void* addr) {
 
 int main(int argc, char* argv[])
 {
-
-
 	createServer(mSendSock, "9000");
 
 	start(acceptEvent);
