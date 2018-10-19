@@ -6,10 +6,13 @@
 #include <cstring>
 #include "udt.h"
 
-using namespace std;
+#include "IReceiveCallback.h"
 
+
+using namespace std;
 
 int startViedoRecv(char*port);
 int stopViedoRecv();
+void registerCb(IReceiveCallback *base);
 
 #endif

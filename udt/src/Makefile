@@ -30,6 +30,10 @@ ifeq ($(arch), AMD64)
    CCFLAGS += -DAMD64
 endif
 
+INCL = -I./common
+CCFLAGS += $(INCL)
+
+
 D_OBJ = obj
 OBJS = api.o buffer.o cache.o ccc.o channel.o common.o core.o epoll.o list.o md5.o packet.o queue.o window.o
 DIR = $(shell pwd)
@@ -65,10 +69,10 @@ sendfile: sendfile.o
 recvfile: recvfile.o
 	$(C++) $^ -o $@ $(LDFLAGS)
 	
-sendvideo: sendvideo.o NALDecoder.o
+sendvideo: sendvideo.o NALDecoder.o UdtSender.o
 	$(C++) $^ -o $@ $(LDFLAGS)
 
-recvvideo: recvvideo.o
+recvvideo: recvvideo.o UdtReceive.o
 	$(C++) $^ -o $@ $(LDFLAGS)
 
 clean:

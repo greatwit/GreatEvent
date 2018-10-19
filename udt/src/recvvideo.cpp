@@ -20,6 +20,7 @@ DWORD WINAPI sendfile(LPVOID);
 
 
 UDTSOCKET mSendSock;
+IReceiveCallback	*mStreamBase = NULL;
 static bool mRunning = false;
 
 
@@ -54,6 +55,7 @@ int createServer(UDTSOCKET &serv, char* port) {
 	   GLOGW("server is ready at port: %s", port);
 
 	   UDT::listen(serv, 10);
+
 	return 0;
 }
 
@@ -111,10 +113,13 @@ void* recvvideo(void* usocket)
 		   if (UDT::ERROR == (ret = recvEx(fhandle, buffer, size))) {
 			   GLOGE("recv data len:%s", UDT::getlasterror().getErrorMessage());
 		   }
+		   if(mStreamBase)
+			   mStreamBase->ReceiveSource(0, "", (void *)buffer, size);
 
 		   GLOGW("recv data ret:%d rsize:%d", ret, size);
 	  }
-	return 0;
+
+	  return 0;
 }
 
 void* acceptEvent(void* addr) {
@@ -159,6 +164,9 @@ int stopViedoRecv() {
 	return 0;
 }
 
+void registerCb(IReceiveCallback *base) {
+	mStreamBase = base;
+}
 
 #ifndef __ANDROID__
 int main(int argc, char* argv[])

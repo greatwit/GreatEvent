@@ -9,7 +9,8 @@
 
 using namespace std;
 
-int startVideoSend(char*ipaddr, char*port, char*needFile, char*saveFile);
+int startVideoSend(char*ipaddr, char*port);
 int stopVideoSend();
+int sendData(char*data, int len);
 
 #endif
