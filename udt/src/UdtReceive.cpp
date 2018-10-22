@@ -2,6 +2,8 @@
 #include "UdtReceive.h"
 #include "recvvideo.h"
 
+#include "basedef.h"
+
 
 	UdtReceive::UdtReceive()
 		:mRunning(false)
@@ -39,6 +41,28 @@
 	int UdtReceive::stopThread() {
 		return 0;
 	}
+
+	class RecvCall:public IReceiveCallback {
+		public:
+			void ReceiveSource(int64_t timeStamp, char*mimeType, void* buffer, int dataLen) {
+				GLOGW("recv data rsize:%d", dataLen);
+			}
+	};
+
+#ifndef __ANDROID__
+int main(int argc, char* argv[])
+{
+	RecvCall *call = new RecvCall();
+	UdtReceive *recv = new UdtReceive();
+	recv->create(9000);
+	recv->registerCallback(call);
+    getchar();
+    recv->release();
+
+    return 0;
+}
+#endif
+
 
 //
 //	int UdtReceive::createServer(UDTSOCKET &serv, char* port) {

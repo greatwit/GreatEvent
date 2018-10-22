@@ -19,7 +19,7 @@ DWORD WINAPI sendfile(LPVOID);
 #include "basedef.h"
 
 
-UDTSOCKET mSendSock;
+UDTSOCKET mSendSock = 0;
 IReceiveCallback	*mStreamBase = NULL;
 static bool mRunning = false;
 
@@ -60,7 +60,10 @@ int createServer(UDTSOCKET &serv, char* port) {
 }
 
 int releaseServer() {
+	if(mSendSock>0) {
 	   UDT::close(mSendSock);
+	   mSendSock = 0;
+	}
 	   // use this function to release the UDT library
 	   UDT::cleanup();
 	   GLOGW("releaseServer.");
@@ -116,7 +119,7 @@ void* recvvideo(void* usocket)
 		   if(mStreamBase)
 			   mStreamBase->ReceiveSource(0, "", (void *)buffer, size);
 
-		   GLOGW("recv data ret:%d rsize:%d", ret, size);
+		   //GLOGW("recv data ret:%d rsize:%d", ret, size);
 	  }
 
 	  return 0;
@@ -168,16 +171,16 @@ void registerCb(IReceiveCallback *base) {
 	mStreamBase = base;
 }
 
-#ifndef __ANDROID__
-int main(int argc, char* argv[])
-{
-	startViedoRecv("9000");
-
-    getchar();
-
-    stopViedoRecv();
-
-    return 0;
-}
-#endif
+//#ifndef __ANDROID__
+//int main(int argc, char* argv[])
+//{
+//	startViedoRecv("9000");
+//
+//    getchar();
+//
+//    stopViedoRecv();
+//
+//    return 0;
+//}
+//#endif
 

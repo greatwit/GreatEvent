@@ -18,10 +18,11 @@ class UdtSender : public ISendBase
 		virtual int disConnect();
 		virtual int sendBuffer(void*buff, int dataLen, int64_t timeStamp);
 
-	private:
 
+		int getSockHandle();
 
-	private:
+	public:
+		static void* sendfileProc(void* sender);
 		//bool mRunning;
 };
 

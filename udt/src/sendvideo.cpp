@@ -12,7 +12,7 @@
 #include "basedef.h"
 #include "h264.h"
 
-UDTSOCKET mSockHandle;
+UDTSOCKET mSockHandle = 0;
 fstream	  mrecvStream;
 
 
@@ -100,12 +100,13 @@ void* sendfile(void* usocket)
 		}
 
 		// send file size information
-		if (UDT::ERROR == sendEx(fhandle, (char*)&mNALU->len, sizeof(int) )) {
-			GLOGE("send error:%s ", UDT::getlasterror().getErrorMessage());
-		    return 0;
-		}
-
-		ret = sendEx(fhandle, (char*)mNALU->buf, mNALU->len);
+//		if (UDT::ERROR == sendEx(fhandle, (char*)&mNALU->len, sizeof(int) )) {
+//			GLOGE("send error:%s ", UDT::getlasterror().getErrorMessage());
+//		    return 0;
+//		}
+//
+//		ret = sendEx(fhandle, (char*)mNALU->buf, mNALU->len);
+		ret = sendData((char*)mNALU->buf, mNALU->len);
 		GLOGE("ret:%d len:%d ", ret, mNALU->len);
 	}
 
@@ -141,6 +142,22 @@ int stopVideoSend() {
 	return 0;
 }
 
+int connect_(char* sDestIp, short destPort) {
+	char port[12]={0};
+	sprintf(port, "%d", destPort);
+	createConnect(mSockHandle, sDestIp, port);
+	return mSockHandle;
+}
+
+int disConnect_() {
+
+	if(mSockHandle>0) {
+		releaseConnect(mSockHandle);
+		mSockHandle = 0;
+	}
+	return 0;
+}
+
 int sendData(char*data, int len) {
 	int ret = 0;
 	if (UDT::ERROR == (ret=sendEx(mSockHandle, (char*)&len, sizeof(int) ))) {
@@ -154,22 +171,26 @@ int sendData(char*data, int len) {
 	return ret;
 }
 
-#ifndef __ANDROID__
-int main(int argc, char* argv[])
-{
-   if ((argc != 3) || (0 == atoi(argv[2])))
-   {
-      cout << "usage: sendvideo server_ip server_port" << endl;
-      return -1;
-   }
-
-   startVideoSend(argv[1],argv[2]);
-
-   getchar();
-
-   stopVideoSend();
-
-   return 0;
+int getSockHandle_() {
+	return mSockHandle;
 }
-#endif
+
+//#ifndef __ANDROID__
+//int main(int argc, char* argv[])
+//{
+//   if ((argc != 3) || (0 == atoi(argv[2])))
+//   {
+//      cout << "usage: sendvideo server_ip server_port" << endl;
+//      return -1;
+//   }
+//
+//   startVideoSend(argv[1], argv[2]);
+//
+//   getchar();
+//
+//   stopVideoSend();
+//
+//   return 0;
+//}
+//#endif
 

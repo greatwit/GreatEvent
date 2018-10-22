@@ -11,6 +11,10 @@ using namespace std;
 
 int startVideoSend(char*ipaddr, char*port);
 int stopVideoSend();
+
+int connect_(char* sDestIp, short destPort);
+int disConnect_();
 int sendData(char*data, int len);
+int getSockHandle_();
 
 #endif
