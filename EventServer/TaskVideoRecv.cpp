@@ -7,7 +7,7 @@
 #include "BufferCache.hpp"
 
 #include "h264.h"
-#include "common.h"
+#include "basedef.h"
 
 #ifdef 	__ANDROID__
 #define	FILE_PATH	"/sdcard/w.h264"

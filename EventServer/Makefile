@@ -1,53 +1,42 @@
-
-#--------------------------------------------------------------------
-
+CXXFLAGS += -std=c++11
+ 
 CC 	= gcc
 CPP = g++
-AR = ar cru
-CFLAGS = -Wall -D_REENTRANT -DHAVE_CONFIG_H -g -fPIC
-SOFLAGS = -shared
-LDFLAGS = -lstdc++ -lpthread -lresolv
 
-LINKER = $(CPP)
-LINT = lint -c
-RM = /bin/rm -f
+CFLAGS = -Wall -DHAVE_CONFIG_H -g -fPIC #-DHAVE_SYS_TIME_H
+CXXFLAGS = -Dlinux
+COMPLIE_INCL = -I./net -I../common -I./ffmpeg -I./ffmpeg/include
+COMPLIE_LIB  = -L./ffmpeg/lib -lavformat -lavcodec -lavdevice -lavfilter -lswresample -lswscale -lavutil
+CFLAGS  += -I./net -I../common -I./
+CXXFLAGS += $(COMPLIE_INCL)
+LDFLAGS += $(COMPLIE_LIB) -lpthread
 
-LIBEVENT_INCL = -I./net -I../common
-#LIBEVENT_INCL = -I$(HOME)/libevent/include -I../common
-#LIBEVENT_LIB  = -L$(HOME)/libevent/lib -levent
-
-CFLAGS  += $(LIBEVENT_INCL)
-LDFLAGS += $(LIBEVENT_LIB)
-
-#--------------------------------------------------------------------
-
-LIBOBJS = 
-
-TARGET = EventServer EventClient
+TARGET = EventServer EventClient FfmpegTest
 
 #--------------------------------------------------------------------
 
 all: $(TARGET)
 
+OBJECTS = net/buffer.o net/epoll.o net/epoll_sub.o net/event.o net/evbuffer.o net/signal.o net/log.o net/net_protocol.o \
+		  TaskBase.o TaskVideoRecv.o TaskVideoSend.o TaskFileRecv.o TaskPlayback.o BufferCache.o DataUtils.o IOUtils.o \
+		  Session.o EventCall.o NALDecoder.o ActorStation.o TcpClient.o TcpServer.o ffmpeg/FfmpegContext.o
 
-EventServer: net/buffer.o net/epoll.o net/epoll_sub.o net/event.o net/evbuffer.o net/signal.o net/log.o \
-			TaskBase.o TaskVideoRecv.o TaskVideoSend.o TaskFileRecv.o BufferCache.o DataUtils.o IOUtils.o \
-			Session.o EventCall.o NALDecoder.o ActorStation.o TcpClient.o TcpServer.o EventServer.o
-	$(LINKER) $(LDFLAGS) $^ -L. -lpthread -o $@
+EventServer=$(OBJECTS) EventServer.o
+EventClient=$(OBJECTS) EventClient.o
+FfmpegTest = ffmpeg/FfmpegContext.o ffmpeg/FfmpegTest.o
+ 
+EventServer:$(EventServer) 
+	 $(CPP) -o EventServer $(EventServer) $(LDFLAGS)
 
-EventClient: net/buffer.o net/epoll.o net/epoll_sub.o net/event.o net/evbuffer.o net/signal.o net/log.o \
-			TaskBase.o TaskVideoRecv.o TaskVideoSend.o TaskFileRecv.o BufferCache.o DataUtils.o IOUtils.o \
-			Session.o EventCall.o NALDecoder.o ActorStation.o TcpClient.o TcpServer.o EventClient.o
-	$(LINKER) $(LDFLAGS) $^ -L. -lpthread -o $@
+EventClient:$(EventClient) 
+	 $(CPP) -o EventClient $(EventClient) $(LDFLAGS)
+
+FfmpegTest:$(FfmpegTest) 
+	 $(CPP) -o FfmpegTest $(FfmpegTest) $(LDFLAGS)
+
+.PHONY:clean
 
 clean:
-	@( $(RM) net/*.o *.o vgcore.* core core.* $(TARGET) )
+	rm *.o net/*.o ffmpeg/*.o
 
-#--------------------------------------------------------------------
-
-# make rule
-%.o : %.c
-	$(CC) $(CFLAGS) -c $^ -o $@	
-
-%.o : %.cpp
-	$(CPP) $(CFLAGS) -c $^ -o $@	
+	

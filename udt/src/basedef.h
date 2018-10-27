@@ -32,26 +32,26 @@
 
 #endif
 
-typedef unsigned short WORD;
-typedef unsigned long DWORD;
-
-#define NET_FLAT	0xfefdfcfb
-
-typedef struct tagNET_CMD
-{
-	DWORD dwFlag;
-	DWORD dwCmd;
-	DWORD dwIndex;
-	DWORD dwLength;
-	char  lpData[];
-}NET_CMD,*LPNET_CMD;
-
-typedef struct tagLOGIN_RET
-{
-	long lRet;
-	int  nLength;
-	char lpData[1];
-}LOGIN_RET,*LPLOGIN_RET;
+//typedef unsigned short WORD;
+//typedef unsigned long DWORD;
+//
+//#define NET_FLAT	0xfefdfcfb
+//
+////typedef struct tagNET_CMD
+////{
+////	DWORD dwFlag;
+////	DWORD dwCmd;
+////	DWORD dwIndex;
+////	DWORD dwLength;
+////	char  lpData[];
+////}NET_CMD,*LPNET_CMD;
+////
+////typedef struct tagLOGIN_RET
+////{
+////	long lRet;
+////	int  nLength;
+////	char lpData[1];
+////}LOGIN_RET,*LPLOGIN_RET;
 
 
 

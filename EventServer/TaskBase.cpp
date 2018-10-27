@@ -8,6 +8,11 @@
 
 	}
 
+	TaskBase::TaskBase( Sid_t sid, char*filename)
+			:mSid(sid)
+	{
+
+	}
 
 	TaskBase::~TaskBase() {
 

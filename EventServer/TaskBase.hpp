@@ -18,6 +18,7 @@ typedef struct tagSid {
 class TaskBase {
 public:
 	TaskBase( Sid_t sid );
+	TaskBase( Sid_t sid, char*filename);
 	virtual ~TaskBase();
 	virtual int StartTask();
 	virtual int StopTask();

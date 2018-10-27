@@ -7,7 +7,7 @@
 #include "BufferCache.hpp"
 
 
-#include "common.h"
+#include "basedef.h"
 
 
 

@@ -18,6 +18,7 @@ struct event;
 
 
 class Session {
+
 public:
 	Session( Sid_t sid );
 	Session( Sid_t sid, short type);
@@ -39,7 +40,6 @@ public:
 	int getStatus();
 
 	int readBuffer();
-	int recvEx(char*pData, int len);
 	int writeBuffer();
 
 	int getRunning();
@@ -54,6 +54,9 @@ public:
 private:
 	Session( Session & );
 	Session & operator=( Session & );
+	int recvEx(char*pData, int len);
+	int recvPackData();
+
 
 	Sid_t mSid;
 	TaskBase *mTaskBase;
@@ -70,17 +73,18 @@ private:
 	char mWriting;
 	char mReading;
 
-	int mPackHeadLen;
+	int  mHeadLenConst;//const
+	int  mTotalDataLen;
+	int  mHasRecvLen;
+	bool mbRecvHead;
 
-	int  mRecvDataLen;
-	int  mRecvHeadLen;
-	int  mTotalLen;
 	char mReadBuff[1500];
 };
 
 typedef struct tagSessionEntry SessionEntry_t;
 
 class SessionManager {
+
 public:
 	SessionManager();
 	~SessionManager();

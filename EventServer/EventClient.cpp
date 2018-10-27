@@ -46,7 +46,7 @@ int main( int argc, char * argv[] )
 	statiion.startup();
 
 	TcpClient client;
-	client.connect("127.0.0.1", 8080);//127.0.0.1 192.168.1.108
+	client.connect("127.0.0.1", 8080);			//127.0.0.1 192.168.1.108
 	client.registerEvent(statiion.getEventArg());
 
 	getchar();

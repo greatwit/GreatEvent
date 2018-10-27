@@ -19,7 +19,7 @@
 
 #include "config.h"
 
-#include "common.h"
+#include "basedef.h"
 
 //#include "event_msgqueue.h"
 
@@ -91,3 +91,5 @@ void TcpServer :: shutdown() {
 		GLOGW("close listenid:%d", mListenFD);
 	}
 }
+
+

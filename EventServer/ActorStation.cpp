@@ -11,7 +11,7 @@
 
 
 #include "ActorStation.hpp"
-#include "common.h"
+#include "basedef.h"
 
 	ActorStation :: ActorStation( )
 		:mIsShutdown(0)

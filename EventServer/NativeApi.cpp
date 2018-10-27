@@ -4,7 +4,7 @@
 #include "TcpServer.hpp"
 
 #include <jni.h>
-#include "common.h"
+#include "basedef.h"
 
 #define REG_PATH "com/great/happyness/netcodec/NativeCodec"
 

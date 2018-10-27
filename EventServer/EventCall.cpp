@@ -19,7 +19,7 @@
 #include "config.h"   // from libevent, for event.h
 //#include "event_msgqueue.h"
 #include "event.h"
-#include "common.h"
+#include "basedef.h"
 
 EventArg :: EventArg()
 		:mTimeout(0)
@@ -127,8 +127,6 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 	sid.mKey = clientFD;
 	eventArg->getSessionManager()->get( sid.mKey, &sid.mSeq );
 
-
-
 	char clientIP[ 32 ] = { 0 };
 	IOUtils::inetNtoa( &( clientAddr.sin_addr ), clientIP, sizeof( clientIP ) );
 	GLOGW( "clientIP: %s clientFD:%d\n",clientIP, clientFD);
@@ -145,7 +143,7 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 		//addEvent( session, EV_WRITE, clientFD );
 
 		if( eventArg->getSessionManager()->getCount() > acceptArg->mMaxConnections
-				/*|| eventArg->getInputResultQueue()->getLength() >= acceptArg->mReqQueueSize*/ ) {
+			/*|| eventArg->getInputResultQueue()->getLength() >= acceptArg->mReqQueueSize*/ ) {
 
 			//syslog( LOG_WARNING, "System busy, session.count %d [%d], queue.length %d [%d]",
 			//	eventArg->getSessionManager()->getCount(), acceptArg->mMaxConnections,

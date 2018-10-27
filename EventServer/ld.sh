@@ -1,2 +1,2 @@
 #!/bin/bash
-export LD_LIBRARY_PATH=/home/great/libevent/lib
+export LD_LIBRARY_PATH=./ffmpeg/lib

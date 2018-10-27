@@ -13,6 +13,7 @@
 
 #include "TaskVideoRecv.hpp"
 #include "TaskVideoSend.hpp"
+#include "TaskPlayback.hpp"
 #include "Session.hpp"
 
 
@@ -20,8 +21,9 @@
 #include "event.h"
 
 #include "h264.h"
-#include "common.h"
-
+#include "basedef.h"
+#include "protocol.h"
+#include "net_protocol.h"
 
 
 //---------------------------sessionManager----------------------------------------
@@ -119,13 +121,13 @@ Session * SessionManager :: remove( uint16_t key, uint16_t * seq )
 //----------------------------------session---------------------------------
 
 Session :: Session( Sid_t sid )
-			:mPackHeadLen(sizeof(PACK_HEAD))
+			:mHeadLenConst(sizeof(NET_HEAD))
 			,mSid(sid)
 			,mTaskBase(NULL)
 			,mArg(NULL)
-			,mRecvDataLen(0)
-			,mRecvHeadLen(0)
-			,mTotalLen(0)
+			,mTotalDataLen(0)
+			,mHasRecvLen(0)
+			,mbRecvHead(true)
 {
 	mReadEvent  = (struct event*)malloc( sizeof( struct event ) );
 	mWriteEvent = (struct event*)malloc( sizeof( struct event ) );
@@ -137,13 +139,13 @@ Session :: Session( Sid_t sid )
 }
 
 Session :: Session( Sid_t sid, short type)
-			:mPackHeadLen(sizeof(PACK_HEAD))
+			:mHeadLenConst(sizeof(NET_HEAD))
 			,mSid(sid)
 			,mTaskBase(NULL)
 			,mArg(NULL)
-			,mRecvDataLen(0)
-			,mRecvHeadLen(0)
-			,mTotalLen(0)
+			,mTotalDataLen(0)
+			,mHasRecvLen(0)
+			,mbRecvHead(true)
 {
 	mReadEvent  = (struct event*)malloc( sizeof( struct event ) );
 	mWriteEvent = (struct event*)malloc( sizeof( struct event ) );
@@ -184,6 +186,7 @@ int Session :: recvEx(char*pData, int len) {
 
 		recvCount += recvRet;
 	}while(recvCount<len);
+	return recvCount;
 }
 
 int Session :: readBuffer() {
@@ -194,24 +197,29 @@ int Session :: readBuffer() {
 	}
 	else
 	{
-		//int leftLent = mTotalLen - mRecvDataLen;
-		ret = recv(mSid.mKey, mReadBuff+mRecvHeadLen, mPackHeadLen-mRecvHeadLen, 0);
-		if(ret>0) {
-			mRecvHeadLen+=ret;
-			if(mRecvHeadLen==mPackHeadLen) {
+//		ret = recv(mSid.mKey, mReadBuff+mHasRecvLen, 1500, 0);
+//		mHasRecvLen+=ret;
+//		LPNET_CMD pCmdbuf = (LPNET_CMD)mReadBuff;
+//		GLOGE("Session flag:%08x ret:%d data:%s", pCmdbuf->dwFlag, ret, pCmdbuf->lpData);
 
-				LPPACK_HEAD head = (LPPACK_HEAD)mReadBuff;
-				short type = head->type;
-				switch(type) {
-					case VIDEO_RECV_MSG:
-						mTaskBase = new TaskVideoRecv( mSid );
-						break;
-					case FILE_RECV_MSG:
-						break;
+		if(mbRecvHead) {
+			ret = recv(mSid.mKey, mReadBuff+mHasRecvLen, mHeadLenConst-mHasRecvLen, 0);
+			if(ret>0) {
+				mHasRecvLen+=ret;
+				if(mHasRecvLen==mHeadLenConst) {
+
+					LPNET_HEAD head = (LPNET_HEAD)mReadBuff;
+					mTotalDataLen = head->dwLength;
+					mHasRecvLen = 0;
+					mbRecvHead = false;
+
+					GLOGE("Session flag:%08x frameLen:%d ret:%d", head->dwFlag, mTotalDataLen, ret);
+					//GLOGE("Session flag:%08x ret:%d data:%s", cmdbuf->dwFlag, ret, cmdbuf->lpData);
+					ret = recvPackData();
 				}
-				mRecvHeadLen = 0;
-				GLOGE("Session fid:%d frameLen:%d ret:%d", htonl(head->fid), mTotalLen, ret);
 			}
+		}else{
+			ret = recvPackData();
 		}
 	}
 
@@ -222,6 +230,47 @@ int Session :: writeBuffer() {
 	int ret = 0;
 	if(mTaskBase!=NULL) {
 		ret = mTaskBase->writeBuffer();
+	}
+	return ret;
+}
+
+int Session ::recvPackData() {
+	int ret = recv(mSid.mKey, mReadBuff+mHeadLenConst+mHasRecvLen, mTotalDataLen-mHasRecvLen, 0);
+	if(ret>0) {
+		mHasRecvLen+=ret;
+		if(mHasRecvLen==mTotalDataLen) {
+
+		    int lValueLen;
+		    char *acValue = new char[256];
+		    memset(acValue,0, 256);
+			LPNET_CMD pCmdbuf = (LPNET_CMD)mReadBuff;
+		    PROTO_GetValueByName(mReadBuff, "play path", (char**)&acValue, &lValueLen);
+		    GLOGE("filename:%s",acValue);
+
+		    if(access(acValue, F_OK)!=0)
+		    	GLOGE("filename %s is no exist.",acValue);
+
+			short type = pCmdbuf->dwIndex;
+			switch(type) {
+				case 0:
+					mTaskBase = new TaskPlayback( mSid, acValue );
+					break;
+
+				case VIDEO_RECV_MSG:
+					mTaskBase = new TaskVideoRecv( mSid );
+					break;
+
+				case FILE_RECV_MSG:
+					break;
+			}
+			mTotalDataLen = 0;
+			mHasRecvLen   = 0;
+			mbRecvHead    = true;
+
+			SAFE_DELETE(acValue);
+			//GLOGE("Session flag:%08x frameLen:%d ret:%d", pCmdbuf->dwFlag, pCmdbuf->dwLength, ret);
+			//GLOGE("Session flag:%08x ret:%d data:%s", pCmdbuf->dwFlag, ret, pCmdbuf->lpData);
+		}
 	}
 	return ret;
 }

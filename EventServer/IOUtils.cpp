@@ -12,7 +12,7 @@
 #include <string.h>
 
 #include "IOUtils.hpp"
-#include "common.h"
+#include "basedef.h"
 
 #define  MAX_MTU 1400
 

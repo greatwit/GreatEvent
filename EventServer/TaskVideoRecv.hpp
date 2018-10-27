@@ -9,6 +9,7 @@
 class BufferCache;
 
 class TaskVideoRecv :public TaskBase {
+
 public:
 	TaskVideoRecv( Sid_t sid );
 	virtual ~TaskVideoRecv();
