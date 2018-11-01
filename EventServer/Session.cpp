@@ -237,14 +237,14 @@ int Session :: writeBuffer() {
 int Session ::recvPackData() {
 	int ret = recv(mSid.mKey, mReadBuff+mHeadLenConst+mHasRecvLen, mTotalDataLen-mHasRecvLen, 0);
 	if(ret>0) {
-		mHasRecvLen+=ret;
+		mHasRecvLen += ret;
 		if(mHasRecvLen==mTotalDataLen) {
 
 		    int lValueLen;
-		    char *acValue = new char[256];
+		    char acValue[256] = {0};//new char[256];
 		    memset(acValue,0, 256);
 			LPNET_CMD pCmdbuf = (LPNET_CMD)mReadBuff;
-		    PROTO_GetValueByName(mReadBuff, "play path", (char**)&acValue, &lValueLen);
+		    PROTO_GetValueByName(mReadBuff, "play path", acValue, &lValueLen);
 		    GLOGE("filename:%s",acValue);
 
 		    if(access(acValue, F_OK)!=0)
@@ -253,7 +253,7 @@ int Session ::recvPackData() {
 			short type = pCmdbuf->dwIndex;
 			switch(type) {
 				case 0:
-					mTaskBase = new TaskPlayback( mSid, acValue );
+					mTaskBase = new TaskPlayback( this, mSid, acValue );
 					break;
 
 				case VIDEO_RECV_MSG:
@@ -267,7 +267,7 @@ int Session ::recvPackData() {
 			mHasRecvLen   = 0;
 			mbRecvHead    = true;
 
-			SAFE_DELETE(acValue);
+			//SAFE_DELETE(acValue);
 			//GLOGE("Session flag:%08x frameLen:%d ret:%d", pCmdbuf->dwFlag, pCmdbuf->dwLength, ret);
 			//GLOGE("Session flag:%08x ret:%d data:%s", pCmdbuf->dwFlag, ret, pCmdbuf->lpData);
 		}

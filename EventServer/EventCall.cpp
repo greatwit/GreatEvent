@@ -210,6 +210,7 @@ void EventCall :: onWrite( int fd, short events, void * arg )
 		ret = session->writeBuffer();
 	}
 
+	//>0 need listen,<=0 not do that
 	if(ret>0)
 		addEvent( session, EV_WRITE, -1 );
 

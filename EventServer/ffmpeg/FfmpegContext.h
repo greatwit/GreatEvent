@@ -8,6 +8,15 @@
 #include "protocol.h"
 
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+	#include "libavformat/avformat.h"
+#ifdef __cplusplus
+};
+#endif
+
 using namespace std;
 
 class FfmpegContext {
@@ -17,9 +26,12 @@ public:
 
 	int getPlayInfo(PLAYER_INIT_INFO &playinfo);
 	int getFileInfo(FILE_INFO &fileInfo);
+	int getFrameData();
+	int getPackageData(AVPacket&pkt);
 
 private:
 	string mFilename;
+	AVFormatContext *mFmt_ctx;
 
 };
 

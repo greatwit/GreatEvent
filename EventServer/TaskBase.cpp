@@ -8,7 +8,13 @@
 
 	}
 
-	TaskBase::TaskBase( Sid_t sid, char*filename)
+	TaskBase::TaskBase( Sid_t &sid, char*filename)
+			:mSid(sid)
+	{
+
+	}
+
+	TaskBase::TaskBase(  Session*sess, Sid_t&sid, char*filename)
 			:mSid(sid)
 	{
 

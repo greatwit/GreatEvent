@@ -83,9 +83,9 @@ typedef struct PROTO_ST_MSG
 int  PROTO_MakeDataHead(PROTO_ST_MSG *stMsg,int cmd);
 int PROTO_GetPackDataLen(char *pDataHead);
 int PROTO_GetCommand(char *pData);
-int PROTO_AddOneItem(PROTO_ST_MSG *stMsg,char *pName,char *pValue,int lValueLen);
+int PROTO_AddOneItem(PROTO_ST_MSG *stMsg,char *pName,char *pValueOut,int lValueLen);
 int PROTO_AddOneItemInt(PROTO_ST_MSG *stMsg,char *pName, int nValue);
-int PROTO_GetValueByName(char *pData, char *pName, char ** pValue, int *pValueLen);
+int PROTO_GetValueByName(char *pData, char *pName, char * pValue, int *pValueLen);
 int  PROTO_MakeRegistMsg(PROTO_ST_MSG *stMsg,char *pcDeviceSerial,char *pcDeviceName);
 int PROTO_MakeSdpMsg(PROTO_ST_MSG *stMsg,char*sdp,int sdp_len);
 int PROTO_MakeClientMsg(PROTO_ST_MSG *stMsg,char *pData, char *pName);

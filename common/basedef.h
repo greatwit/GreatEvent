@@ -1,13 +1,15 @@
 #ifndef __BASE_DEF_H__
 #define __BASE_DEF_H__
 
+#include <stdio.h>
+#include <stdlib.h>
+
+
 
 #ifdef __cplusplus
 	  extern "C"{
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
 
 #ifndef TAG
 #define TAG "NetCodec"
@@ -83,6 +85,7 @@ typedef unsigned long DWORD;
 #ifdef __cplusplus
 }
 #endif
+
 
 
 #endif

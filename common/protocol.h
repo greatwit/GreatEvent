@@ -11,15 +11,14 @@
 
 #ifndef __PROTOCOL_H__
 #define __PROTOCOL_H__
-	  
-#ifdef __cplusplus
-	  extern "C"{
-#endif
-
 
 //#include "global.h"
 #include <pthread.h>
-#include <string.h>
+
+
+#ifdef __cplusplus
+	  extern "C"{
+#endif
 
 #define FRAME_MAX_MESSAGE_BUF_SIZE	(128*1024)
 #define FRAME_SOCKET_TIMEOUT 		(2000)   //��λ����
@@ -51,9 +50,10 @@ typedef struct TagFrameHead
 }TagFrameHead;
 #pragma   pack()
 
-
 //===============================================================
 #define NET_FLAG	0xfefdfcfb
+
+
 
 //cmds
 enum MODULE_MSG_ID{
@@ -210,7 +210,7 @@ enum MODULE_MSG_ID{
 #define ERR_TIMEOUT		23
 #define ERR_DOING		24
 
-//#pragma   pack(1)
+////#pragma   pack(1)
 typedef struct tagNET_HEAD
 {
 	unsigned int dwFlag;
@@ -218,7 +218,7 @@ typedef struct tagNET_HEAD
 	unsigned int dwIndex;
 	unsigned int dwLength;
 }NET_HEAD,*LPNET_HEAD;
-//#pragma   pack()
+////#pragma   pack()
 
 #pragma   pack(1)
 typedef struct tagNET_CMD
@@ -231,10 +231,11 @@ typedef struct tagNET_CMD
 }NET_CMD,*LPNET_CMD;
 #pragma   pack()
 
+
 #pragma   pack(1)
 typedef struct tagLOGIN_RET
 {
-	unsigned int* lRet;
+	unsigned int lRet;
 	int nLength;
 	char lpData[1024];
 }LOGIN_RET,*LPLOGIN_RET;
@@ -247,9 +248,11 @@ typedef struct tagAV_FRAME
 	int   nLength;
 	unsigned int dwTick;
 	unsigned int dwTm;
-	void *lpData;
+	char  lpData[];
 }AV_FRAME,*LPAV_FRAME;
 #pragma   pack()
+
+
 
 //��¼������
 //�ͻ��˷���ָ�
@@ -529,6 +532,6 @@ void releaseAllPackage(cam_connection *pConn);
 #ifdef __cplusplus
 }
 #endif
- 
+
 #endif
 

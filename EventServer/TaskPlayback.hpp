@@ -5,15 +5,18 @@
 #include <unistd.h>
 
 #include "h264.h"
+#include "basedef.h"
 #include "TaskBase.hpp"
 #include "FfmpegContext.h"
 
 class BufferCache;
 
+
+
 class TaskPlayback :public TaskBase {
 
 public:
-	TaskPlayback( Sid_t sid, char*filename);
+	TaskPlayback( Session*sess, Sid_t& sid, char*filename);
 	virtual ~TaskPlayback();
 	virtual int StartTask();
 	virtual int StopTask();
@@ -24,21 +27,21 @@ public:
 	int tcpSendData(char*data, int len);
 	int tpcSendMsg(unsigned char msg);
 	int sendEx(char*data,int len);
-	int getLoginRes(char*data);
+	int getLoginRet(LOGIN_RET&lRet);
 
 private:
-	FfmpegContext *mFfmpeg;
-	char mReadBuff[1500];
-	BufferCache * mInBuffer;
-	FILE			*mpFile;
-	NALU_t 			*mNALU;
-	int				mSeqid;
+	int recvPackData();
 
-	int mPackHeadLen;
+	FfmpegContext 		*mFfmpeg;
+	struct tagRecvBuffer mRecvBuffer;
+	struct tagSendBuffer mSendBuffer;
+	BufferCache 		* mInBuffer;
+	FILE				*mpFile;
+	NALU_t 				*mNALU;
+	int					mSeqid;
+	Session				*mSess;
 
-	int  mRecvDataLen;
-	int  mRecvHeadLen;
-	int  mTotalLen;
+	const int 			mPackHeadLen;
 };
 
 

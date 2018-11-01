@@ -188,7 +188,7 @@ int PROTO_GetCommand(char *pData)
 /*
 XML data
 */
-int PROTO_GetValueByName(char *pData,char *pName,char **pValue,int *pValueLen)
+int PROTO_GetValueByName(char *pData,char *pName,char *pValueOut,int *pValueLen)
 {
     char *ptr;
 	char *p;
@@ -215,7 +215,7 @@ int PROTO_GetValueByName(char *pData,char *pName,char **pValue,int *pValueLen)
 			}
 			//*pValue = p;
 			*pValueLen = i-1;
-			memcpy(*pValue, p, i);
+			memcpy(pValueOut, p, i);
 			//GLOGE("pValue:%s , pValueLen:%d \n", *pValue, *pValueLen);
 			//printf("p:%s\n", p);
 			return 1;

@@ -18,12 +18,12 @@
 
 void IOUtils :: inetNtoa( in_addr * addr, char * ip, int size )
 {
-#if defined (linux) || defined (__sgi) || defined (__hpux) || defined (__FreeBSD__)
-	const unsigned char *p = ( const unsigned char *) addr;
-	snprintf( ip, size, "%i.%i.%i.%i", p[0], p[1], p[2], p[3] );
-#else
-	snprintf( ip, size, "%i.%i.%i.%i", addr->s_net, addr->s_host, addr->s_lh, addr->s_impno );
-#endif
+	#if defined (linux) || defined (__sgi) || defined (__hpux) || defined (__FreeBSD__)
+		const unsigned char *p = ( const unsigned char *) addr;
+		snprintf( ip, size, "%i.%i.%i.%i", p[0], p[1], p[2], p[3] );
+	#else
+		snprintf( ip, size, "%i.%i.%i.%i", addr->s_net, addr->s_host, addr->s_lh, addr->s_impno );
+	#endif
 }
 
 int IOUtils :: setNonblock( int fd )

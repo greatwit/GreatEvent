@@ -4,18 +4,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 
+#include "protocol.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+	#include "libavformat/avformat.h"
+#ifdef __cplusplus
+};
+#endif
 
 #define PACKET_BUFFER_END            (unsigned int)0x00000000
 #define MAX_RTP_PKT_LENGTH     1360
 
-
-
 #define H264                    96
-
-
 
 typedef struct 
 {
@@ -101,6 +107,45 @@ typedef struct
   unsigned char *buf;                    //! contains the first byte followed by the EBSP
   unsigned short lost_packets;  //! true, if packet loss is detected
 } NALU_t;
+
+//recv data struct
+struct tagRecvBuffer {
+	char buff[1500];
+	bool bRecvHead;
+	int  hasRecvLen;
+	int  totalLen;
+	void reset() {
+		bRecvHead 	= true;
+		hasRecvLen 	= 0;
+		totalLen 	= sizeof(NET_CMD);
+		memset(buff,0, 1500);
+	}
+};
+
+//send data struct
+struct tagSendBuffer {
+	bool bSendCmd;
+	int  hasSendLen;
+	int  totalLen;
+	AVPacket avpack;
+	char cmd[1500];
+	void reset() {
+		if(bSendCmd) memset(cmd,0, 1500);
+		hasSendLen 	= 0;
+		totalLen 	= 0;
+		av_packet_unref(&avpack);
+		avpack.size = 0;
+		bSendCmd 	= true;
+	}
+	bool isSendVideo() {
+		return avpack.size>0;
+	}
+	void setToVideo() {
+		bSendCmd	= false;
+		hasSendLen 	= 0;
+		totalLen 	= avpack.size;
+	}
+};
 
 #ifndef  MAX_LEN
 #define  MAX_LEN 1300

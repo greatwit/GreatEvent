@@ -28,12 +28,12 @@ int main(int argc, char**argv) {
 	LPFILE_INFO	  fileInfo = (LPFILE_INFO)lpLR->lpData;
 	FfmpegContext *context = new FfmpegContext(FILE_NAME);
 	context->getFileInfo(*fileInfo);
-
+//
 	PLAYER_INIT_INFO &playInfo = fileInfo->pi;
 	printf("w:%d h:%d size:%d framerate:%d\n",
 			playInfo.nWidth, playInfo.nHeigth,
 			playInfo.gop_size, playInfo.nFps);
-
+//
 	printf("nAudioFormat:%d nChannel:%d nSampleRate:%d bit_rate:%d\n",
 			playInfo.nAudioFormat, playInfo.nChannel,
 			playInfo.nSampleRate, playInfo.bit_rate);
@@ -42,6 +42,23 @@ int main(int argc, char**argv) {
 
 	getchar();
 
+	//context->getFrameData();
+	AVPacket pkt;
+	int count = 0;
+	int res = 0;
+
+    while ((res = context->getPackageData(pkt)) >= 0) {
+        AVPacket &orig_pkt = pkt;
+        count++;
+        printf("pkg count:%d len:%d type:%d\n", count, pkt.size, pkt.flags);
+
+        av_packet_unref(&orig_pkt);
+    }
+
+    if(res == AVERROR_EOF)
+    	printf("eof.\n");
+
+	getchar();
 	delete context;
 	context = NULL;
 

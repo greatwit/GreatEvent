@@ -3,25 +3,55 @@
 #include "FfmpegContext.h"
 
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-	#include "libavformat/avformat.h"
-#ifdef __cplusplus
-};
-#endif
+
 
 
 FfmpegContext::FfmpegContext( string filename )
 			:mFilename(filename)
+			,mFmt_ctx(NULL)
 {
+	av_register_all();
+	int ret = 0;
+	//Input
+	if ((ret = avformat_open_input(&mFmt_ctx, mFilename.c_str(), 0, 0)) < 0) {
+		printf( "Could not open input file.");
+		//return -1;
+	}
+	if ((ret = avformat_find_stream_info(mFmt_ctx, 0)) < 0) {
+		printf( "Failed to retrieve input stream information");
+		//return -1;
+	}
 
 }
 
 FfmpegContext::~FfmpegContext() {
 
 }
+
+
+int FfmpegContext::getFrameData() {
+	int count = 0;
+	AVPacket pkt;
+    while (av_read_frame(mFmt_ctx, &pkt) >= 0) {
+        AVPacket orig_pkt = pkt;
+        count++;
+        printf("pkg count:%d len:%d type:%d\n", count, pkt.size, pkt.flags);
+//        do {
+//            ret = decode_packet(&got_frame, 0);
+//            if (ret < 0)
+//                break;
+//            pkt.data += ret;
+//            pkt.size -= ret;
+//        } while (pkt.size > 0);
+        av_packet_unref(&orig_pkt);
+    }
+	return 0;
+}
+
+int FfmpegContext::getPackageData(AVPacket &pkt) {
+	return av_read_frame(mFmt_ctx, &pkt);
+}
+
 /*
 typedef struct tagPLAYER_INIT_INFO
 {
@@ -60,31 +90,20 @@ typedef struct tagPLAYER_INIT_INFO
 */
 int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo) {
 
-	av_register_all();
-
 	int ret = 0;
-    AVFormatContext *ifmt_ctx = NULL;
+    //AVFormatContext *ifmt_ctx = NULL;
 
-	//Input
-	if ((ret = avformat_open_input(&ifmt_ctx, mFilename.c_str(), 0, 0)) < 0) {
-		printf( "Could not open input file.");
-		return -1;
-	}
-	if ((ret = avformat_find_stream_info(ifmt_ctx, 0)) < 0) {
-		printf( "Failed to retrieve input stream information");
-		return -1;
-	}
 
-	playinfo.gop_size = ifmt_ctx->duration;
+	playinfo.gop_size = mFmt_ctx->duration;
 
-	for (int i = 0; i < ifmt_ctx->nb_streams; i++) {
+	for (int i = 0; i < mFmt_ctx->nb_streams; i++) {
 			//Create output AVStream according to input AVStream
 			AVFormatContext *ofmt_ctx;
-			AVStream *in_stream = ifmt_ctx->streams[i];
+			AVStream *in_stream = mFmt_ctx->streams[i];
 			AVCodecContext *pCodec = in_stream->codec;
 			AVStream *out_stream = NULL;
 
-			AVMediaType codecType = ifmt_ctx->streams[i]->codec->codec_type;
+			AVMediaType codecType = mFmt_ctx->streams[i]->codec->codec_type;
 			if(codecType==AVMEDIA_TYPE_VIDEO) {
 
 				//out_stream=avformat_new_stream(ofmt_ctx_v, in_stream->codec->codec);
