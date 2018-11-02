@@ -24,7 +24,7 @@ public:
 	virtual int writeBuffer();
 
 	void packetHead(int fid, short pid, int len, unsigned char type, LPPACK_HEAD lpPack);
-	int tcpSendData(char*data, int len);
+	int tcpSendData();
 	int tpcSendMsg(unsigned char msg);
 	int sendEx(char*data,int len);
 	int getLoginRet(LOGIN_RET&lRet);

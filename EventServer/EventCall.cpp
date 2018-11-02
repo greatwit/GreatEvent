@@ -204,7 +204,7 @@ void EventCall :: onWrite( int fd, short events, void * arg )
 	session->setWriting( 0 );
 
 	Sid_t sid = session->getSid();
-	GLOGW("onWrite fd:%d sid:%d",fd,session->getSid().mKey);
+	//GLOGW("onWrite fd:%d sid:%d",fd,session->getSid().mKey);
 
 	if( EV_WRITE & events ) {
 		ret = session->writeBuffer();

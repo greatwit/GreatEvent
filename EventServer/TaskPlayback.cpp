@@ -29,19 +29,25 @@
 
 		mSendBuffer.reset();
 		mInBuffer = new BufferCache();
-
 		mFfmpeg   = new FfmpegContext(filename);
 
 		//char lpRet[sizeof(NET_CMD) + sizeof(LOGIN_RET)] = {0};
-		char *lpRet = mSendBuffer.cmd;
-		((LPNET_CMD)lpRet)->dwFlag = NET_FLAG;
-		((LPNET_CMD)lpRet)->dwCmd  = MODULE_MSG_LOGINRET;
-		((LPNET_CMD)lpRet)->dwLength = sizeof(LOGIN_RET);
+		char *lpRet   = mSendBuffer.cmd;
+		LPNET_CMD cmd = (LPNET_CMD)lpRet;
+		cmd->dwFlag   = NET_FLAG;
+		cmd->dwCmd    = MODULE_MSG_LOGINRET;
+		cmd->dwIndex  = 0;
+		cmd->dwLength = sizeof(LOGIN_RET);
 		LOGIN_RET loginRet = {0};
 		getLoginRet(loginRet);
 		loginRet.lRet = ERR_NOERROR;
 		memcpy(lpRet+sizeof(NET_CMD), &loginRet, sizeof(LOGIN_RET));
-		int ret = sendEx(lpRet, sizeof(NET_CMD) + sizeof(LOGIN_RET));
+
+		mSendBuffer.totalLen = sizeof(NET_CMD) + sizeof(LOGIN_RET);
+		mSendBuffer.bSendCmd = true;
+		int ret = tcpSendData();
+
+		//int ret = sendEx(lpRet, sizeof(NET_CMD) + sizeof(LOGIN_RET));
 
 //		mpFile = OpenBitstreamFile( filename ); //camera_640x480.h264 //camera_1280x720.h264
 //		if(mpFile==NULL) {
@@ -53,7 +59,7 @@
 
 		GLOGE("net_cmd len:%d send ret:%d", mPackHeadLen, ret);
 		//StartTask();
-		EventCall::addEvent( mSess, EV_WRITE, -1 );
+
 	}
 
 
@@ -85,7 +91,7 @@
 			frame->dwTm   		= pkt.pts;
 			frame->nLength 		= pkt.size;//frame size
 
-			cmd->dwFlag 		= NET_FLAG;
+			cmd->dwFlag 	= NET_FLAG;
 			cmd->dwCmd 		= MODULE_MSG_VIDEO;
 			cmd->dwIndex 	= 0;
 			cmd->dwLength 	= pkt.size+sizeof(AV_FRAME);
@@ -106,14 +112,18 @@
 //		LPLOGIN_RET lpLR = (LPLOGIN_RET)lpRet->lpData;
 //		lpLR->nLength = sizeof(lpLR->lpData);
 
-		LPFILE_INFO	  fileInfo = (LPFILE_INFO)lRet.lpData;
+		//LPFILE_INFO	  fileInfo = (LPFILE_INFO)lRet.lpData;
+		FILE_INFO info = {0};
 		lRet.nLength = sizeof(FILE_INFO);
-		mFfmpeg->getFileInfo(*fileInfo);
+		mFfmpeg->getFileInfo(info);
 
-		PLAYER_INIT_INFO &playInfo = fileInfo->pi;
-		printf("getLoginRet w:%d h:%d size:%d framerate:%d\n",
+		PLAYER_INIT_INFO &playInfo = info.pi;
+		info.tmStart = 0;
+		info.tmEnd	  = playInfo.gop_size;
+		memcpy(lRet.lpData, &info, sizeof(FILE_INFO));
+		printf("getLoginRet w:%d h:%d size:%d framerate:%d extlen:%d\n",
 				playInfo.nWidth, playInfo.nHeigth,
-				playInfo.gop_size, playInfo.nFps);
+				playInfo.gop_size, playInfo.nFps, playInfo.extsize);
 
 		printf("getLoginRet nAudioFormat:%d nChannel:%d nSampleRate:%d bit_rate:%d\n",
 				playInfo.nAudioFormat, playInfo.nChannel,
@@ -156,14 +166,29 @@
 		return iRet;
 	}
 
-	int TaskPlayback::tcpSendData(char*data, int len) {
-		int iRet = 0;
-		char sendData[1500] = {0};
-		mSeqid++;
-		packetHead(mSeqid, 0, len, VIDEO_RECV_STREAM, (LPPACK_HEAD)sendData);
-		iRet = sendEx(sendData, mPackHeadLen);
-		iRet = sendEx(data, len);
-		return iRet;
+	int TaskPlayback::tcpSendData()
+	{
+		int ret = 0;
+		if(mSendBuffer.bSendCmd) {
+			ret = sendEx(mSendBuffer.cmd+mSendBuffer.hasSendLen, mSendBuffer.totalLen-mSendBuffer.hasSendLen);
+			if(ret>0)
+				mSendBuffer.hasSendLen += ret;
+			if(mSendBuffer.hasSendLen == mSendBuffer.totalLen)
+			{
+				if(mSendBuffer.avpack.size>0)
+					mSendBuffer.setToVideo();
+				else
+					mSendBuffer.reset();
+			}
+		}
+		if(!mSendBuffer.bSendCmd) {
+			ret = sendEx((char*)mSendBuffer.avpack.data+mSendBuffer.hasSendLen, mSendBuffer.totalLen-+mSendBuffer.hasSendLen);
+			if(ret>0)
+				mSendBuffer.hasSendLen += ret;
+			if(mSendBuffer.hasSendLen == mSendBuffer.totalLen)
+				mSendBuffer.reset();
+		}
+		return ret;
 	}
 
 	int TaskPlayback::readBuffer() {
@@ -204,15 +229,20 @@
 			    memset(acValue,0, 256);
 				LPNET_CMD pCmdbuf = (LPNET_CMD)mRecvBuffer.buff;
 			    PROTO_GetValueByName(mRecvBuffer.buff, "name", acValue, &lValueLen);
-			    GLOGE("name:%s",acValue);
+			    if (strcmp(acValue, "start") == 0) {
+				    memset(acValue,0, 256);
+				    PROTO_GetValueByName(mRecvBuffer.buff, "tmstart", acValue, &lValueLen);
+				    GLOGE("tmstart:%d",atoi(acValue));
 
-			    memset(acValue,0, 256);
-			    PROTO_GetValueByName(mRecvBuffer.buff, "tmstart", acValue, &lValueLen);
-			    GLOGE("tmstart:%d",atoi(acValue));
+				    memset(acValue,0, 256);
+				    PROTO_GetValueByName(mRecvBuffer.buff, "tmend", acValue, &lValueLen);
+				    GLOGE("tmend:%d",atoi(acValue));
+				    EventCall::addEvent( mSess, EV_WRITE, -1 );
+			    }
+			    else if(strcmp(acValue, "pause") == 0) {
 
-			    memset(acValue,0, 256);
-			    PROTO_GetValueByName(mRecvBuffer.buff, "tmend", acValue, &lValueLen);
-			    GLOGE("tmend:%d",atoi(acValue));
+			    }
+
 			    //GLOGE("recv total:%s", mRecvBuffer.buff);
 
 			    mRecvBuffer.reset();
@@ -222,21 +252,39 @@
 	}
 
 	int TaskPlayback::writeBuffer() {
+		static int count = 0;
 		int ret = 0;
-//		if(feof(mpFile)) {
-//			//mRunning = false;
-//			GLOGW("read file done.");
-//			return 0;
-//		}
-//		int size=GetAnnexbNALU(mpFile, mNALU);//每执行一次，文件的指针指向本次找到的NALU的末尾，下一个位置即为下个NALU的起始码0x000001
-//		//GLOGE("GetAnnexbNALU size:%d", n->len);
-//		if(size<4)
-//		{
-//			GLOGE("get nul error!\n");
-//			//continue;
-//		}
-//		ret = tcpSendData((char*)mNALU->buf, mNALU->len);
-		//GLOGE("TaskPlayback writeBuffer event.");
 
+		if(mSendBuffer.totalLen==0) //take new data and send
+		{
+			AVPacket &pkt 	 = mSendBuffer.avpack;
+			int res = mFfmpeg->getPackageData(pkt);
+			if(res>=0) {
+				mSendBuffer.totalLen = sizeof(NET_CMD) + sizeof(AV_FRAME);
+				mSendBuffer.bSendCmd = true;
+
+				LPNET_CMD	 cmd = (LPNET_CMD)mSendBuffer.cmd;
+				LPAV_FRAME frame = (LPAV_FRAME)(mSendBuffer.cmd+sizeof(NET_CMD));
+
+				cmd->dwFlag 	= NET_FLAG;
+				cmd->dwCmd 		= MODULE_MSG_VIDEO;
+				cmd->dwIndex 	= 0;
+				cmd->dwLength 	= pkt.size+sizeof(AV_FRAME);
+
+				frame->dwFrameType 	= pkt.flags+1;
+				frame->nLength 		= pkt.size;//frame size
+				frame->dwTick 		= pkt.pts;
+				frame->dwTm   		= pkt.pts;
+			}
+			else
+				return -1;
+		}
+
+		//still have data
+		ret = tcpSendData();
+		count++;
+		GLOGE("TaskPlayback writeBuffer len:%d ret:%d count:%d.", sizeof(NET_CMD) + sizeof(AV_FRAME), ret, count);
+		usleep(33*1000);
+		count++; if(count >= 3) return -1;
 		return ret;
 	}

@@ -392,7 +392,7 @@ NET_CMD nc;
 #define ARRAY_NUM   100
 
 // lpLR->lpData Ϊ�ļ�ͷ��Ϣ���ṹ�嶨�����£�
-#pragma   pack(1)
+//#pragma   pack(1)
 typedef struct tagPLAYER_INIT_INFO
 {
 	int nCodeID;
@@ -427,7 +427,7 @@ typedef struct tagPLAYER_INIT_INFO
 	int  nVideoExtSize;
 	char	videoExtData[ARRAY_NUM];
 }PLAYER_INIT_INFO,*LPPLAYER_INIT_INFO;//�ļ�ͷ��Ϣ
-#pragma   pack(0)
+//#pragma   pack(0)
 
 #pragma   pack(1)
 typedef struct tagFILE_INFO

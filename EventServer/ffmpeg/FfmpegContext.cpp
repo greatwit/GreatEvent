@@ -94,7 +94,7 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo) {
     //AVFormatContext *ifmt_ctx = NULL;
 
 
-	playinfo.gop_size = mFmt_ctx->duration;
+	playinfo.gop_size = mFmt_ctx->duration/1000;
 
 	for (int i = 0; i < mFmt_ctx->nb_streams; i++) {
 			//Create output AVStream according to input AVStream
@@ -130,13 +130,11 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo) {
 				playinfo.me_penalty_compensation	= pCodec->me_penalty_compensation;
 				playinfo.qblur						= pCodec->qblur;//float
 				playinfo.flags						= pCodec->flags;
-				playinfo.extsize					= pCodec->extradata_size;
-				playinfo.extdata[ARRAY_NUM];
-				playinfo.nVideoExtSize;
-
 				playinfo.bits_per_sample			= pCodec->bits_per_raw_sample;
 				playinfo.bit_rate					= pCodec->bit_rate;
 
+				playinfo.nVideoExtSize				= pCodec->extradata_size;
+				memcpy(playinfo.videoExtData, pCodec->extradata, pCodec->extradata_size);
 			}
 			else if(codecType==AVMEDIA_TYPE_AUDIO)
 			{
@@ -145,6 +143,9 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo) {
 				playinfo.nChannel					= pCodec->channels;
 				playinfo.channel_layout				= pCodec->channel_layout;//unsigned long long
 				playinfo.block_align				= in_stream->codecpar->block_align;
+
+				playinfo.extsize					= pCodec->extradata_size;
+				memcpy(playinfo.extdata, pCodec->extradata, pCodec->extradata_size);
 			}
 	}
 
