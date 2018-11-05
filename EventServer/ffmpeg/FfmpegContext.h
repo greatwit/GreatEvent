@@ -27,12 +27,14 @@ public:
 	int getPlayInfo(PLAYER_INIT_INFO &playinfo);
 	int getFileInfo(FILE_INFO &fileInfo);
 	int getFrameData();
-	int getPackageData(AVPacket&pkt);
+	int getPackageData(AVPacket&pkt,int &frameType);
+
+	int GetH264Stream();
 
 private:
 	string mFilename;
 	AVFormatContext *mFmt_ctx;
-
+	FILE			*mwFile;
 };
 
 

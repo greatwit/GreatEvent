@@ -134,6 +134,7 @@ struct tagSendBuffer {
 		hasSendLen 	= 0;
 		totalLen 	= 0;
 		av_packet_unref(&avpack);
+		memset(&avpack,0,sizeof(AVPacket));
 		avpack.size = 0;
 		bSendCmd 	= true;
 	}
@@ -144,6 +145,7 @@ struct tagSendBuffer {
 		bSendCmd	= false;
 		hasSendLen 	= 0;
 		totalLen 	= avpack.size;
+		memset(cmd,0, 1500);
 	}
 };
 

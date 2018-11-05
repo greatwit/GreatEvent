@@ -32,6 +32,16 @@
 #define false	0
 #define true	1
 
+#define FRAME_VIDEO_I	1
+#define FRAME_VIDEO_P	2
+#define FRAME_AUDIO		3
+#define FRAME_TALKAUDIO			4
+
+#define AUDCODEC_G711_ULAW 1
+#define AUDCODEC_G711_ALAW 2
+#define AUDCODEC_PCM 3
+#define AUDCODEC_AAC 4
+
 #define PACKED		__attribute__((packed, aligned(1))) //
 #define PACKED4		__attribute__((packed, aligned(4))) //
 
@@ -220,7 +230,7 @@ typedef struct tagNET_HEAD
 }NET_HEAD,*LPNET_HEAD;
 ////#pragma   pack()
 
-#pragma   pack(1)
+//#pragma   pack(1)
 typedef struct tagNET_CMD
 {
 	unsigned int dwFlag;
@@ -229,19 +239,19 @@ typedef struct tagNET_CMD
 	unsigned int dwLength;
 	char  lpData[];
 }NET_CMD,*LPNET_CMD;
-#pragma   pack()
+//#pragma   pack()
 
 
-#pragma   pack(1)
+//#pragma   pack(1)
 typedef struct tagLOGIN_RET
 {
 	unsigned int lRet;
 	int nLength;
 	char lpData[1024];
 }LOGIN_RET,*LPLOGIN_RET;
-#pragma   pack()
+//#pragma   pack()
 
-#pragma   pack(1)
+//#pragma   pack(1)
 typedef struct tagAV_FRAME
 {
 	unsigned int dwFrameType;
@@ -250,7 +260,7 @@ typedef struct tagAV_FRAME
 	unsigned int dwTm;
 	char  lpData[];
 }AV_FRAME,*LPAV_FRAME;
-#pragma   pack()
+//#pragma   pack()
 
 
 

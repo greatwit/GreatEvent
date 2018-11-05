@@ -13,6 +13,8 @@ LOCAL_MODULE    := netcodec
 
 LOCAL_C_INCLUDES += \
 				   $(LOCAL_PROJECT_ROOT)/net \
+				   $(LOCAL_PROJECT_ROOT)/ffmpeg \
+				   $(LOCAL_PROJECT_ROOT)/ffmpeg/include \
 				   $(LOCAL_PROJECT_ROOT)/../common \
 				   external/stlport/stlport bionic
 
@@ -23,15 +25,18 @@ LOCAL_SRC_FILES := net/buffer.c \
 				net/evbuffer.c \
 				net/signal.c \
 				net/log.c \
+				net/net_protocol.c \
 				ActorStation.cpp \
 				BufferCache.cpp \
 				DataUtils.cpp \
 				EventCall.cpp \
 				IOUtils.cpp \
 				Session.cpp \
+				ffmpeg/FfmpegContext.cpp \
 				TaskBase.cpp \
 				TaskVideoRecv.cpp \
 				TaskVideoSend.cpp \
+				TaskPlayback.cpp \
 				TcpClient.cpp \
 				TcpServer.cpp \
 				NALDecoder.cpp \
