@@ -34,7 +34,7 @@ static jboolean StopNetWork(JNIEnv *env, jobject) {
 
 static jboolean StartServer(JNIEnv *env, jobject, jstring localip, jint destport)
 {
-	if(mpServer==NULL){
+	if(mpServer==NULL) {
 		mpServer = new TcpServer("", destport);
 		mpServer->setMaxThreads( 10 );
 		mpServer->registerEvent(mStatiion.getEventArg());
@@ -44,7 +44,7 @@ static jboolean StartServer(JNIEnv *env, jobject, jstring localip, jint destport
 
 static jboolean StopServer(JNIEnv *env, jobject)
 {
-	if(mpServer!=NULL){
+	if(mpServer!=NULL) {
 		mpServer->shutdown();
 		delete mpServer;
 		mpServer = NULL;

@@ -2,14 +2,29 @@ LOCAL_PATH := $(call my-dir)
 
 LOCAL_PROJECT_ROOT := $(LOCAL_PATH)#$(subst $(LOCAL_PATH)/,,$(wildcard $(LOCAL_PATH)))
 
+include $(CLEAR_VARS)  
+LOCAL_MODULE := avformat  
+LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/ffmpeg/android/lib/libavformat.so
+include $(PREBUILT_SHARED_LIBRARY)
 
+include $(CLEAR_VARS)  
+LOCAL_MODULE := avcodec  
+LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/ffmpeg/android/lib/libavcodec.so
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)  
+LOCAL_MODULE := avutil  
+LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/ffmpeg/android/lib/libavutil.so
+include $(PREBUILT_SHARED_LIBRARY)
 
 
 include $(CLEAR_VARS)
 
+APP_ALLOW_MISSING_DEPS=true
+
 LOCAL_CFLAGS := -D__ANDROID__ -DHAVE_CONFIG_H
 
-LOCAL_MODULE    := netcodec
+LOCAL_MODULE := netplayer
 
 LOCAL_C_INCLUDES += \
 				   $(LOCAL_PROJECT_ROOT)/net \
@@ -42,11 +57,8 @@ LOCAL_SRC_FILES := net/buffer.c \
 				NALDecoder.cpp \
 				NativeApi.cpp
 
-#LOCAL_STATIC_LIBRARIES := libMediaStream
-
-#LOCAL_SHARED_LIBRARIES := libnativehelper
-
-LOCAL_LDLIBS := -llog
+LOCAL_SHARED_LIBRARIES := avformat avcodec avutil
+LOCAL_LDLIBS := -llog 
 
 include $(BUILD_SHARED_LIBRARY)
 
