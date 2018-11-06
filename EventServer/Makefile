@@ -1,5 +1,5 @@
 CXXFLAGS += -std=c++11
- 
+
 CC 	= gcc
 CPP = g++
 

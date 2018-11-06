@@ -62,7 +62,7 @@ LOCAL_SRC_FILES := net/buffer.c \
 				NativeApi.cpp
 
 LOCAL_SHARED_LIBRARIES := avformat avcodec avutil swresample
-LOCAL_LDLIBS := -llog 
+LOCAL_LDLIBS := -llog
 
 include $(BUILD_SHARED_LIBRARY)
 

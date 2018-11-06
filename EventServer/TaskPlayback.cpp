@@ -211,14 +211,14 @@
 			    char acValue[256] = {0};//new char[256];
 			    memset(acValue,0, 256);
 				LPNET_CMD pCmdbuf = (LPNET_CMD)mRecvBuffer.buff;
-			    PROTO_GetValueByName(mRecvBuffer.buff, "name", acValue, &lValueLen);
+			    PROTO_GetValueByName(mRecvBuffer.buff, (char*)"name", acValue, &lValueLen);
 			    if (strcmp(acValue, "start") == 0) {
 				    memset(acValue,0, 256);
-				    PROTO_GetValueByName(mRecvBuffer.buff, "tmstart", acValue, &lValueLen);
+				    PROTO_GetValueByName(mRecvBuffer.buff, (char*)"tmstart", acValue, &lValueLen);
 				    GLOGE("tmstart:%d",atoi(acValue));
 
 				    memset(acValue,0, 256);
-				    PROTO_GetValueByName(mRecvBuffer.buff, "tmend", acValue, &lValueLen);
+				    PROTO_GetValueByName(mRecvBuffer.buff, (char*)"tmend", acValue, &lValueLen);
 				    GLOGE("tmend:%d",atoi(acValue));
 				    EventCall::addEvent( mSess, EV_WRITE, -1 );
 			    }

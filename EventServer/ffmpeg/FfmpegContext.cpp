@@ -164,7 +164,7 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo) {
 			}
 			else if(codecType==AVMEDIA_TYPE_AUDIO)
 			{
-				playinfo.nAudioFormat				= 86018;//in_stream->codecpar->format;
+				playinfo.nAudioFormat				= in_stream->codecpar->format;//86018;//
 				playinfo.nSampleRate				= pCodec->sample_rate;
 				playinfo.nChannel					= pCodec->channels;
 				playinfo.channel_layout				= pCodec->channel_layout;//unsigned long long
