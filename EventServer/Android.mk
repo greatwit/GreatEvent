@@ -17,12 +17,16 @@ LOCAL_MODULE := avutil
 LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/ffmpeg/android/lib/libavutil.so
 include $(PREBUILT_SHARED_LIBRARY)
 
+include $(CLEAR_VARS)  
+LOCAL_MODULE := swresample  
+LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/ffmpeg/android/lib/libswresample.so
+include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 
 APP_ALLOW_MISSING_DEPS=true
 
-LOCAL_CFLAGS := -D__ANDROID__ -DHAVE_CONFIG_H
+LOCAL_CFLAGS := -D__ANDROID__ -DHAVE_CONFIG_H -D__STDC_CONSTANT_MACROS
 
 LOCAL_MODULE := netplayer
 
@@ -57,7 +61,7 @@ LOCAL_SRC_FILES := net/buffer.c \
 				NALDecoder.cpp \
 				NativeApi.cpp
 
-LOCAL_SHARED_LIBRARIES := avformat avcodec avutil
+LOCAL_SHARED_LIBRARIES := avformat avcodec avutil swresample
 LOCAL_LDLIBS := -llog 
 
 include $(BUILD_SHARED_LIBRARY)
