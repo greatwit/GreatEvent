@@ -26,7 +26,7 @@ include $(CLEAR_VARS)
 
 APP_ALLOW_MISSING_DEPS=true
 
-LOCAL_CFLAGS := -D__ANDROID__ -DHAVE_CONFIG_H -D__STDC_CONSTANT_MACROS
+LOCAL_CFLAGS := -D__ANDROID__ -DHAVE_CONFIG_H -DHAV_FFMPEG -D__STDC_CONSTANT_MACROS
 
 LOCAL_MODULE := netplayer
 
@@ -35,6 +35,7 @@ LOCAL_C_INCLUDES += \
 				   $(LOCAL_PROJECT_ROOT)/ffmpeg \
 				   $(LOCAL_PROJECT_ROOT)/ffmpeg/include \
 				   $(LOCAL_PROJECT_ROOT)/../common \
+				   $(LOCAL_PROJECT_ROOT)/../common/gthread \
 				   external/stlport/stlport bionic
 
 LOCAL_SRC_FILES := net/buffer.c \
@@ -45,6 +46,8 @@ LOCAL_SRC_FILES := net/buffer.c \
 				net/signal.c \
 				net/log.c \
 				net/net_protocol.c \
+				../common/gthread/gmutex.cpp \
+				../common/gthread/gthread.cpp \
 				ActorStation.cpp \
 				BufferCache.cpp \
 				DataUtils.cpp \

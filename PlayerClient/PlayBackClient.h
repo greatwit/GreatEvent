@@ -21,12 +21,13 @@ public:
 	int IsPlayerBufferEmpty();
 	//void SetOrientation(int nOri);
 	//void SetZoom(POINT pt,BOOL bAdd);
+
 private:
 	 void DefNetMessage(HANDLE hClient,DWORD dwMsg,DWORD dwIndex,char* lpData,int nLength);
 	 BOOL Reconnect();
 	 void sendControl();
+
 private:
-	
 	//HANDLE m_hPlayer;
 	CDataBuffer m_bufData;
 	ONRECVAVDATA proc;

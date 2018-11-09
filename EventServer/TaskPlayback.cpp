@@ -225,12 +225,29 @@
 			    else if(strcmp(acValue, "pause") == 0) {
 
 			    }
+			    else if(strcmp(acValue, "seek") == 0) {
+
+			    }
 
 			    //GLOGE("recv total:%s", mRecvBuffer.buff);
 
 			    mRecvBuffer.reset();
 			}
 		}
+		return ret;
+	}
+
+	int TaskPlayback::sendEndfileCmd() {
+		LPNET_CMD	cmd = (LPNET_CMD)mSendBuffer.cmd;
+		cmd->dwFlag 	= NET_FLAG;
+		cmd->dwCmd 		= MODULE_MSG_DATAEND;
+		cmd->dwIndex 	= 0;
+		cmd->dwLength 	= 0;
+
+		mSendBuffer.totalLen = sizeof(NET_CMD);
+		mSendBuffer.bSendCmd = true;
+		int ret = tcpSendData();
+
 		return ret;
 	}
 
@@ -268,18 +285,23 @@
 							pkt.data[3] = 0x01;
 						}
 						break;
+
 					case AVMEDIA_TYPE_AUDIO:
 						frame->dwFrameType = FRAME_AUDIO;
 						break;
 				}
 
 			}
-			else
-				return -1;
+			else {
+				ret = sendEndfileCmd();
+				GLOGE("TaskPlayback sendEndfileCmd ret:%d.", ret);
+				return 0;
+			}
 		}
 
 		//still have data
 		ret = tcpSendData();
+
 		count++;
 		//if(count >= 2) return -1;
 		GLOGE("TaskPlayback writeBuffer len:%d ret:%d count:%d.", sizeof(NET_CMD) + sizeof(AV_FRAME), ret, count);
@@ -287,3 +309,4 @@
 
 		return ret;
 	}
+

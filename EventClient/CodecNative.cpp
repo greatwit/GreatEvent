@@ -1,5 +1,5 @@
 #include <jni.h>
-#include "common.h"
+#include "basedef.h"
 #include "TcpSender.h"
 
 

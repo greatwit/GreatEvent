@@ -34,7 +34,6 @@ FfmpegContext::~FfmpegContext() {
 		fclose(mwFile);
 }
 
-
 int FfmpegContext::getFrameData() {
 	int count = 0;
 	AVPacket pkt;
@@ -56,7 +55,7 @@ int FfmpegContext::getFrameData() {
 
 int FfmpegContext::getPackageData(AVPacket &pkt, int &frameType) {
 
-	int ret = av_read_frame(mFmt_ctx, &pkt);
+	int ret = av_read_frame(mFmt_ctx, &pkt);//0 is ok,<0 is error or end of file
 
     if (ret >= 0) {
     	AVStream *stream = mFmt_ctx->streams[pkt.stream_index];
@@ -68,6 +67,15 @@ int FfmpegContext::getPackageData(AVPacket &pkt, int &frameType) {
 //		}
     }
 	return ret;
+}
+
+void *FfmpegContext::Thread() {
+	GThread::ThreadStarted();
+	while(1)
+	{
+
+	}
+
 }
 
 /*

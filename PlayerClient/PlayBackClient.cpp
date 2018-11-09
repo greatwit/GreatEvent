@@ -243,6 +243,7 @@ int CPlayBackClient::OpenPlayback(const char* szIP,int nPort,const char* szPath,
 	StartWork();
 	return TRUE;
 }
+
 BOOL CPlayBackClient::IsPlayerBufferEmpty()
 {
 	if (!m_bDataEnd)

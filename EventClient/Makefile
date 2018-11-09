@@ -1,11 +1,11 @@
 PROJECT_ROOT = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
-OBJS = EventClient.o TcpSender.o NALDecoder.o spioutils.o gthread/gmutex.o gthread/gthread.o 
+OBJS = EventClient.o TcpSender.o NALDecoder.o spioutils.o ../common/gthread/gmutex.o ../common/gthread/gthread.o 
 
 
 CFLAGS += -g
 
-GTHREAD_INCL = -I$(PROJECT_ROOT)/gthread -I../common
+GTHREAD_INCL = -I../common/gthread -I../common
 CFLAGS  += $(GTHREAD_INCL)
 
 all:	EventClient

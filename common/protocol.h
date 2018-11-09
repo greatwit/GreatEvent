@@ -29,8 +29,13 @@
 #define VIDEO	1
 #define AUDIO	2
 
+#ifndef false
 #define false	0
+#endif
+
+#ifndef true
 #define true	1
+#endif
 
 #define FRAME_VIDEO_I	1
 #define FRAME_VIDEO_P	2

@@ -6,20 +6,20 @@
 #include <string>
 
 #include "protocol.h"
-
+#include "gthread.h"
 
 #ifdef __cplusplus
 extern "C"
 {
-#endif
+	#endif
 	#include "libavformat/avformat.h"
-#ifdef __cplusplus
+	#ifdef __cplusplus
 };
 #endif
 
 using namespace std;
 
-class FfmpegContext {
+class FfmpegContext : private GThread {
 public:
 	FfmpegContext( string filename );
 	virtual ~FfmpegContext();
@@ -30,6 +30,8 @@ public:
 	int getPackageData(AVPacket&pkt,int &frameType);
 
 	int GetH264Stream();
+
+	void *Thread();
 
 private:
 	string mFilename;

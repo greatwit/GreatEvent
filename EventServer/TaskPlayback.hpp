@@ -31,6 +31,7 @@ public:
 
 private:
 	int recvPackData();
+	int sendEndfileCmd();
 
 	FfmpegContext 		*mFfmpeg;
 	struct tagRecvBuffer mRecvBuffer;

@@ -162,13 +162,13 @@ BOOL CNetDataClient::RecvData(DWORD& dwCmd,DWORD& dwIndex,void* lpData,int& nLen
 		M4W_LOG_ERR("recv err 222");
 		return FALSE;
 	}
-	if (nc.dwLength == 0)
-	{
-		nLength = 0;
-		dwCmd = nc.dwCmd;
-		dwIndex = nc.dwIndex;
-		return TRUE;
-	}
+//	if (nc.dwLength == 0)
+//	{
+//		nLength = 0;
+//		dwCmd = nc.dwCmd;
+//		dwIndex = nc.dwIndex;
+//		return TRUE;
+//	}
 
 	if (nc.dwLength > nLength)
 	{
@@ -176,24 +176,30 @@ BOOL CNetDataClient::RecvData(DWORD& dwCmd,DWORD& dwIndex,void* lpData,int& nLen
 		return FALSE;
 	}
 
-	//M4W_LOG_ERR("recv cmd=%d",nc.dwLength);
+	M4W_LOG_ERR("recv cmd=%d",nc.dwCmd);
+	switch(nc.dwCmd) {
 
+	case MODULE_MSG_VIDEO:
+		LPAV_FRAME av;
+		if (!Recv(lpData, nc.dwLength))
+		{
+			M4W_LOG_ERR("recv err 4444");
+			return FALSE;
+		}
+		av = (LPAV_FRAME)lpData;
+		if(av->dwFrameType==1 || av->dwFrameType==2) {
+			count++;
+			//char tag[4] = {0x00, 0x00, 0x00, 0x01};
+			//fwrite(tag, 1, 4, mwFile);
+			fwrite(av->lpData, 1, av->nLength, mwFile);
+			//M4W_LOG_ERR("recv avlen=%d type:%d count:%d",av->nLength, av->dwFrameType, count);
+		}
+		break;
 
-	if (!Recv(lpData, nc.dwLength))
-	{
-		M4W_LOG_ERR("recv err 4444");
+	case MODULE_MSG_DATAEND:
 		return FALSE;
 	}
-	LPAV_FRAME av = (LPAV_FRAME)lpData;
 
-
-	if(av->dwFrameType==1 || av->dwFrameType==2) {
-		count++;
-		//char tag[4] = {0x00, 0x00, 0x00, 0x01};
-		//fwrite(tag, 1, 4, mwFile);
-		fwrite(av->lpData, 1, av->nLength, mwFile);
-		M4W_LOG_ERR("recv avlen=%d type:%d count:%d",av->nLength, av->dwFrameType, count);
-	}
 
 	//usleep(10*1000);
 	return TRUE;
@@ -203,6 +209,7 @@ BOOL CNetDataClient::ConnectServer(SFILE_INFO* lpInfo)
 {
 	if(!Connect(m_szIP.c_str(),m_nPort))
 		return FALSE;
+
 	M4W_LOG_ERR("connect suc opt = %d",m_opt);
 	char lpData[2048];
 	int nLength = 0;
@@ -255,6 +262,7 @@ BOOL CNetDataClient::ConnectServer(SFILE_INFO* lpInfo)
 	fwrite(info.videoExtData+27, 1, 4, mwFile);
 	return TRUE;
 }
+
 BOOL CNetDataClient::OpenClient(const char* szIP,int nPort,const char* szPath,int opt, SFILE_INFO* lpFileInfo)
 {
 
@@ -263,43 +271,45 @@ BOOL CNetDataClient::OpenClient(const char* szIP,int nPort,const char* szPath,in
 	m_szFile = szPath;
 	m_opt = opt;
 	return ConnectServer(lpFileInfo);
-	
 }
+
 void* CNetDataClient::__WorkThread(void* param)
 {
 	((CNetDataClient*)param)->Work();
 	return 0;
 }
+
 class CAutoPtr
 {
-public:
-	CAutoPtr(int len)
-	{
-		m_pData = (char*)malloc(len);
-	}
-	~CAutoPtr()
-	{
-		if(m_pData)
+	public:
+		CAutoPtr(int len)
 		{
-			free(m_pData);
-			m_pData = NULL;
+			m_pData = (char*)malloc(len);
 		}
-	}
-	operator char*()
+		~CAutoPtr()
 		{
-		return m_pData;
+			if(m_pData)
+			{
+				free(m_pData);
+				m_pData = NULL;
+			}
 		}
-	bool operator ==(const char* p)
-		{
-		  return p == m_pData;
-		}
-	bool operator !=(const char* p)
-		{
-		 return p != m_pData;
-		}
-private:
-	char* m_pData;
+		operator char*()
+			{
+			return m_pData;
+			}
+		bool operator ==(const char* p)
+			{
+			  return p == m_pData;
+			}
+		bool operator !=(const char* p)
+			{
+			 return p != m_pData;
+			}
+	private:
+		char* m_pData;
 };
+
 void CNetDataClient::Work()
 {
 	M4W_LOG_ERR("CNetDataClient::Work begin.");
@@ -343,7 +353,7 @@ NEXT:
 //			}
 //			DefNetMessage(this,dwMsg,dwIndex,(char*)lpData,nLength);
 
-			if (!RecvData(dwMsg,dwIndex,(char*)lpData,nLength))
+			if (!RecvData(dwMsg, dwIndex, (char*)lpData, nLength))
 			{
 				M4W_LOG_ERR("quit 333");
 				break;
@@ -362,14 +372,17 @@ NEXT:
 	}
 
 }
+
 BOOL CNetDataClient::waitforQuit(){
 	CSingleLock sLock(&m_cs,TRUE);
 	return (m_evtQuit.Wait(m_cs.getcs(),1));
 }
+
 BOOL CNetDataClient::Reconnect()
 {
 	return ConnectServer(NULL);
 }
+
 BOOL CNetDataClient::IsPlayerBufferEmpty()
 {
 	return FALSE;
@@ -405,6 +418,7 @@ void CNetDataClient::CloseClient()
 	CLOSE_THREAD(m_hThread);
 	CTcpConnect::Close();
 }
+
 BOOL CNetDataClient::Start(DWORD dwStart,DWORD dwEnd)
 {
 	
@@ -415,7 +429,6 @@ BOOL CNetDataClient::Start(DWORD dwStart,DWORD dwEnd)
 
 string CNetDataClient::ExecCmd(DWORD dwMsg,const char* szMsg,int nMsgLen)
 {
-		
 	WAIT_INFO wi;
 	memset(&wi,0,sizeof(wi));
 	CEvent ew;
@@ -440,7 +453,7 @@ string CNetDataClient::ExecCmd(DWORD dwMsg,const char* szMsg,int nMsgLen)
 	}
 
 	slock.Lock();
-	ew.Wait(m_cs.getcs(),6000);
+	ew.Wait(m_cs.getcs(), 6000);
 	map<long,LPWAIT_INFO>::iterator it = m_mapWait.find(nIndex);
 	if(it != m_mapWait.end())
 	{
@@ -454,6 +467,7 @@ void CNetDataClient::StartWork()
 {
 	if(m_hThread)
 		return;
+
 	m_evtQuit.ResetEvent();
 	pthread_create(&m_hThread,NULL,__WorkThread,this);
 }
@@ -477,31 +491,38 @@ BOOL CNetDataClient::OpenPlayback(const char* szIP,int nPort,const char* szPath,
 {
 	return FALSE;
 }
+
 /*
 BOOL CNetDataClient::Downloadback(const char* szIP,int nPort,const char* szPath,LPPLABACK_FILE_INFO lpFileInfo)
 {
 	return FALSE;
 }*/
+
 DWORD CNetDataClient::GetCurTime()
 {
 	return 0;
 }
+
 BOOL CNetDataClient::Capture(const char* szPath)
 {
 	return FALSE;
 }
+
 void CNetDataClient::SetSpeed(int nSpeed)
 {
 }
+
 int CNetDataClient::SetPlayPause(BOOL bPause)
 {
 }
+
 BOOL CNetDataClient::Seek(DWORD dwStart)
 {
 	return FALSE;
 }
- BOOL CNetDataClient::OnTimeOut()
- {
-	 return FALSE;
- }
+
+BOOL CNetDataClient::OnTimeOut()
+{
+	return FALSE;
+}
  

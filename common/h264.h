@@ -13,7 +13,9 @@
 extern "C"
 {
 #endif
+#ifdef HAV_FFMPEG
 	#include "libavformat/avformat.h"
+#endif
 #ifdef __cplusplus
 };
 #endif
@@ -122,6 +124,7 @@ struct tagRecvBuffer {
 	}
 };
 
+#ifdef HAV_FFMPEG
 //send data struct
 struct tagSendBuffer {
 	bool bSendCmd;
@@ -148,6 +151,8 @@ struct tagSendBuffer {
 		memset(cmd,0, 1500);
 	}
 };
+#endif
+
 
 #ifndef  MAX_LEN
 #define  MAX_LEN 1300
