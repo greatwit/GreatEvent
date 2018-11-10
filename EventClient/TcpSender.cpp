@@ -130,7 +130,7 @@ void *TcpSender::Thread(){
 	//char sendbuf[1500];
 	NALU_t *n = AllocNALU(8000000);
 	bool start=false;
-	while (mRunning){
+	while (mRunning) {
 		if(feof(mFile)) {
 			mRunning = false;
 			break;

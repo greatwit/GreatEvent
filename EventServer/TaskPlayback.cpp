@@ -104,11 +104,11 @@
 		info.tmStart = 0;
 		info.tmEnd	  = playInfo.gop_size;
 		memcpy(lRet.lpData, &info, sizeof(FILE_INFO));
-		printf("getLoginRet w:%d h:%d size:%d framerate:%d extlen:%d\n",
+		GLOGE("getLoginRet w:%d h:%d size:%d framerate:%d extlen:%d\n",
 				playInfo.nWidth, playInfo.nHeigth,
 				playInfo.gop_size, playInfo.nFps, playInfo.extsize);
 
-		printf("getLoginRet nAudioFormat:%d nChannel:%d nSampleRate:%d bit_rate:%d\n",
+		GLOGE("getLoginRet nAudioFormat:%d nChannel:%d nSampleRate:%d bit_rate:%d\n",
 				playInfo.nAudioFormat, playInfo.nChannel,
 				playInfo.nSampleRate, playInfo.bit_rate);
 

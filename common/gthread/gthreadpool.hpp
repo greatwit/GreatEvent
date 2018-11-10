@@ -12,9 +12,11 @@ class GThreadPool {
 public:
 	typedef void ( * DispatchFunc_t )( void * );
 
+	GThreadPool();
 	GThreadPool( int maxThreads, const char * tag = 0 );
 	~GThreadPool();
 
+	void initPara(int maxThreads, const char * tag = 0);
 	/// @return 0 : OK, -1 : cannot create thread
 	int dispatch( DispatchFunc_t dispatchFunc, void *arg );
 

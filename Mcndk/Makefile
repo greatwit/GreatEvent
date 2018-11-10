@@ -1,25 +1,23 @@
-PROJECT_ROOT = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+CXXFLAGS += -std=c++11
+ 
+CC 	= gcc
+CPP = g++
 
-OBJS = mcndk.o
+FFMPEG_PATH  = ../common/ffmpeg
+THREAD_PATH  = ../common/gthread
 
-ifeq ($(BUILD_MODE),debug)
-	CFLAGS += -g
-else ifeq ($(BUILD_MODE),run)
-	CFLAGS += -O2
-else
-	$(error Build mode $(BUILD_MODE) not supported by this Makefile)
-endif
+COMPLIE_INCL = -I./include -I../common -I$(FFMPEG_PATH) -I$(FFMPEG_PATH)/include -I$(THREAD_PATH)
+COMPLIE_LIB  = -L$(FFMPEG_PATH)/lib -lavformat -lavcodec -lavdevice -lavfilter -lswresample -lswscale -lavutil -lpthread
+CXXFLAGS += $(COMPLIE_INCL)
+LDFLAGS += $(COMPLIE_LIB)
 
-all:	mcndk
+OBJECTS = main.o FileDeCodecJni.o $(FFMPEG_PATH)/FfmpegContext.o $(THREAD_PATH)/gthreadpool.o
+EXE=FfmpegTest
+ 
+ 
+$(EXE):$(OBJECTS)
+	$(CPP) -o $(EXE) $(OBJECTS) $(LDFLAGS) 
 
-mcndk:	$(OBJS)
-	$(CXX) -o $@ $^
-
-%.o:	$(PROJECT_ROOT)%.cpp
-	$(CXX) -c $(CFLAGS) $(CXXFLAGS) $(CPPFLAGS) -o $@ $<
-
-%.o:	$(PROJECT_ROOT)%.c
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $<
-
+.PHONY:clean
 clean:
-	rm -fr mcndk $(OBJS)
+	rm $(EXE) $(OBJECTS)

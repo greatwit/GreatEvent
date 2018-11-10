@@ -1,2 +1,2 @@
 #!/bin/bash
-export LD_LIBRARY_PATH=./ffmpeg/lib
+export LD_LIBRARY_PATH=../common/ffmpeg/lib

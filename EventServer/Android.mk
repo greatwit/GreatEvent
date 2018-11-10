@@ -2,24 +2,26 @@ LOCAL_PATH := $(call my-dir)
 
 LOCAL_PROJECT_ROOT := $(LOCAL_PATH)#$(subst $(LOCAL_PATH)/,,$(wildcard $(LOCAL_PATH)))
 
-include $(CLEAR_VARS)  
-LOCAL_MODULE := avformat  
-LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/ffmpeg/android/lib/libavformat.so
+FFMPEG_PATH  = ../common/ffmpeg
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := avformat
+LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/android/lib/libavformat.so
 include $(PREBUILT_SHARED_LIBRARY)
 
-include $(CLEAR_VARS)  
-LOCAL_MODULE := avcodec  
-LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/ffmpeg/android/lib/libavcodec.so
+include $(CLEAR_VARS)
+LOCAL_MODULE := avcodec
+LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/android/lib/libavcodec.so
 include $(PREBUILT_SHARED_LIBRARY)
 
-include $(CLEAR_VARS)  
-LOCAL_MODULE := avutil  
-LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/ffmpeg/android/lib/libavutil.so
+include $(CLEAR_VARS)
+LOCAL_MODULE := avutil
+LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/android/lib/libavutil.so
 include $(PREBUILT_SHARED_LIBRARY)
 
-include $(CLEAR_VARS)  
-LOCAL_MODULE := swresample  
-LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/ffmpeg/android/lib/libswresample.so
+include $(CLEAR_VARS)
+LOCAL_MODULE := swresample
+LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/android/lib/libswresample.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -32,8 +34,8 @@ LOCAL_MODULE := netplayer
 
 LOCAL_C_INCLUDES += \
 				   $(LOCAL_PROJECT_ROOT)/net \
-				   $(LOCAL_PROJECT_ROOT)/ffmpeg \
-				   $(LOCAL_PROJECT_ROOT)/ffmpeg/include \
+				   $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH) \
+				   $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/include \
 				   $(LOCAL_PROJECT_ROOT)/../common \
 				   $(LOCAL_PROJECT_ROOT)/../common/gthread \
 				   external/stlport/stlport bionic
@@ -46,15 +48,14 @@ LOCAL_SRC_FILES := net/buffer.c \
 				net/signal.c \
 				net/log.c \
 				net/net_protocol.c \
-				../common/gthread/gmutex.cpp \
-				../common/gthread/gthread.cpp \
+				../common/gthread/gthreadpool.cpp \
+				$(FFMPEG_PATH)/FfmpegContext.cpp \
 				ActorStation.cpp \
 				BufferCache.cpp \
 				DataUtils.cpp \
 				EventCall.cpp \
 				IOUtils.cpp \
 				Session.cpp \
-				ffmpeg/FfmpegContext.cpp \
 				TaskBase.cpp \
 				TaskVideoRecv.cpp \
 				TaskVideoSend.cpp \

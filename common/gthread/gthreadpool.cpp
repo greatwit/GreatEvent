@@ -20,6 +20,21 @@ typedef struct tagGThread {
 	GThreadPool * mParent;
 } GThread_t;
 
+GThreadPool :: GThreadPool()
+	:mTag(NULL)
+	,mThreadList(NULL)
+{
+	pthread_mutex_init( &mMainMutex, NULL );
+	pthread_cond_init( &mIdleCond, NULL );
+	pthread_cond_init( &mFullCond, NULL );
+	pthread_cond_init( &mEmptyCond, NULL );
+
+	mMaxThreads = 0;
+	mIndex = 0;
+	mIsShutdown = 0;
+	mTotal = 0;
+}
+
 GThreadPool :: GThreadPool( int maxThreads, const char * tag )
 {
 	if( maxThreads <= 0 ) maxThreads = 2;
@@ -32,6 +47,17 @@ GThreadPool :: GThreadPool( int maxThreads, const char * tag )
 	mIndex = 0;
 	mIsShutdown = 0;
 	mTotal = 0;
+
+	tag = NULL == tag ? "unknown" : tag;
+	mTag = strdup( tag );
+
+	mThreadList = ( GThread_t ** )malloc( sizeof( void * ) * mMaxThreads );
+	memset( mThreadList, 0, sizeof( void * ) * mMaxThreads );
+}
+
+void GThreadPool :: initPara(int maxThreads, const char * tag) {
+	if( maxThreads <= 0 ) maxThreads = 2;
+	mMaxThreads = maxThreads;
 
 	tag = NULL == tag ? "unknown" : tag;
 	mTag = strdup( tag );
