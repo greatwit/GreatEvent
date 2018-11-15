@@ -43,6 +43,9 @@
 //#include "omxil_utils.h"
 //
 #include "mediacodec.h"
+
+#include "basedef.h"
+
 //
 //char* MediaCodec_GetName(vlc_object_t *p_obj, const char *psz_mime,
 //                         int hxxx_profile, bool *p_adaptive);
@@ -244,26 +247,31 @@ InitSymbols(mc_api *api)
 
     //vlc_mutex_lock(&lock);
 
-    if (i_init_state != -1)
+    if (i_init_state != -1) {
+		GLOGE("i_init_state != -1.");
         goto end;
+	}
 
     i_init_state = 0;
 
     void *ndk_handle = dlopen("libmediandk.so", RTLD_NOW);
-    if (!ndk_handle)
+    if (!ndk_handle) {
+		GLOGE("dlopen failed.");
         goto end;
-
-    for (int i = 0; members[i].name; i++)
+	}
+	int i = 0;
+    for (; members[i].name; i++)
     {
         void *sym = dlsym(ndk_handle, members[i].name);
         if (!sym && members[i].critical)
         {
             dlclose(ndk_handle);
+			GLOGE("dlsym total:%d", i);
             goto end;
         }
         *(void **)((uint8_t*)&syms + members[i].offset) = sym;
     }
-
+	GLOGE("jump for i:%d", i);
     i_init_state = 1;
 end:
     ret = i_init_state == 1;
@@ -325,20 +333,21 @@ static int Start(mc_api *api, union mc_api_args *p_args)
     int i_ret = MC_API_ERROR;
     ANativeWindow *p_anw = NULL;
 
-    assert(api->psz_mime && api->psz_name);
-
-    p_sys->p_codec = syms.AMediaCodec.createCodecByName("video/avc");//api->psz_name
+    //assert(api->psz_mime && api->psz_name);
+	
+	GLOGE("createCodecByName 1");
+    p_sys->p_codec = syms.AMediaCodec.createCodecByName("video_decoder.avc");//api->psz_name OMX.google.h264.decoder
     if (!p_sys->p_codec)
     {
-        //msg_Err(api->p_obj, "AMediaCodec.createCodecByName for %s failed",
-        //        api->psz_name);
+		GLOGE("AMediaCodec.createCodecByName for %s failed", "video/avc");
         goto error;
     }
-
+	GLOGE("createCodecByName 2");
+	
     p_sys->p_format = syms.AMediaFormat.new();
     if (!p_sys->p_format)
     {
-        //msg_Err(api->p_obj, "AMediaFormat.new failed");
+        GLOGE("AMediaFormat.new failed");
         goto error;
     }
 
@@ -372,12 +381,12 @@ static int Start(mc_api *api, union mc_api_args *p_args)
     if (syms.AMediaCodec.configure(p_sys->p_codec, p_sys->p_format,
                                    p_anw, NULL, 0) != AMEDIA_OK)
     {
-        //msg_Err(api->p_obj, "AMediaCodec.configure failed");
+        GLOGE("AMediaCodec.configure failed");
         goto error;
     }
     if (syms.AMediaCodec.start(p_sys->p_codec) != AMEDIA_OK)
     {
-        //msg_Err(api->p_obj, "AMediaCodec.start failed");
+        GLOGE("AMediaCodec.start failed");
         goto error;
     }
 
@@ -385,7 +394,7 @@ static int Start(mc_api *api, union mc_api_args *p_args)
     api->b_direct_rendering = !!p_anw;
     i_ret = 0;
 
-    //msg_Dbg(api->p_obj, "MediaCodec via NDK opened");
+    GLOGW("MediaCodec via NDK opened");
 error:
     if (i_ret != 0)
         Stop(api);

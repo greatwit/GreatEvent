@@ -15,10 +15,13 @@ FileDeCodec *mFileDec		= NULL;
 
 static jboolean StartFileDecodec(JNIEnv *env, jobject, jobject surface) {
 	bool bRes = false;
+	GLOGW("StartFileDecodec 1");
 	ANativeWindow *pAnw = ANativeWindow_fromSurface(env, surface);
+	GLOGW("StartFileDecodec 2");
 	mFileDec = new FileDeCodec();
+	GLOGW("StartFileDecodec 3");
 	mFileDec->StartVideo(pAnw);
-
+	GLOGW("StartFileDecodec 4");
 	return bRes;
 }
 
@@ -68,11 +71,12 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* reserved)
 
 	g_javaVM = vm;
 
-	GLOGW("JNI_OnLoad......");
+	GLOGW("JNI_OnLoad......1");
 	registerNativeMethods(env,
 			REG_PATH, video_method_table,
 			NELEM(video_method_table));
-
+	GLOGW("JNI_OnLoad......2");
+	
 	return JNI_VERSION_1_4;
 }
 

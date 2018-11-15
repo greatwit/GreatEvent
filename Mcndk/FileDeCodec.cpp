@@ -28,9 +28,9 @@ FileDeCodec::FileDeCodec()
 			,mFirstFrame(false)
 			,mFile(NULL)
 {
-	GLOGV("FileDeCodec::FileDeCodec() construct.");
+	GLOGW("FileDeCodec::FileDeCodec() construct.");
 	mFile = fopen(FILE_PATH, "rb");
-
+	GLOGW("open filepath:%s", FILE_PATH);
 	if(MC_API_ERROR == MediaCodecNdk_Init(&mApi))
 		GLOGE("MediaCodecNdk_Init error.");
 
@@ -79,8 +79,8 @@ bool FileDeCodec::StartVideo(void *surface)
 	args.video.i_width 	= 1280;
 	args.video.i_height = 720;
 	args.video.i_angle 	= 0;
-	mApi.start(&mApi, &args);
-
+	int err = mApi.start(&mApi, &args);
+	GLOGE("function %s,line:%d mApi.start res:%d",__FUNCTION__,__LINE__,err);
 	mbRunning = true;  
 
 	return true;
@@ -110,14 +110,14 @@ bool FileDeCodec::StopVideo()
 void * FileDeCodec::Thread()
 {
 	GThread::ThreadStarted();
-
+	GLOGW("FileDeCodec::Thread");
 	int res = 0, dataLen = 0, err=0;
 	int count = 0;
 	do {
 		res = fread(mcharLength, 4, 1, mFile);
 		if(res>0)
 		{
-			dataLen = charsToInt1(mcharLength,0);
+			dataLen = charsToInt1(mcharLength, 0);
 			res 	= fread(mData, dataLen, 1, mFile);
 			count++;
 			GLOGW("count:%d res:%d dataLen:%d", count, res, dataLen);
