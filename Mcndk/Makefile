@@ -11,7 +11,7 @@ COMPLIE_LIB  = -L$(FFMPEG_PATH)/lib -lavformat -lavcodec -lavdevice -lavfilter -
 CXXFLAGS += $(COMPLIE_INCL)
 LDFLAGS += $(COMPLIE_LIB)
 
-OBJECTS = main.o FileDeCodecJni.o $(FFMPEG_PATH)/FfmpegContext.o $(THREAD_PATH)/gthreadpool.o
+OBJECTS = main.o FileDeCodec.o FileDeCodecJni.o $(FFMPEG_PATH)/FfmpegContext.o $(THREAD_PATH)/gthreadpool.o $(THREAD_PATH)/gthread.o $(THREAD_PATH)/gmutex.o
 EXE=FfmpegTest
  
  

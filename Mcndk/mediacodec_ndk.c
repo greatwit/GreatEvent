@@ -327,7 +327,7 @@ static int Start(mc_api *api, union mc_api_args *p_args)
 
     assert(api->psz_mime && api->psz_name);
 
-    p_sys->p_codec = syms.AMediaCodec.createCodecByName(api->psz_name);
+    p_sys->p_codec = syms.AMediaCodec.createCodecByName("video/avc");//api->psz_name
     if (!p_sys->p_codec)
     {
         //msg_Err(api->p_obj, "AMediaCodec.createCodecByName for %s failed",
@@ -343,7 +343,8 @@ static int Start(mc_api *api, union mc_api_args *p_args)
     }
 
     syms.AMediaFormat.setInt32(p_sys->p_format, "encoder", 0);
-    syms.AMediaFormat.setString(p_sys->p_format, "mime", api->psz_mime);
+    syms.AMediaFormat.setString(p_sys->p_format, "mime", "video/avc");//api->psz_mime
+
     /* No limits for input size */
     syms.AMediaFormat.setInt32(p_sys->p_format, "max-input-size", 0);
     if (api->i_cat == VIDEO_ES)
@@ -617,6 +618,9 @@ static int Configure(mc_api * api, int i_profile)
     free(api->psz_name);
     bool b_adaptive;
     //api->psz_name = MediaCodec_GetName(api->p_obj, api->psz_mime, i_profile, &b_adaptive);
+    //api->psz_name = "video/avc";
+    //api->psz_mime = "video/avc";
+    api->i_cat = VIDEO_ES;
     if (!api->psz_name)
         return MC_API_ERROR;
     //api->i_quirks = OMXCodec_GetQuirks(api->i_cat, api->i_codec, api->psz_name, strlen(api->psz_name));
@@ -640,17 +644,17 @@ int MediaCodecNdk_Init(mc_api *api)
     if (!api->p_sys)
         return MC_API_ERROR;
 
-    api->clean = Clean;
-    api->configure = Configure;
-    api->start = Start;
-    api->stop = Stop;
-    api->flush = Flush;
-    api->dequeue_in = DequeueInput;
-    api->queue_in = QueueInput;
-    api->dequeue_out = DequeueOutput;
-    api->get_out = GetOutput;
-    api->release_out = ReleaseOutput;
-    api->release_out_ts = ReleaseOutputAtTime;
+    api->clean 				= Clean;
+    api->configure 			= Configure;
+    api->start 				= Start;
+    api->stop 				= Stop;
+    api->flush 				= Flush;
+    api->dequeue_in 		= DequeueInput;
+    api->queue_in 			= QueueInput;
+    api->dequeue_out 		= DequeueOutput;
+    api->get_out 			= GetOutput;
+    api->release_out 		= ReleaseOutput;
+    api->release_out_ts 	= ReleaseOutputAtTime;
     api->set_output_surface = SetOutputSurface;
 
     api->b_support_rotation = true;

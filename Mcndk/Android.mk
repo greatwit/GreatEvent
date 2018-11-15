@@ -6,25 +6,25 @@ LOCAL_PROJECT_ROOT := $(LOCAL_PATH)#$(subst $(LOCAL_PATH)/,,$(wildcard $(LOCAL_P
 FFMPEG_PATH  = ../common/ffmpeg
 THREAD_PATH  = ../common/gthread
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := avformat
-LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/android/lib/libavformat.so
-include $(PREBUILT_SHARED_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := avcodec
-LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/android/lib/libavcodec.so
-include $(PREBUILT_SHARED_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := avutil
-LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/android/lib/libavutil.so
-include $(PREBUILT_SHARED_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := swresample
-LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/android/lib/libswresample.so
-include $(PREBUILT_SHARED_LIBRARY)
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := avformat
+#LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/android/lib/libavformat.so
+#include $(PREBUILT_SHARED_LIBRARY)
+#
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := avcodec
+#LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/android/lib/libavcodec.so
+#include $(PREBUILT_SHARED_LIBRARY)
+#
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := avutil
+#LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/android/lib/libavutil.so
+#include $(PREBUILT_SHARED_LIBRARY)
+#
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := swresample
+#LOCAL_SRC_FILES := $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/android/lib/libswresample.so
+#include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 
@@ -39,14 +39,16 @@ LOCAL_C_INCLUDES += \
 					$(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/include \
 					$(LOCAL_PROJECT_ROOT)/$(THREAD_PATH)
 
-LOCAL_SRC_FILES := mediacodec_ndk.c FileDeCodecJni.cpp $(FFMPEG_PATH)/FfmpegContext.cpp $(THREAD_PATH)/gthreadpool.cpp
+#LOCAL_SRC_FILES := mediacodec_ndk.c FileDeCodecJni.cpp $(FFMPEG_PATH)/FfmpegContext.cpp $(THREAD_PATH)/gthreadpool.cpp
+LOCAL_SRC_FILES := mediacodec_ndk.c FileDeCodec.cpp McNative.cpp $(THREAD_PATH)/gmutex.cpp $(THREAD_PATH)/gthread.cpp
 
-LOCAL_SHARED_LIBRARIES := avformat avcodec avutil swresample
+#LOCAL_SHARED_LIBRARIES := avformat avcodec avutil swresample
+
 
 #LOCAL_STATIC_LIBRARIES := libMediaStream
-#LOCAL_SHARED_LIBRARIES := libnativehelper
+#LOCAL_SHARED_LIBRARIES := libandroid_runtime
 
-LOCAL_LDLIBS := -llog
+LOCAL_LDLIBS := -llog -landroid
 
 include $(BUILD_SHARED_LIBRARY)
 

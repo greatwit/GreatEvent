@@ -33,8 +33,19 @@ typedef struct mc_api_out mc_api_out;
 
 typedef int (*pf_MediaCodecApi_init)(mc_api*);
 
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 int MediaCodecJni_Init(mc_api*);
 int MediaCodecNdk_Init(mc_api*);
+
+#ifdef __cplusplus
+};
+#endif
+
 
 #define MC_API_ERROR (-1)
 #define MC_API_INFO_TRYAGAIN (-11)
