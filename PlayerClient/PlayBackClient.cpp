@@ -297,7 +297,6 @@ BOOL CPlayBackClient::Start(DWORD dwStart,DWORD dwEnd)
 
 int CPlayBackClient::SetPlayPause(BOOL bPause)
 {
-
 	CSingleLock slock(&m_csbSend,TRUE);
 	if(m_bPause == bPause)
 			return TRUE;

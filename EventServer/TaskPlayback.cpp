@@ -47,19 +47,8 @@
 		mSendBuffer.bSendCmd = true;
 		int ret = tcpSendData();
 
-		//int ret = sendEx(lpRet, sizeof(NET_CMD) + sizeof(LOGIN_RET));
-
-//		mpFile = OpenBitstreamFile( filename ); //camera_640x480.h264 //camera_1280x720.h264
-//		if(mpFile==NULL) {
-//			GLOGE("open file:%s failed.", filename);
-//		}
-		//mNALU  = AllocNALU(8000000);
-//
-//		tpcSendMsg(VIDEO_RECV_MSG);
-
 		GLOGE("net_cmd len:%d send ret:%d", mPackHeadLen, ret);
 		//StartTask();
-
 	}
 
 
@@ -96,6 +85,7 @@
 //		lpLR->nLength = sizeof(lpLR->lpData);
 
 		//LPFILE_INFO	  fileInfo = (LPFILE_INFO)lRet.lpData;
+
 		FILE_INFO info = {0};
 		lRet.nLength = sizeof(FILE_INFO);
 		mFfmpeg->getFileInfo(info);
@@ -104,6 +94,7 @@
 		info.tmStart = 0;
 		info.tmEnd	  = playInfo.gop_size;
 		memcpy(lRet.lpData, &info, sizeof(FILE_INFO));
+
 		GLOGE("getLoginRet w:%d h:%d size:%d framerate:%d extlen:%d\n",
 				playInfo.nWidth, playInfo.nHeigth,
 				playInfo.gop_size, playInfo.nFps, playInfo.extsize);
@@ -125,8 +116,10 @@
 				iRet = send(sockId, data+len-leftLen, leftLen, 0);
 			else
 				iRet = send(sockId, data+len-leftLen, MAX_MTU, 0);
-			if(iRet<0)
+			if(iRet<0) {
 				GLOGE("send data error ret:%d.", iRet);
+				return iRet;
+			}
 			leftLen -= iRet;
 		}while(leftLen>0);
 
@@ -211,29 +204,43 @@
 			    char acValue[256] = {0};//new char[256];
 			    memset(acValue,0, 256);
 				LPNET_CMD pCmdbuf = (LPNET_CMD)mRecvBuffer.buff;
-			    PROTO_GetValueByName(mRecvBuffer.buff, (char*)"name", acValue, &lValueLen);
-			    if (strcmp(acValue, "start") == 0) {
-				    memset(acValue,0, 256);
-				    PROTO_GetValueByName(mRecvBuffer.buff, (char*)"tmstart", acValue, &lValueLen);
-				    GLOGE("tmstart:%d",atoi(acValue));
+				if(pCmdbuf->dwCmd == MODULE_MSG_CONTROL_PLAY) {
+					PROTO_GetValueByName(mRecvBuffer.buff, (char*)"name", acValue, &lValueLen);
+					if (strcmp(acValue, "start") == 0) {
+						memset(acValue,0, 256);
+						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"tmstart", acValue, &lValueLen);
+						GLOGE("tmstart:%d",atoi(acValue));
 
-				    memset(acValue,0, 256);
-				    PROTO_GetValueByName(mRecvBuffer.buff, (char*)"tmend", acValue, &lValueLen);
-				    GLOGE("tmend:%d",atoi(acValue));
-				    EventCall::addEvent( mSess, EV_WRITE, -1 );
-			    }
-			    else if(strcmp(acValue, "pause") == 0) {
+						memset(acValue,0, 256);
+						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"tmend", acValue, &lValueLen);
+						GLOGE("tmend:%d",atoi(acValue));
+						EventCall::addEvent( mSess, EV_WRITE, -1 );
+					}
+					else if(strcmp(acValue, "setpause") == 0) {
+						memset(acValue,0, 256);
+						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"value", acValue, &lValueLen);
+					}
+					else if(strcmp(acValue, "seek") == 0) {
+						memset(acValue,0, 256);
+						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"value", acValue, &lValueLen);
 
-			    }
-			    else if(strcmp(acValue, "seek") == 0) {
-
-			    }
-
+						char *lpRet   = mSendBuffer.cmd;
+						LPNET_CMD cmd = (LPNET_CMD)lpRet;
+						cmd->dwFlag   = NET_FLAG;
+						cmd->dwCmd    = MODULE_MSG_SEEK_CMPD;
+						cmd->dwIndex  = 0;
+						cmd->dwLength = sizeof(LOGIN_RET);
+					}
+				}
 			    //GLOGE("recv total:%s", mRecvBuffer.buff);
 
 			    mRecvBuffer.reset();
 			}
 		}
+		else if(ret == 0) {
+
+		}
+
 		return ret;
 	}
 

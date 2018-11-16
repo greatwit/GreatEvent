@@ -176,7 +176,7 @@ BOOL CNetDataClient::RecvData(DWORD& dwCmd,DWORD& dwIndex,void* lpData,int& nLen
 		return FALSE;
 	}
 
-	M4W_LOG_ERR("recv cmd=%d",nc.dwCmd);
+	M4W_LOG_ERR("recv cmd=%d len:%d",nc.dwCmd, nc.dwLength);
 	switch(nc.dwCmd) {
 
 	case MODULE_MSG_VIDEO:

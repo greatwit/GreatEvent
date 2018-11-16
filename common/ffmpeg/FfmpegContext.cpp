@@ -139,28 +139,6 @@ typedef struct tagPLAYER_INIT_INFO
 */
 
 
-
-static int mov_read_ftyp(MOVContext *c, AVIOContext *pb, MOVAtom atom)
-{
-    //读4个字节的major_brand,并存到dict中
-    ffio_read_size(pb, type, 4);
-    av_dict_set(&c->fc->metadata, "major_brand", type, 0);
-
-    //读4个字节的minor_ver,并存到dict中
-    minor_ver = avio_rb32(pb);
-    av_dict_set_int(&c->fc->metadata, "minor_version", minor_ver, 0);
-
-    //读剩余的字节，即comp_brands_str,并存到dict中
-    comp_brand_size = atom.size - 8;    //atom.size己经是去除8字节头，余下的size
-    ffio_read_size(pb, comp_brands_str, comp_brand_size);
-    comp_brands_str[comp_brand_size] = 0;
-    av_dict_set(&c->fc->metadata, "compatible_brands", comp_brands_str, 0);
-
-    return 0;
-}
-
-
-
 int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo) {
 
 	int ret = 0;
