@@ -175,29 +175,31 @@ BOOL CNetDataClient::RecvData(DWORD& dwCmd,DWORD& dwIndex,void* lpData,int& nLen
 		M4W_LOG_ERR("recv err 333");
 		return FALSE;
 	}
-
-	M4W_LOG_ERR("recv cmd=%d len:%d",nc.dwCmd, nc.dwLength);
+	char head[] = {0,0,0,1};
+	//M4W_LOG_ERR("recv cmd=%d len:%d",nc.dwCmd, nc.dwLength);
 	switch(nc.dwCmd) {
 
-	case MODULE_MSG_VIDEO:
-		LPAV_FRAME av;
-		if (!Recv(lpData, nc.dwLength))
-		{
-			M4W_LOG_ERR("recv err 4444");
-			return FALSE;
-		}
-		av = (LPAV_FRAME)lpData;
-		if(av->dwFrameType==1 || av->dwFrameType==2) {
-			count++;
-			//char tag[4] = {0x00, 0x00, 0x00, 0x01};
-			//fwrite(tag, 1, 4, mwFile);
-			fwrite(av->lpData, 1, av->nLength, mwFile);
-			//M4W_LOG_ERR("recv avlen=%d type:%d count:%d",av->nLength, av->dwFrameType, count);
-		}
-		break;
+		case MODULE_MSG_VIDEO:
+			LPAV_FRAME av;
+			if (!Recv(lpData, nc.dwLength))
+			{
+				M4W_LOG_ERR("recv err 4444");
+				return FALSE;
+			}
+			av = (LPAV_FRAME)lpData;
+			if(av->dwFrameType==1 || av->dwFrameType==2) {
+				count++;
+				//char tag[4] = {0x00, 0x00, 0x00, 0x01};
+				//fwrite(tag, 1, 4, mwFile);
+				fwrite(av->lpData, 1, av->nLength, mwFile);
+				if(memcmp(head, av->lpData, 4)==0)
+					printf("head:0x%02x type:%d\n", (char)av->lpData[4], av->dwFrameType);
+				//M4W_LOG_ERR("recv avlen=%d type:%d count:%d",av->nLength, av->dwFrameType, count);
+			}
+			break;
 
-	case MODULE_MSG_DATAEND:
-		return FALSE;
+		case MODULE_MSG_DATAEND:
+			return FALSE;
 	}
 
 
@@ -254,12 +256,32 @@ BOOL CNetDataClient::ConnectServer(SFILE_INFO* lpInfo)
 
 	PLAYER_INIT_INFO &info = lpInfo->pi;
 
+	printf("nVideoExtSize:%d\n", info.nVideoExtSize);
+
+	int spsIndex =0, spsLen = 0, ppsIndex =0, ppsLen = 0;
+	for(int i=0;i<info.nVideoExtSize;i++) {
+		switch(info.videoExtData[i]) {
+		case 0x67:
+			spsIndex = i;
+			spsLen   = (int)info.videoExtData[i-1];
+			break;
+		case 0x68:
+			ppsIndex = i;
+			ppsLen   = (int)info.videoExtData[i-1];
+			break;
+		}
+	}
+
+	printf("sps index:%d sps len:%d pps index:%d pps len:%d\n", spsIndex, spsLen, ppsIndex, ppsLen);
+
 	//info.nVideoExtSize
 	char tag[4] = {0x00, 0x00, 0x00, 0x01};
 	fwrite(tag, 1, 4, mwFile);
-	fwrite(info.videoExtData+8, 1, 16, mwFile);
+	fwrite(info.videoExtData+spsIndex, 1, spsLen, mwFile);
 	fwrite(tag, 1, 4, mwFile);
-	fwrite(info.videoExtData+27, 1, 4, mwFile);
+	fwrite(info.videoExtData+ppsIndex, 1, ppsLen, mwFile);
+	//for(int i=0;i<info.nVideoExtSize;i++)
+	//	printf("0x%02X\n", (unsigned char)info.videoExtData[i]);
 	return TRUE;
 }
 

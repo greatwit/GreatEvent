@@ -91,7 +91,7 @@ int FfmpegContext::getPackageData(AVPacket &pkt, int &frameType) {
 
     if (ret >= 0) {
     	AVStream *stream = mFmt_ctx->streams[pkt.stream_index];
-    	frameType = stream->codec->codec_type;
+    	frameType 		 = stream->codec->codec_type;
 //		if (stream->codec->codec_type==AVMEDIA_TYPE_VIDEO ) {
 //			char tag[4] = {0x00, 0x00, 0x00, 0x01};
 //			fwrite(tag, 1, 4, mwFile);
@@ -101,87 +101,37 @@ int FfmpegContext::getPackageData(AVPacket &pkt, int &frameType) {
 	return ret;
 }
 
-/*
-typedef struct tagPLAYER_INIT_INFO
-{
-	int nCodeID;
-	int nFps;
-	int nWidth;
-	int nHeigth;
-	int nSampleRate;
-	int nBistspersample;
-	int nChannel;
-	int nAudioFormat;
-	int sample_fmt;
-	unsigned long long channel_layout;
-	int nCodecFlag;
-	int bits_per_sample;
-	int bit_rate;
-	int me_method;
-	int bit_ratetolerance;
-	int block_align;
-
-	int gop_size;
-	int frame_size;
-	int frame_number;
-	int ildct_cmp;
-	int me_subpel_quality;
-	int mb_lmax;
-	int mb_lmin;
-	int me_penalty_compensation;
-	float qblur;
-	int  flags;
-	int extsize;
-	char extdata[ARRAY_NUM];
-	int  nVideoExtSize;
-	char	videoExtData[ARRAY_NUM];
-}
-*/
-
-
-int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo) {
+int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo, unsigned int &endTime) {
 
 	int ret = 0;
-    //AVFormatContext *ifmt_ctx = NULL;
-
-	playinfo.gop_size = mFmt_ctx->duration/1000;
+	endTime = (mFmt_ctx->duration - mFmt_ctx->start_time)/1000;
 
 	for (int i = 0; i < mFmt_ctx->nb_streams; i++) {
 			//Create output AVStream according to input AVStream
-			AVFormatContext *ofmt_ctx;
-			AVStream *in_stream = mFmt_ctx->streams[i];
-			AVCodecContext *pCodec = in_stream->codec;
-			AVStream *out_stream = NULL;
+			//AVFormatContext *ofmt_ctx;
+			AVStream *pStream = mFmt_ctx->streams[i];
+			AVCodecContext *pCodec = pStream->codec;
+			//AVStream *out_stream = NULL;
 
 			AVMediaType codecType = mFmt_ctx->streams[i]->codec->codec_type;
 			if(codecType==AVMEDIA_TYPE_VIDEO) {
 				//out_stream=avformat_new_stream(ofmt_ctx_v, in_stream->codec->codec);
 
-				playinfo.nCodeID					= pCodec->codec_id;
-				playinfo.nFps						= in_stream->r_frame_rate.num / in_stream->r_frame_rate.den;
+				playinfo.nCodeID					= pCodec->codec_id+1;
+				playinfo.nFps						= (pStream->r_frame_rate.den==0)?25:(pStream->r_frame_rate.num / pStream->r_frame_rate.den);
 				playinfo.nWidth						= pCodec->width;
 				playinfo.nHeigth					= pCodec->height;
 
-				playinfo.nBistspersample			= pCodec->bits_per_coded_sample;
+				if((pCodec->extradata) && (pCodec->extradata_size>0)) {
+					playinfo.nVideoExtSize			= pCodec->extradata_size;
+					//int nCopy = pCodec->extradata_size <= sizeof(playinfo.videoExtData)?pCodec->extradata_size:sizeof(playinfo.videoExtData);
+					//memcpy_s(playinfo.videoExtData, sizeof(playinfo.videoExtData), pCodec->extradata, nCopy);
+					memcpy(playinfo.videoExtData, pCodec->extradata, pCodec->extradata_size);
+				}
 
-				playinfo.sample_fmt					= pCodec->sample_fmt;
-				playinfo.nCodecFlag					= pCodec->codec_tag;
-				playinfo.me_method;
-				playinfo.bit_ratetolerance			= pCodec->bit_rate_tolerance;
-
-				playinfo.frame_size					= pCodec->frame_size;
-				playinfo.frame_number				= pCodec->frame_number;
-				playinfo.ildct_cmp					= pCodec->ildct_cmp;
-				playinfo.me_subpel_quality			= pCodec->me_subpel_quality;
-				playinfo.mb_lmax					= pCodec->mb_lmax;
-				playinfo.mb_lmin					= pCodec->mb_lmin;
-				playinfo.me_penalty_compensation	= pCodec->me_penalty_compensation;
-				playinfo.qblur						= pCodec->qblur;//float
-				playinfo.flags						= pCodec->flags;
-
-
-				playinfo.nVideoExtSize				= pCodec->extradata_size;
-				memcpy(playinfo.videoExtData, pCodec->extradata, pCodec->extradata_size);
+				printf("len:%d\n",pCodec->extradata_size);
+				for(int i=0; i<pCodec->extradata_size; i++)
+					printf("v:0x%02X\n", (unsigned char)pCodec->extradata[i]);
 
 //				int spsLength=pCodec->extradata[6]*0xFF+pCodec->extradata[7];
 //				int ppsLength=pCodec->extradata[8+spsLength+1]*0xFF+pCodec->extradata[8+spsLength+2];
@@ -195,18 +145,62 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo) {
 			}
 			else if(codecType==AVMEDIA_TYPE_AUDIO)
 			{
-				playinfo.nAudioFormat				= in_stream->codecpar->format;//86018;//
-				playinfo.nSampleRate				= pCodec->sample_rate;
-				playinfo.nChannel					= pCodec->channels;
-				playinfo.channel_layout				= pCodec->channel_layout;//unsigned long long
-				playinfo.bits_per_sample			= pCodec->bits_per_raw_sample;//bit count
-				playinfo.nBistspersample			= pCodec->bits_per_coded_sample; // sample right 16
+				playinfo.nAudioFormat				= pCodec->codec_id;//86018;//
+				//if(playinfo.nAudioFormat == AV_CODEC_ID_NONE || playinfo.nAudioFormat == AV_CODEC_ID_ADPCM_IMA_WAV)
+				//	playinfo.nAudioFormat = AV_CODEC_ID_IMA;
+				playinfo.nCodecFlag					= pCodec->codec_tag;
 				playinfo.bit_rate					= pCodec->bit_rate;
 				playinfo.bit_ratetolerance			= pCodec->bit_rate_tolerance;
-				playinfo.frame_size					= pCodec->frame_size;
 				playinfo.sample_fmt					= pCodec->sample_fmt;
-				playinfo.block_align				= in_stream->codecpar->block_align;
+				playinfo.bits_per_sample			= pCodec->bits_per_coded_sample;//bit count
+				playinfo.nBistspersample			= pCodec->bits_per_raw_sample;  // sample right 16
+				if(playinfo.nBistspersample==0) {
+					switch(pCodec->sample_fmt) {
+						case AV_SAMPLE_FMT_U8:
+						case AV_SAMPLE_FMT_U8P:
+							playinfo.nBistspersample=8;
+							break;
+						case AV_SAMPLE_FMT_S16:
+						case AV_SAMPLE_FMT_S16P:
+							playinfo.nBistspersample=16;
+							break;
+						case AV_SAMPLE_FMT_S32:
+						case AV_SAMPLE_FMT_S32P:
+						case AV_SAMPLE_FMT_FLT:
+						case AV_SAMPLE_FMT_FLTP:
+
+						case AV_SAMPLE_FMT_S64:
+						case AV_SAMPLE_FMT_S64P:
+						case AV_SAMPLE_FMT_DBL:
+						case AV_SAMPLE_FMT_DBLP:
+							playinfo.nBistspersample=32;
+							break;
+						default:
+							playinfo.nBistspersample=16;
+							break;
+					}
+				}
+				playinfo.block_align				= pCodec->block_align;
+				playinfo.channel_layout				= pCodec->channel_layout;//unsigned long long
+				playinfo.nSampleRate				= pCodec->sample_rate;
+				playinfo.nChannel					= pCodec->channels;
+
+				if(playinfo.nAudioFormat == AV_CODEC_ID_MP2) {
+					playinfo.nAudioFormat = AV_CODEC_ID_MP1;
+					if(playinfo.nSampleRate == 0) playinfo.nSampleRate = 8000;
+					if(playinfo.nChannel == 0) playinfo.nChannel = 2;
+				}
+
 				playinfo.extsize					= pCodec->extradata_size;
+				playinfo.gop_size					= pCodec->gop_size;
+				playinfo.frame_size					= pCodec->frame_size;
+				playinfo.frame_number				= pCodec->frame_number;
+				playinfo.ildct_cmp					= pCodec->ildct_cmp;
+				playinfo.me_subpel_quality			= pCodec->me_subpel_quality;
+				playinfo.mb_lmax					= pCodec->mb_lmax;
+				playinfo.mb_lmin					= pCodec->mb_lmin;
+				playinfo.me_penalty_compensation	= pCodec->me_penalty_compensation;
+				playinfo.qblur						= pCodec->qblur;	//float
 				memcpy(playinfo.extdata, pCodec->extradata, pCodec->extradata_size);
 
 				printf( "nAudioFormat:%d nSampleRate:%d nChannel:%d bits_per_sample:%d bit_rate:%d bit_ratetolerance:%d frame_size:%d sample_fmt:%d\n",
@@ -220,8 +214,7 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo) {
 
 int FfmpegContext::getFileInfo(FILE_INFO &fileInfo) {
 
-	getPlayInfo(fileInfo.pi);
-	fileInfo.tmEnd 		= 100000000;
+	getPlayInfo(fileInfo.pi, fileInfo.tmEnd);
 	fileInfo.tmStart 	= 0;
 
 	return 0;
@@ -245,7 +238,7 @@ int FfmpegContext::GetH264Stream()
    uint8_t startcode[4]={00,00,00,01};
    FILE *fp;
 
-   fp=fopen("123.h264","wb+");
+   fp=fopen("123.h264", "wb+");
 
    char *InputFileName="h264/tmp.mp4";
    char *OutPutPath = "out.h264";

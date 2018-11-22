@@ -91,8 +91,6 @@
 		mFfmpeg->getFileInfo(info);
 
 		PLAYER_INIT_INFO &playInfo = info.pi;
-		info.tmStart = 0;
-		info.tmEnd	  = playInfo.gop_size;
 		memcpy(lRet.lpData, &info, sizeof(FILE_INFO));
 
 		GLOGE("getLoginRet w:%d h:%d size:%d framerate:%d extlen:%d\n",
@@ -285,6 +283,20 @@
 				switch(frameType) {
 					case AVMEDIA_TYPE_VIDEO:
 						frame->dwFrameType = (pkt.flags == 0)?FRAME_VIDEO_P:FRAME_VIDEO_I;
+						if(frame->dwFrameType==FRAME_VIDEO_I && pkt.data[4]==0x67) {
+							int index = 0,len = 0;
+							char head[4] = {0,0,0,1};
+							for(int i=0;i<36;i++) {
+								char curDat = pkt.data[i];
+								if(curDat==0x67 || curDat==0x68) {
+									index 	= i;
+									len 	= (int)pkt.data[i-1];
+									memcpy(pkt.data+i-4, head, 4);
+									printf("---------------------index:%d len:%d\n", index, len);
+								}
+							}
+							memcpy(pkt.data+index+len, head, 4);
+						}
 						if(pkt.size>=4) {
 							pkt.data[0] = 0x00;
 							pkt.data[1] = 0x00;

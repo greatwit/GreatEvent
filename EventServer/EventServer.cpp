@@ -14,10 +14,11 @@
 #include "TcpClient.hpp"
 #include "ActorStation.hpp"
 
+#define PORT 31000
 
 int main( int argc, char * argv[] )
 {
-	int port = 8080, maxThreads = 10;
+	int port = PORT, maxThreads = 10;
 	//const char * serverType = "hahs";
 
 	extern char *optarg ;

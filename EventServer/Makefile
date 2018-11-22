@@ -2,8 +2,8 @@ CXXFLAGS += -std=c++11
 
 CC 	= gcc
 CPP = g++
-CFLAGS = -Wall -DHAVE_CONFIG_H -g -fPIC #-DHAVE_SYS_TIME_H
-CXXFLAGS = -Dlinux -DHAV_FFMPEG
+CFLAGS 		= -Wall -DHAVE_CONFIG_H -g -fPIC #-DHAVE_SYS_TIME_H
+CXXFLAGS 	+= -Dlinux -DHAV_FFMPEG
 
 FFMPEG_PATH  = ../common/ffmpeg
 COMPLIE_INCL = -I./net -I../common -I../common/gthread -I$(FFMPEG_PATH) -I$(FFMPEG_PATH)/include

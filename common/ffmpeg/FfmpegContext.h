@@ -27,7 +27,7 @@ class FfmpegContext {
 		FfmpegContext( string filename );
 		virtual ~FfmpegContext();
 
-		int getPlayInfo(PLAYER_INIT_INFO &playinfo);
+		int getPlayInfo(PLAYER_INIT_INFO &playinfo, unsigned int &endTime);
 		int getFileInfo(FILE_INFO &fileInfo);
 		int getPackageCall();
 		int getPackageData(AVPacket&pkt,int &frameType);

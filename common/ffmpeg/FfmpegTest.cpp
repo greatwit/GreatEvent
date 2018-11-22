@@ -10,7 +10,7 @@ class FfmpegCall : public IPkgCall {
 public:
 	~FfmpegCall() {}
 	void PkgSource(AVPacket&pkt, int &frameType) {
-		printf("type:%d len:%d\n", frameType, pkt.size);
+		//printf("type:%d len:%d\n", frameType, pkt.size);
 	}
 };
 
@@ -44,9 +44,9 @@ int main(int argc, char**argv) {
 	context->getFileInfo(*fileInfo);
 //
 	PLAYER_INIT_INFO &playInfo = fileInfo->pi;
-	printf("w:%d h:%d size:%d framerate:%d\n",
+	printf("w:%d h:%d mediasize:%d nVideoExtSize:%d framerate:%d\n",
 			playInfo.nWidth, playInfo.nHeigth,
-			playInfo.gop_size, playInfo.nFps);
+			playInfo.gop_size, playInfo.nVideoExtSize, playInfo.nFps);
 //
 	printf("nAudioFormat:%d nChannel:%d nSampleRate:%d bit_rate:%d\n",
 			playInfo.nAudioFormat, playInfo.nChannel,

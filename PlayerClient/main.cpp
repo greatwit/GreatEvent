@@ -65,7 +65,7 @@ int main(int argc, char**argv)
 	}
 
     CNetDataClient *lpClient = new CPlayBackClient();
-    int ret = lpClient->OpenPlayback(argv[1], 8080, argv[2], NULL, &info); //now connect to the server
+    int ret = lpClient->OpenPlayback(argv[1], 31000, argv[2], NULL, &info); //now connect to the server
 
     getchar();
 
