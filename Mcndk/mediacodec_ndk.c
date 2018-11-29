@@ -1,26 +1,4 @@
-/*****************************************************************************
- * mediacodec_ndk.c: mc_api implementation using NDK
- *****************************************************************************
- * Copyright © 2015 VLC authors and VideoLAN, VideoLabs
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
- *****************************************************************************/
 
-/*****************************************************************************
- * Preamble
- *****************************************************************************/
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -46,9 +24,6 @@
 
 #include "basedef.h"
 
-//
-//char* MediaCodec_GetName(vlc_object_t *p_obj, const char *psz_mime,
-//                         int hxxx_profile, bool *p_adaptive);
 
 #define THREAD_NAME "mediacodec_ndk"
 
@@ -118,6 +93,9 @@ typedef struct AMediaCrypto AMediaCrypto;
 
 typedef AMediaCodec* (*pf_AMediaCodec_createCodecByName)(const char *name);
 
+typedef AMediaCodec* (*pf_AMediaCodec_createDecoderByType)(const char *mime_type);
+typedef AMediaCodec* (*pf_AMediaCodec_createEncoderByType)(const char *mime_type);
+
 typedef media_status_t (*pf_AMediaCodec_configure)(AMediaCodec*,
         const AMediaFormat* format,
         ANativeWindow* surface,
@@ -164,6 +142,8 @@ typedef media_status_t (*pf_AMediaFormat_delete)(AMediaFormat*);
 typedef void (*pf_AMediaFormat_setString)(AMediaFormat*,
         const char* name, const char* value);
 
+typedef const char* (*pf_AMediaFormat_toString)(AMediaFormat*);
+
 typedef void (*pf_AMediaFormat_setInt32)(AMediaFormat*,
         const char* name, int32_t value);
 
@@ -174,6 +154,8 @@ struct syms
 {
     struct {
         pf_AMediaCodec_createCodecByName createCodecByName;
+        pf_AMediaCodec_createDecoderByType createDecoderByType;//(const char *mime_type)
+        pf_AMediaCodec_createEncoderByType createEncoderByType;//(const char *name)
         pf_AMediaCodec_configure configure;
         pf_AMediaCodec_start start;
         pf_AMediaCodec_stop stop;
@@ -193,6 +175,7 @@ struct syms
         pf_AMediaFormat_new new;
         pf_AMediaFormat_delete delete;
         pf_AMediaFormat_setString setString;
+        //pf_AMediaFormat_toString toString;
         pf_AMediaFormat_setInt32 setInt32;
         pf_AMediaFormat_getInt32 getInt32;
     } AMediaFormat;
@@ -209,6 +192,8 @@ static struct members members[] =
 {
 #define OFF(x) offsetof(struct syms, AMediaCodec.x)
     { "AMediaCodec_createCodecByName", OFF(createCodecByName), true },
+	{ "AMediaCodec_createDecoderByType", OFF(createDecoderByType), true },
+	{ "AMediaCodec_createEncoderByType", OFF(createEncoderByType), true },
     { "AMediaCodec_configure", OFF(configure), true },
     { "AMediaCodec_start", OFF(start), true },
     { "AMediaCodec_stop", OFF(stop), true },
@@ -229,6 +214,7 @@ static struct members members[] =
     { "AMediaFormat_new", OFF(new), true },
     { "AMediaFormat_delete", OFF(delete), true },
     { "AMediaFormat_setString", OFF(setString), true },
+	//{ "AMediaFormat_toString", OFF(toString), true },
     { "AMediaFormat_setInt32", OFF(setInt32), true },
     { "AMediaFormat_getInt32", OFF(getInt32), true },
 #undef OFF
@@ -335,14 +321,14 @@ static int Start(mc_api *api, union mc_api_args *p_args)
 
     //assert(api->psz_mime && api->psz_name);
 	
-	GLOGE("createCodecByName 1");
-    p_sys->p_codec = syms.AMediaCodec.createCodecByName("video_decoder.avc");//api->psz_name OMX.google.h264.decoder
+	GLOGE("createDecoderByType 1");
+    p_sys->p_codec = syms.AMediaCodec.createDecoderByType("video/avc");//syms.AMediaCodec.createCodecByName("video_decoder.avc");//api->psz_name OMX.google.h264.decoder
     if (!p_sys->p_codec)
     {
-		GLOGE("AMediaCodec.createCodecByName for %s failed", "video/avc");
+		GLOGE("AMediaCodec.createDecoderByType for %s failed", "video/avc");
         goto error;
     }
-	GLOGE("createCodecByName 2");
+	GLOGE("createDecoderByType 2");
 	
     p_sys->p_format = syms.AMediaFormat.new();
     if (!p_sys->p_format)
@@ -350,26 +336,29 @@ static int Start(mc_api *api, union mc_api_args *p_args)
         GLOGE("AMediaFormat.new failed");
         goto error;
     }
-
-    syms.AMediaFormat.setInt32(p_sys->p_format, "encoder", 0);
+    GLOGW("Configure begin.");
+    //syms.AMediaFormat.setInt32(p_sys->p_format, "decoder", 1);
     syms.AMediaFormat.setString(p_sys->p_format, "mime", "video/avc");//api->psz_mime
 
     /* No limits for input size */
-    syms.AMediaFormat.setInt32(p_sys->p_format, "max-input-size", 0);
+    //syms.AMediaFormat.setInt32(p_sys->p_format, "max-input-size", 0);
     if (api->i_cat == VIDEO_ES)
     {
+    	GLOGW("VIDEO_ES------ width:%d height:%d.", p_args->video.i_width, p_args->video.i_height);
         syms.AMediaFormat.setInt32(p_sys->p_format, "width", p_args->video.i_width);
         syms.AMediaFormat.setInt32(p_sys->p_format, "height", p_args->video.i_height);
-        syms.AMediaFormat.setInt32(p_sys->p_format, "rotation-degrees", p_args->video.i_angle);
+        syms.AMediaFormat.setInt32(p_sys->p_format, "frame-rate", 30);
+        //syms.AMediaFormat.setInt32(p_sys->p_format, "rotation-degrees", p_args->video.i_angle);
         if (p_args->video.p_surface)
         {
             p_anw = p_args->video.p_surface;
-            if (p_args->video.b_tunneled_playback)
-                syms.AMediaFormat.setInt32(p_sys->p_format,
-                                           "feature-tunneled-playback", 1);
-            if (p_args->video.b_adaptive_playback)
-                syms.AMediaFormat.setInt32(p_sys->p_format,
-                                           "feature-adaptive-playback", 1);
+//            if (p_args->video.b_tunneled_playback)
+//                syms.AMediaFormat.setInt32(p_sys->p_format,
+//                                           "feature-tunneled-playback", 1);
+//            if (p_args->video.b_adaptive_playback)
+//                syms.AMediaFormat.setInt32(p_sys->p_format,
+//                                           "feature-adaptive-playback", 1);
+            GLOGW("p_args->video.p_surface.");
         }
     }
     else
@@ -384,17 +373,27 @@ static int Start(mc_api *api, union mc_api_args *p_args)
         GLOGE("AMediaCodec.configure failed");
         goto error;
     }
+    GLOGW("syms.AMediaCodec.configure.");
     if (syms.AMediaCodec.start(p_sys->p_codec) != AMEDIA_OK)
     {
         GLOGE("AMediaCodec.start failed");
         goto error;
     }
-
+    GLOGW("syms.AMediaCodec.start.");
     api->b_started = true;
     api->b_direct_rendering = !!p_anw;
     i_ret = 0;
 
     GLOGW("MediaCodec via NDK opened");
+
+    uint8_t *p_mc_buf;
+    size_t i_mc_size;
+    p_mc_buf = syms.AMediaCodec.getInputBuffer(p_sys->p_codec,
+                                               0, &i_mc_size);
+    GLOGW("getInputBuffer size:%d", i_mc_size);
+
+    //p_mc_buf = syms.AMediaCodec.getOutputBuffer(p_sys->p_codec, 0, &i_mc_size);
+    //GLOGW("getOutputBuffer size:%d", i_mc_size);
 error:
     if (i_ret != 0)
         Stop(api);
@@ -450,6 +449,7 @@ static int QueueInput(mc_api *api, int i_index, const void *p_buf,
 
     p_mc_buf = syms.AMediaCodec.getInputBuffer(p_sys->p_codec,
                                                i_index, &i_mc_size);
+    GLOGE("getInputBuffer memsize:%d datasize:%d", i_mc_size, i_size);
     if (!p_mc_buf)
         return MC_API_ERROR;
 
@@ -482,17 +482,18 @@ static int DequeueOutput(mc_api *api, mtime_t i_timeout)
     mc_api_sys *p_sys = api->p_sys;
     ssize_t i_index;
 
-    i_index = syms.AMediaCodec.dequeueOutputBuffer(p_sys->p_codec, &p_sys->info,
-                                                   i_timeout);
-
+    i_index = syms.AMediaCodec.dequeueOutputBuffer(p_sys->p_codec, &p_sys->info, i_timeout);
+    GLOGE("dequeueOutputBuffer size:%d time:%d", p_sys->info.size, p_sys->info.presentationTimeUs);
     if (i_index >= 0)
         return i_index;
     else if (i_index == AMEDIACODEC_INFO_TRY_AGAIN_LATER)
         return MC_API_INFO_TRYAGAIN;
     else if (i_index == AMEDIACODEC_INFO_OUTPUT_BUFFERS_CHANGED)
         return MC_API_INFO_OUTPUT_BUFFERS_CHANGED;
-    else if (i_index == AMEDIACODEC_INFO_OUTPUT_FORMAT_CHANGED)
+    else if (i_index == AMEDIACODEC_INFO_OUTPUT_FORMAT_CHANGED) {
+    	//AMediaFormat* format = syms.AMediaCodec.getOutputFormat(p_sys->p_codec);
         return MC_API_INFO_OUTPUT_FORMAT_CHANGED;
+    }
     else
     {
         //msg_Warn(api->p_obj, "AMediaCodec.dequeueOutputBuffer failed");
@@ -554,6 +555,7 @@ static int GetOutput(mc_api *api, int i_index, mc_api_out *p_out)
             p_out->conf.video.crop_top      = GetFormatInteger(format, "crop-top");
             p_out->conf.video.crop_right    = GetFormatInteger(format, "crop-right");
             p_out->conf.video.crop_bottom   = GetFormatInteger(format, "crop-bottom");
+            GLOGE("OutputFormat change to w:%d h:%d format:%d", p_out->conf.video.width, p_out->conf.video.height, p_out->conf.video.pixel_format);
         }
         else
         {
@@ -624,14 +626,14 @@ static void Clean(mc_api *api)
  *****************************************************************************/
 static int Configure(mc_api * api, int i_profile)
 {
-    free(api->psz_name);
+    //free(api->psz_name);
     bool b_adaptive;
     //api->psz_name = MediaCodec_GetName(api->p_obj, api->psz_mime, i_profile, &b_adaptive);
     //api->psz_name = "video/avc";
     //api->psz_mime = "video/avc";
     api->i_cat = VIDEO_ES;
-    if (!api->psz_name)
-        return MC_API_ERROR;
+    //if (!api->psz_name)
+     //   return MC_API_ERROR;
     //api->i_quirks = OMXCodec_GetQuirks(api->i_cat, api->i_codec, api->psz_name, strlen(api->psz_name));
 
     /* Allow interlaced picture after API 21 */

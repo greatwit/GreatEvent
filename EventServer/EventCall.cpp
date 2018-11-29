@@ -24,15 +24,13 @@
 EventArg :: EventArg()
 		:mTimeout(0)
 		,mEventBase(NULL)
-		,mSessionManager(NULL)
-{
+		,mSessionManager(NULL) {
 }
 
 EventArg :: EventArg( int timeout )
 			:mTimeout(timeout)
 			,mEventBase(NULL)
-			,mSessionManager(NULL)
-{
+			,mSessionManager(NULL) {
 }
 
 EventArg :: ~EventArg()
@@ -50,6 +48,7 @@ EventArg :: ~EventArg()
 int EventArg ::Create() {
 	if(mEventBase==NULL)
 		mEventBase = (struct event_base*)event_init();
+
 	if(mSessionManager==NULL)
 		mSessionManager = new SessionManager();
 
@@ -139,7 +138,7 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 
 		event_set( session->getReadEvent(), clientFD, EV_READ, onRead, session );
 		event_set( session->getWriteEvent(), clientFD, EV_WRITE, onWrite, session );
-		addEvent( session, EV_READ, clientFD );
+		addEvent(  session, EV_READ, clientFD );
 		//addEvent( session, EV_WRITE, clientFD );
 
 		if( eventArg->getSessionManager()->getCount() > acceptArg->mMaxConnections
@@ -180,6 +179,7 @@ void EventCall :: onRead( int fd, short events, void * arg )
 				EventArg * eventArg = (EventArg*)session->getArg();
 					eventArg->getSessionManager()->remove( fd );
 					event_del( session->getReadEvent() );
+					event_del( session->getWriteEvent() );
 
 					delete session;
 					session = NULL;
@@ -211,7 +211,7 @@ void EventCall :: onWrite( int fd, short events, void * arg )
 	}
 
 	//>0 need listen,<=0 not do that
-	if(ret>0)
+	if(ret != 0)
 		addEvent( session, EV_WRITE, -1 );
 
 /*

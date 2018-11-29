@@ -16,6 +16,7 @@ void CDataBuffer::ClearBuffer()
 		m_listData.pop_front();
 	}
 }
+
 void CDataBuffer::ReleaseBuffer()
 {
 	while(m_listData.size())
@@ -29,10 +30,12 @@ void CDataBuffer::ReleaseBuffer()
 		m_listUnuse.pop_front();
 	}
 }
+
 CDataBuffer::~CDataBuffer(void)
 {
 	ReleaseBuffer();
 }
+
 DWORD CDataBuffer::GetDataCount()
 {
 	CSingleLock sLock(&m_cs,TRUE);

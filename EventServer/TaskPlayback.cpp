@@ -22,12 +22,13 @@
 				,mFfmpeg(NULL)
 				,mpFile(NULL)
 				,mSeqid(0)
+				,mFrameRate(30)
 	{
 		//GLOGD("TaskPlayback filename:%s.", FILE_PATH);
 		GLOGE("mPackHeadLen is :%d", mPackHeadLen);
 		mRecvBuffer.reset();
-
 		mSendBuffer.reset();
+
 		mInBuffer = new BufferCache();
 		mFfmpeg   = new FfmpegContext(filename);
 
@@ -93,6 +94,9 @@
 		PLAYER_INIT_INFO &playInfo = info.pi;
 		memcpy(lRet.lpData, &info, sizeof(FILE_INFO));
 
+		if(playInfo.nSampleRate>0)
+			mFrameRate = playInfo.nFps;
+
 		GLOGE("getLoginRet w:%d h:%d size:%d framerate:%d extlen:%d\n",
 				playInfo.nWidth, playInfo.nHeigth,
 				playInfo.gop_size, playInfo.nFps, playInfo.extsize);
@@ -104,7 +108,7 @@
 		return 0;
 	}
 
-	int TaskPlayback::sendEx(char*data,int len) {
+	int TaskPlayback::sendEx(char*data, int len) {
 		int leftLen = len, iRet = 0;
 		fd_set fdSend;
 		struct timeval timeout;
@@ -115,7 +119,7 @@
 			else
 				iRet = send(sockId, data+len-leftLen, MAX_MTU, 0);
 			if(iRet<0) {
-				GLOGE("send data error ret:%d.", iRet);
+				//GLOGE("send data errno:%d ret:%d.", errno, iRet);
 				return iRet;
 			}
 			leftLen -= iRet;
@@ -124,21 +128,21 @@
 		return len - leftLen;
 	}
 
-	void TaskPlayback::packetHead(int fid, short pid, int len, unsigned char type, LPPACK_HEAD lpPack) {
-		memset(lpPack, 0, sizeof(PACK_HEAD));
-		lpPack->type 		= type;
-		lpPack->fid 		= htonl(fid);
-		lpPack->pid			= htons(pid);
-		lpPack->len 		= htonl(len);
-	}
-
-	int TaskPlayback::tpcSendMsg(unsigned char msg) {
-		int iRet = 0;
-		char sendData[1500] = {0};
-		packetHead(0, 0, mPackHeadLen, msg, (LPPACK_HEAD)sendData);
-		iRet = sendEx(sendData, mPackHeadLen);
-		return iRet;
-	}
+//	void TaskPlayback::packetHead(int fid, short pid, int len, unsigned char type, LPPACK_HEAD lpPack) {
+//		memset(lpPack, 0, sizeof(PACK_HEAD));
+//		lpPack->type 		= type;
+//		lpPack->fid 		= htonl(fid);
+//		lpPack->pid			= htons(pid);
+//		lpPack->len 		= htonl(len);
+//	}
+//
+//	int TaskPlayback::tpcSendMsg(unsigned char msg) {
+//		int iRet = 0;
+//		char sendData[1500] = {0};
+//		packetHead(0, 0, mPackHeadLen, msg, (LPPACK_HEAD)sendData);
+//		iRet = sendEx(sendData, mPackHeadLen);
+//		return iRet;
+//	}
 
 	int TaskPlayback::tcpSendData()
 	{
@@ -147,6 +151,8 @@
 			ret = sendEx(mSendBuffer.cmd+mSendBuffer.hasSendLen, mSendBuffer.totalLen-mSendBuffer.hasSendLen);
 			if(ret>0)
 				mSendBuffer.hasSendLen += ret;
+			else
+				GLOGE("tcpSendData cmd errno:%d ret:%d.", errno, ret);
 			if(mSendBuffer.hasSendLen == mSendBuffer.totalLen)
 			{
 				if(mSendBuffer.avpack.size>0)
@@ -155,13 +161,104 @@
 					mSendBuffer.reset();
 			}
 		}
-		if(!mSendBuffer.bSendCmd) {
-			ret = sendEx((char*)mSendBuffer.avpack.data+mSendBuffer.hasSendLen, mSendBuffer.totalLen-+mSendBuffer.hasSendLen);
+		else
+		{
+			ret = sendEx((char*)mSendBuffer.avpack.data+mSendBuffer.hasSendLen, mSendBuffer.totalLen-mSendBuffer.hasSendLen);
 			if(ret>0)
 				mSendBuffer.hasSendLen += ret;
-			if(mSendBuffer.hasSendLen == mSendBuffer.totalLen)
+			else
+				GLOGE("tcpSendData dta errno:%d ret:%d.", errno, ret);
+
+			if(mSendBuffer.hasSendLen == mSendBuffer.totalLen) {
 				mSendBuffer.reset();
+			}
 		}
+		return ret;
+	}
+
+	int TaskPlayback::sendEndfileCmd() {
+		LPNET_CMD	cmd = (LPNET_CMD)mSendBuffer.cmd;
+		cmd->dwFlag 	= NET_FLAG;
+		cmd->dwCmd 		= MODULE_MSG_DATAEND;
+		cmd->dwIndex 	= 0;
+		cmd->dwLength 	= 0;
+
+		mSendBuffer.totalLen = sizeof(NET_CMD);
+		mSendBuffer.bSendCmd = true;
+		int ret = tcpSendData();
+
+		return ret;
+	}
+
+	int TaskPlayback::writeBuffer() {
+		static int count = 0;
+		int ret = 0;
+
+		if(mSendBuffer.totalLen==0) //take new data and send
+		{
+			int frameType = -1;
+			AVPacket &pkt 	 = mSendBuffer.avpack;
+			int res = mFfmpeg->getPackageData(pkt, frameType);
+			if(res>=0) {
+				mSendBuffer.totalLen = sizeof(NET_CMD) + sizeof(AV_FRAME);
+				mSendBuffer.bSendCmd = true;
+
+				LPNET_CMD	 cmd = (LPNET_CMD)mSendBuffer.cmd;
+				LPAV_FRAME frame = (LPAV_FRAME)(cmd->lpData);
+
+				cmd->dwFlag 	= NET_FLAG;
+				cmd->dwCmd 		= MODULE_MSG_VIDEO;
+				cmd->dwIndex 	= 0;
+				cmd->dwLength 	= pkt.size+sizeof(AV_FRAME);
+				frame->nLength 		= pkt.size;//frame size
+				frame->dwTick 		= pkt.pts/mFrameRate;
+				frame->dwTm   		= pkt.pts/mFrameRate;
+
+				switch(frameType) {
+					case AVMEDIA_TYPE_VIDEO:
+						frame->dwFrameType = (pkt.flags == 0)?FRAME_VIDEO_P:FRAME_VIDEO_I;
+						if(frame->dwFrameType==FRAME_VIDEO_I && pkt.data[4]==0x67) {
+							int index = 0,len = 0;
+							char head[4] = {0,0,0,1};
+							for(int i=0;i<36;i++) {
+								char curDat = pkt.data[i];
+								if(curDat==0x67 || curDat==0x68) {
+									index 	= i;
+									len 	= (int)pkt.data[i-1];
+									memcpy(pkt.data+i-4, head, 4);
+									printf("---------------------index:%d len:%d\n", index, len);
+								}
+							}
+							memcpy(pkt.data+index+len, head, 4);
+						}
+						if(pkt.size>=4) {
+							pkt.data[0] = 0x00;
+							pkt.data[1] = 0x00;
+							pkt.data[2] = 0x00;
+							pkt.data[3] = 0x01;
+						}
+						break;
+
+					case AVMEDIA_TYPE_AUDIO:
+						frame->dwFrameType = FRAME_AUDIO;
+						break;
+				}
+			}
+			else {
+				ret = sendEndfileCmd();
+				GLOGE("TaskPlayback sendEndfileCmd ret:%d.", ret);
+				return 0;
+			}
+		}
+
+		//still have data
+		ret = tcpSendData();
+
+		count++;
+		//if(count >= 2) return -1;
+		GLOGE("TaskPlayback writeBuffer len:%d ret:%d count:%d.", sizeof(NET_CMD) + sizeof(AV_FRAME), ret, count);
+		//usleep(10*1000);
+
 		return ret;
 	}
 
@@ -193,7 +290,7 @@
 	int TaskPlayback::recvPackData() {
 		int &hasRecvLen = mRecvBuffer.hasRecvLen;
 		int ret = recv(mSid.mKey, mRecvBuffer.buff+mPackHeadLen+hasRecvLen, mRecvBuffer.totalLen-hasRecvLen, 0);
-		GLOGE("recvPackData ret:%d",ret);
+		GLOGE("-------------------recvPackData ret:%d",ret);
 		if(ret>0) {
 			hasRecvLen += ret;
 			if(hasRecvLen==mRecvBuffer.totalLen) {
@@ -238,93 +335,6 @@
 		else if(ret == 0) {
 
 		}
-
-		return ret;
-	}
-
-	int TaskPlayback::sendEndfileCmd() {
-		LPNET_CMD	cmd = (LPNET_CMD)mSendBuffer.cmd;
-		cmd->dwFlag 	= NET_FLAG;
-		cmd->dwCmd 		= MODULE_MSG_DATAEND;
-		cmd->dwIndex 	= 0;
-		cmd->dwLength 	= 0;
-
-		mSendBuffer.totalLen = sizeof(NET_CMD);
-		mSendBuffer.bSendCmd = true;
-		int ret = tcpSendData();
-
-		return ret;
-	}
-
-	int TaskPlayback::writeBuffer() {
-		static int count = 0;
-		int ret = 0;
-
-		if(mSendBuffer.totalLen==0) //take new data and send
-		{
-			int frameType = -1;
-			AVPacket &pkt 	 = mSendBuffer.avpack;
-			int res = mFfmpeg->getPackageData(pkt, frameType);
-			if(res>=0) {
-				mSendBuffer.totalLen = sizeof(NET_CMD) + sizeof(AV_FRAME);
-				mSendBuffer.bSendCmd = true;
-
-				LPNET_CMD	 cmd = (LPNET_CMD)mSendBuffer.cmd;
-				LPAV_FRAME frame = (LPAV_FRAME)(cmd->lpData);
-
-				cmd->dwFlag 	= NET_FLAG;
-				cmd->dwCmd 		= MODULE_MSG_VIDEO;
-				cmd->dwIndex 	= 0;
-				cmd->dwLength 	= pkt.size+sizeof(AV_FRAME);
-				frame->nLength 		= pkt.size;//frame size
-				frame->dwTick 		= pkt.pts;
-				frame->dwTm   		= pkt.pts;
-
-				switch(frameType) {
-					case AVMEDIA_TYPE_VIDEO:
-						frame->dwFrameType = (pkt.flags == 0)?FRAME_VIDEO_P:FRAME_VIDEO_I;
-						if(frame->dwFrameType==FRAME_VIDEO_I && pkt.data[4]==0x67) {
-							int index = 0,len = 0;
-							char head[4] = {0,0,0,1};
-							for(int i=0;i<36;i++) {
-								char curDat = pkt.data[i];
-								if(curDat==0x67 || curDat==0x68) {
-									index 	= i;
-									len 	= (int)pkt.data[i-1];
-									memcpy(pkt.data+i-4, head, 4);
-									printf("---------------------index:%d len:%d\n", index, len);
-								}
-							}
-							memcpy(pkt.data+index+len, head, 4);
-						}
-						if(pkt.size>=4) {
-							pkt.data[0] = 0x00;
-							pkt.data[1] = 0x00;
-							pkt.data[2] = 0x00;
-							pkt.data[3] = 0x01;
-						}
-						break;
-
-					case AVMEDIA_TYPE_AUDIO:
-						frame->dwFrameType = FRAME_AUDIO;
-						break;
-				}
-
-			}
-			else {
-				ret = sendEndfileCmd();
-				GLOGE("TaskPlayback sendEndfileCmd ret:%d.", ret);
-				return 0;
-			}
-		}
-
-		//still have data
-		ret = tcpSendData();
-
-		count++;
-		//if(count >= 2) return -1;
-		GLOGE("TaskPlayback writeBuffer len:%d ret:%d count:%d.", sizeof(NET_CMD) + sizeof(AV_FRAME), ret, count);
-		//usleep(30*1000);
 
 		return ret;
 	}

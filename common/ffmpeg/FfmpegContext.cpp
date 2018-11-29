@@ -16,19 +16,23 @@ FfmpegContext::FfmpegContext( string filename )
 			,mPkgcall(NULL)
 			,mbRunning(false)
 {
-	av_register_all();
+
 	int ret = 0;
+
 	//Input
 	if ((ret = avformat_open_input(&mFmt_ctx, mFilename.c_str(), 0, 0)) < 0) {
 		printf( "Could not open input file.");
 		//return -1;
 	}
+
 	if ((ret = avformat_find_stream_info(mFmt_ctx, 0)) < 0) {
 		printf( "Failed to retrieve input stream information");
 		//return -1;
 	}
 
 	mwFile = fopen(FILE_PATH, "wb+");
+	if(mwFile)
+		printf( "open input file %s success.\n", FILE_PATH);
 
 	mPool.initPara(2);
 }

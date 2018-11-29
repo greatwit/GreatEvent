@@ -6,6 +6,8 @@
 #include <iostream>
 
 #include "mediacodec.h"
+#include "gthreadpool.hpp"
+#include "h264.h"
 
 class FileDeCodec  : private GThread
 {
@@ -19,6 +21,7 @@ class FileDeCodec  : private GThread
 		bool StartVideo(void *surface);
 		bool StopVideo();
 
+		void renderBuffer();
 		
 	protected:
 		bool isFirstFrame();
@@ -27,19 +30,23 @@ class FileDeCodec  : private GThread
 		void decorder(char*data, int dataLen);
 		void *Thread();
 
+		static void dequeueFunc( void *arg );
 
 	private:
 		bool				mFirstFrame;
 		bool				mbRunning;
 
 		FILE 				*mFile;
+		NALU_t 			*mNALU;
 		
-		char mcharLength[4];
-		char mData[1000000];
+		//char mcharLength[4];
+		//char mData[1000000];
 		
 		struct mc_api mApi;
 
 		//sp<CodecBase> 	mCodec;
+		GThreadPool 	mPool;
+		int 				mCount;
 };
 
 #endif

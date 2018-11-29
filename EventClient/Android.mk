@@ -4,6 +4,7 @@ LOCAL_PROJECT_ROOT := $(LOCAL_PATH)#$(subst $(LOCAL_PATH)/,,$(wildcard $(LOCAL_P
 
 
 THREAD_PATH  = ../common/gthread
+NAREDEC_PATH = ../common/NalBareflow
 
 include $(CLEAR_VARS)
 
@@ -15,10 +16,10 @@ LOCAL_C_INCLUDES += \
 				   $(LOCAL_PROJECT_ROOT)/../common \
 				   external/stlport/stlport bionic
 
-LOCAL_SRC_FILES := NALDecoder.cpp \
-				   CodecNative.cpp \
+LOCAL_SRC_FILES := $(NAREDEC_PATH)/NALDecoder.cpp \
 				   $(THREAD_PATH)/gmutex.cpp \
 				   $(THREAD_PATH)/gthread.cpp \
+				   CodecNative.cpp \
 				   spioutils.cpp \
 				   TcpSender.cpp
 

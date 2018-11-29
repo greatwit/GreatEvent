@@ -1,8 +1,9 @@
 PROJECT_ROOT = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 THREAD_PATH  = ../common/gthread
+NAREDEC_PATH = ../common/NalBareflow
 
-OBJS = EventClient.o TcpSender.o NALDecoder.o spioutils.o $(THREAD_PATH)/gmutex.o $(THREAD_PATH)/gthread.o 
+OBJS = EventClient.o TcpSender.o spioutils.o $(NAREDEC_PATH)/NALDecoder.o $(THREAD_PATH)/gmutex.o $(THREAD_PATH)/gthread.o 
 
 
 CFLAGS += -g

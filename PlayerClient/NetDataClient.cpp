@@ -203,7 +203,7 @@ BOOL CNetDataClient::RecvData(DWORD& dwCmd,DWORD& dwIndex,void* lpData,int& nLen
 	}
 
 
-	//usleep(10*1000);
+	usleep(100*1000);
 	return TRUE;
 }
 

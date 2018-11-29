@@ -23,9 +23,9 @@ public:
 	virtual int readBuffer();
 	virtual int writeBuffer();
 
-	void packetHead(int fid, short pid, int len, unsigned char type, LPPACK_HEAD lpPack);
+//	void packetHead(int fid, short pid, int len, unsigned char type, LPPACK_HEAD lpPack);
+//	int tpcSendMsg(unsigned char msg);
 	int tcpSendData();
-	int tpcSendMsg(unsigned char msg);
 	int sendEx(char*data,int len);
 	int getLoginRet(LOGIN_RET&lRet);
 
@@ -34,6 +34,7 @@ private:
 	int sendEndfileCmd();
 
 	FfmpegContext 		*mFfmpeg;
+	int 				mFrameRate;
 	struct tagRecvBuffer mRecvBuffer;
 	struct tagSendBuffer mSendBuffer;
 	BufferCache 		* mInBuffer;

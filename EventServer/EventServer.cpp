@@ -10,8 +10,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "TcpServer.hpp"
-#include "TcpClient.hpp"
+#include "PlayerServer.hpp"
 #include "ActorStation.hpp"
 
 #define PORT 31000
@@ -42,18 +41,18 @@ int main( int argc, char * argv[] )
 		}
 	}
 
-	ActorStation statiion;
-	statiion.startup();
+	ActorStation station;
+	station.startup();
 
-	TcpServer server( "", port );
+	PlayerServer server( "", port );
 	server.setMaxThreads( maxThreads );
 	server.setReqQueueSize( 100, "HTTP/1.1 500 Sorry, server is busy now!\r\n" );
-	server.registerEvent(statiion.getEventArg());
+	server.registerEvent(station.getEventArg());
 
 	getchar();
 
 	server.shutdown();
-	statiion.shutdown();
+	station.shutdown();
 	return 0;
 }
 

@@ -8,7 +8,7 @@
 
 //char *gFilePath1 = "/sdcard/camera.h264";
 #ifdef 	__ANDROID__
-#define	FILE_PATH	"/sdcard/camera.h264"
+#define	FILE_PATH	"/sdcard/uptest.h264"
 #else
 #define	FILE_PATH	"camera.h264"
 #endif
@@ -27,33 +27,26 @@ FileDeCodec::FileDeCodec()
 			:mbRunning(false)
 			,mFirstFrame(false)
 			,mFile(NULL)
+			,mCount(0)
 {
 	GLOGW("FileDeCodec::FileDeCodec() construct.");
-	mFile = fopen(FILE_PATH, "rb");
+	mFile = OpenBitstreamFile( FILE_PATH );//fopen(FILE_PATH, "rb");
 	GLOGW("open filepath:%s", FILE_PATH);
+	if(mFile==NULL)
+		GLOGE("OpenBitstreamFile failed.");
+
 	if(MC_API_ERROR == MediaCodecNdk_Init(&mApi))
 		GLOGE("MediaCodecNdk_Init error.");
 
 	mApi.configure(&mApi, 0);
+	mPool.initPara(2);
+	mNALU  = AllocNALU(100000);
 }
 
 FileDeCodec::~FileDeCodec()
 {
 	GLOGV("FileDeCodec, Destructor");
 }
-
-//bool FileDeCodec::CreateCodec( const sp<AMessage> &format, const sp<Surface> &surface, const sp<ICrypto> &crypto, int flags, char*filename)
-//{
-//	mFile = fopen(filename, "rb");
-//	mcharLength[4] = {0};
-//	mData[1000000] = {0};
-//
-//	//mCodec = new CodecBase("video/avc", true, false);
-//	//mCodec->CreateCodec(format, surface, crypto, flags);
-//	CodecBaseLib::getInstance()->CodecCreate(format, surface, crypto, flags, false);
-//
-//	return true;
-//}
 
 bool FileDeCodec::DeInit()
 {	
@@ -70,18 +63,21 @@ bool FileDeCodec::StartVideo(void *surface)
 	if (GThread::IsRunning())
 		return false;
 
-	if (GThread::Start() < 0)
-		return false;
-
 	mApi.set_output_surface(&mApi, surface, 0);
 
 	union mc_api_args args;
+	args.video.p_surface = surface;
 	args.video.i_width 	= 1280;
 	args.video.i_height = 720;
 	args.video.i_angle 	= 0;
 	int err = mApi.start(&mApi, &args);
 	GLOGE("function %s,line:%d mApi.start res:%d",__FUNCTION__,__LINE__,err);
-	mbRunning = true;  
+
+	if (GThread::Start() < 0)
+		return false;
+
+	mbRunning = true;
+	mPool.dispatch( dequeueFunc, this );
 
 	return true;
 }
@@ -90,7 +86,6 @@ bool FileDeCodec::StopVideo()
 {
 	GLOGW("function %s,line:%d StopVideo 0",__FUNCTION__,__LINE__);
 
-
 	if (GThread::IsRunning()) {
 		GThread::Kill();
 	}
@@ -98,7 +93,6 @@ bool FileDeCodec::StopVideo()
 	mbRunning = false;
 
 	mApi.stop(&mApi);
-
 	//mCodec->stopCodec();
 	//CodecBaseLib::getInstance()->StopCodec();
 	
@@ -107,38 +101,94 @@ bool FileDeCodec::StopVideo()
 	return true;
 }
 
+void FileDeCodec::dequeueFunc( void *arg ) {
+	int res = 0;
+	FileDeCodec* context = (FileDeCodec*)arg;
+	context->renderBuffer();
+}
+
+void FileDeCodec::renderBuffer() {
+	//mc_api_out mcout;
+	//err = mApi.get_out(&mApi, index, &mcout);//GetOutput(mc_api *api, int i_index, mc_api_out *p_out)
+
+	int err = 0;
+	while(mbRunning) {
+
+		if(mCount>0) {
+			int index = mApi.dequeue_out(&mApi, 12000);
+			if(index>=0)
+				mCount--;
+			mc_api_out mcout;
+			int rest = mApi.get_out(&mApi, index, &mcout);
+			GLOGI("renderBuffer---------rest:%d",rest);
+//			if(index>=0) {
+//				err = mApi.release_out(&mApi, index, true);
+//				GLOGW("release_out err:%d", err);
+//				mCount--;
+//			} else {
+//				GLOGE("dequeue_out index:%d", index);
+//				mc_api_out mcout;
+//				int rest = mApi.get_out(&mApi, index, &mcout);
+//			}
+		}
+		usleep(20*1000);
+	}
+}
+
 void * FileDeCodec::Thread()
 {
 	GThread::ThreadStarted();
 	GLOGW("FileDeCodec::Thread");
-	int res = 0, dataLen = 0, err=0;
-	int count = 0;
-	do {
-		res = fread(mcharLength, 4, 1, mFile);
-		if(res>0)
-		{
-			dataLen = charsToInt1(mcharLength, 0);
-			res 	= fread(mData, dataLen, 1, mFile);
-			count++;
-			GLOGW("count:%d res:%d dataLen:%d", count, res, dataLen);
 
-			int index = mApi.dequeue_in(&mApi, 0);
-			GLOGW("dequeue_in index:%d", index);
-			err = mApi.queue_in(&mApi, index, mData, dataLen, -1, true);
+	int err=0;
+	long timeoutUs = 10000;
+	do{
+		int index = mApi.dequeue_in(&mApi, timeoutUs);
+		GLOGW("dequeue_in index:%d", index);
+		if(index>=0) {
+			int size=GetAnnexbNALU(mFile, mNALU);//每执行一次，文件的指针指向本次找到的NALU的末尾，下一个位置即为下个NALU的起始码0x000001
+			GLOGE("GetAnnexbNALU size:%d", size);
+			if(size<4) {
+				GLOGE("get nul error!\n");
+				continue;
+			}
+			err = mApi.queue_in(&mApi, index, mNALU, size, 10000, false);
 			GLOGW("queue_in err:%d", err);
-			//CodecBaseLib::getInstance()->AddBuffer(mData, dataLen);
-			//mCodec->addBuffer(mData, dataLen);
-			usleep(30*1000);
-			index = mApi.dequeue_out(&mApi, 0);
-			GLOGW("dequeue_out index:%d", index);
-			mc_api_out mcout;
-			err = mApi.get_out(&mApi, index, &mcout);//GetOutput(mc_api *api, int i_index, mc_api_out *p_out)
-			GLOGW("get_out err:%d", err);
-			mApi.release_out(&mApi, index, true);
-
+			if(err>=0)
+				mCount++;
+			usleep(25*1000);
 		}else
-			break;
-	}while(mbRunning);
+			continue;
+
+	}while(!feof(mFile)&&mbRunning);
+
+	mbRunning = false;
+
+//	int res = 0, dataLen = 0, err=0;
+//	int count = 0;
+//	do {
+//		res = fread(mcharLength, 4, 1, mFile);
+//		if(res>0)
+//		{
+//			long timeoutUs = 10000;
+//			dataLen = charsToInt1(mcharLength, 0);
+//			res 	= fread(mData, dataLen, 1, mFile);
+//			count++;
+//			GLOGW("count:%d res:%d dataLen:%d", count, res, dataLen);
+//
+//			int index = mApi.dequeue_in(&mApi, timeoutUs);
+//			GLOGW("dequeue_in index:%d", index);
+//			if(index>=0) {
+//				err = mApi.queue_in(&mApi, index, mData, dataLen, 1000000, true);
+//				GLOGW("queue_in err:%d", err);
+//			}else
+//				continue;
+//			mCount++;
+//			usleep(20*1000);
+//
+//		}else
+//			break;
+//	}while(mbRunning);
 
 	return 0;
 }

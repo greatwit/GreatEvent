@@ -132,12 +132,19 @@ struct tagSendBuffer {
 	int  totalLen;
 	AVPacket avpack;
 	char cmd[1500];
+
+	tagSendBuffer() {
+		memset(&avpack, 0, sizeof(AVPacket));
+	}
+
 	void reset() {
 		if(bSendCmd) memset(cmd,0, 1500);
 		hasSendLen 	= 0;
 		totalLen 	= 0;
-		av_packet_unref(&avpack);
-		memset(&avpack,0,sizeof(AVPacket));
+		//av_free_packet(&avpack);
+		if(avpack.size>0)
+			av_packet_unref(&avpack);
+		memset(&avpack, 0, sizeof(AVPacket));
 		avpack.size = 0;
 		bSendCmd 	= true;
 	}

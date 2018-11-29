@@ -3,6 +3,8 @@ LOCAL_PATH := $(call my-dir)
 LOCAL_PROJECT_ROOT := $(LOCAL_PATH)#$(subst $(LOCAL_PATH)/,,$(wildcard $(LOCAL_PATH)))
 
 FFMPEG_PATH  = ../common/ffmpeg
+THREAD_PATH  = ../common/gthread
+NAREDEC_PATH = ../common/NalBareflow
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := avformat
@@ -37,7 +39,7 @@ LOCAL_C_INCLUDES += \
 				   $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH) \
 				   $(LOCAL_PROJECT_ROOT)/$(FFMPEG_PATH)/include \
 				   $(LOCAL_PROJECT_ROOT)/../common \
-				   $(LOCAL_PROJECT_ROOT)/../common/gthread \
+				   $(LOCAL_PROJECT_ROOT)/$(THREAD_PATH) \
 				   external/stlport/stlport bionic
 
 LOCAL_SRC_FILES := net/buffer.c \
@@ -48,8 +50,9 @@ LOCAL_SRC_FILES := net/buffer.c \
 				net/signal.c \
 				net/log.c \
 				net/net_protocol.c \
-				../common/gthread/gthreadpool.cpp \
+				$(THREAD_PATH)/gthreadpool.cpp \
 				$(FFMPEG_PATH)/FfmpegContext.cpp \
+				$(NAREDEC_PATH)/NALDecoder.cpp \
 				ActorStation.cpp \
 				BufferCache.cpp \
 				DataUtils.cpp \
@@ -62,7 +65,6 @@ LOCAL_SRC_FILES := net/buffer.c \
 				TaskPlayback.cpp \
 				TcpClient.cpp \
 				TcpServer.cpp \
-				NALDecoder.cpp \
 				NativeApi.cpp
 
 LOCAL_SHARED_LIBRARIES := avformat avcodec avutil swresample
