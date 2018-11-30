@@ -23,6 +23,7 @@
 				,mpFile(NULL)
 				,mSeqid(0)
 				,mFrameRate(30)
+				,mFrameCount(0)
 	{
 		//GLOGD("TaskPlayback filename:%s.", FILE_PATH);
 		GLOGE("mPackHeadLen is :%d", mPackHeadLen);
@@ -243,6 +244,15 @@
 						frame->dwFrameType = FRAME_AUDIO;
 						break;
 				}
+
+				if(mFrameCount>=0) {
+					mFrameCount++;
+					if(mFrameCount>=300) {
+						mFrameCount = -1;
+						return 0;
+					}
+				}
+
 			}
 			else {
 				ret = sendEndfileCmd();

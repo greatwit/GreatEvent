@@ -25,7 +25,8 @@ public:
 	virtual ~Session();
 
 	struct event * getReadEvent();	
-	struct event * getWriteEvent();	
+	struct event * getWriteEvent();
+	struct event * getTimeEvent();
 
 	//void setHandler( SP_Handler * handler );
 	//SP_Handler * getHandler();
@@ -63,7 +64,7 @@ private:
 
 	struct event * mReadEvent;
 	struct event * mWriteEvent;
-
+	struct event * mTimeEvent;
 	//SP_Handler * mHandler;
 	void * mArg;
 

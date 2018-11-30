@@ -64,8 +64,7 @@ int EventArg ::Destroy() {
 	return 0;
 }
 
-struct event_base * EventArg :: getEventBase() const
-{
+struct event_base * EventArg :: getEventBase() const {
 	return mEventBase;
 }
 
@@ -136,9 +135,18 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 		eventArg->getSessionManager()->put( sid.mKey, session, &sid.mSeq );
 		session->setArg( eventArg );
 
-		event_set( session->getReadEvent(), clientFD, EV_READ, onRead, session );
+		event_set( session->getReadEvent(),  clientFD, EV_READ,  onRead, session );
 		event_set( session->getWriteEvent(), clientFD, EV_WRITE, onWrite, session );
+		//event_set( session->getTimeEvent(), clientFD, EV_TIMEOUT, onTimer, session );
+		evtimer_set(session->getTimeEvent(), onTimer, session->getTimeEvent());
 		addEvent(  session, EV_READ, clientFD );
+		addEvent(  session, EV_TIMEOUT, clientFD );
+
+		struct timeval timeout;
+		memset( &timeout, 0, sizeof( timeout ) );
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 500000;
+		evtimer_add( session->getTimeEvent(), &timeout );
 		//addEvent( session, EV_WRITE, clientFD );
 
 		if( eventArg->getSessionManager()->getCount() > acceptArg->mMaxConnections
@@ -177,17 +185,19 @@ void EventCall :: onRead( int fd, short events, void * arg )
 		if(ret==0)
 		{
 				EventArg * eventArg = (EventArg*)session->getArg();
-					eventArg->getSessionManager()->remove( fd );
-					event_del( session->getReadEvent() );
-					event_del( session->getWriteEvent() );
+				eventArg->getSessionManager()->remove( fd );
+				event_del( session->getReadEvent() );
+				event_del( session->getWriteEvent() );
+				event_del( session->getTimeEvent() );
 
-					delete session;
-					session = NULL;
-					close( fd );
+				delete session;
+				session = NULL;
 
-					GLOGE("read zero:%d\n",ret);
+				close( fd );
 
-					return;
+				GLOGE("read zero:%d\n",ret);
+
+				return;
 		}
 	}
 
@@ -283,6 +293,19 @@ void EventCall :: onWrite( int fd, short events, void * arg )
 */
 }
 
+void EventCall :: onTimer( int fd, short events, void * arg )
+{
+	GLOGE("------------onTimer fd:%d arg:%d \n", fd, arg);
+	 struct event* ev_time = (struct event*)arg;
+	struct timeval timeout;
+	memset( &timeout, 0, sizeof( timeout ) );
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 500000;
+	 //event_add(ev_time, &tv);
+	 evtimer_add(ev_time, &timeout);
+	 //evtimer_set(session->getTimeEvent(), onTimer, session->getTimeEvent());
+}
+
 void EventCall :: onResponse( void * queueData, void * arg )
 {
 	//SP_Response * response = (SP_Response*)queueData;
@@ -307,10 +330,13 @@ void EventCall :: addEvent( Session * session, short events, int fd )
 		event_set( pEvent, fd, events, onWrite, session );
 		event_base_set( eventArg->getEventBase(), pEvent );
 
+
 		struct timeval timeout;
 		memset( &timeout, 0, sizeof( timeout ) );
 		timeout.tv_sec = eventArg->getTimeout();
 		event_add( pEvent, &timeout );
+
+		//evtimer_add( session->getTimeEvent(), &timeout );
 	}
 
 	if( events & EV_READ && 0 == session->getReading() ) {
@@ -326,6 +352,7 @@ void EventCall :: addEvent( Session * session, short events, int fd )
 		memset( &timeout, 0, sizeof( timeout ) );
 		timeout.tv_sec = eventArg->getTimeout();
 		event_add( pEvent, &timeout );
+
 	}
 }
 

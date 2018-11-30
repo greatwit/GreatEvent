@@ -47,6 +47,34 @@ int MediaCodecNdk_Init(mc_api*);
 #endif
 
 
+/*****************************************************************************
+ * NdkMediaError.h
+ *****************************************************************************/
+
+typedef enum {
+    AMEDIA_OK = 0,
+
+    AMEDIA_ERROR_BASE                  = -10000,
+    AMEDIA_ERROR_UNKNOWN               = AMEDIA_ERROR_BASE,
+    AMEDIA_ERROR_MALFORMED             = AMEDIA_ERROR_BASE - 1,
+    AMEDIA_ERROR_UNSUPPORTED           = AMEDIA_ERROR_BASE - 2,
+    AMEDIA_ERROR_INVALID_OBJECT        = AMEDIA_ERROR_BASE - 3,
+    AMEDIA_ERROR_INVALID_PARAMETER     = AMEDIA_ERROR_BASE - 4,
+
+    AMEDIA_DRM_ERROR_BASE              = -20000,
+    AMEDIA_DRM_NOT_PROVISIONED         = AMEDIA_DRM_ERROR_BASE - 1,
+    AMEDIA_DRM_RESOURCE_BUSY           = AMEDIA_DRM_ERROR_BASE - 2,
+    AMEDIA_DRM_DEVICE_REVOKED          = AMEDIA_DRM_ERROR_BASE - 3,
+    AMEDIA_DRM_SHORT_BUFFER            = AMEDIA_DRM_ERROR_BASE - 4,
+    AMEDIA_DRM_SESSION_NOT_OPENED      = AMEDIA_DRM_ERROR_BASE - 5,
+    AMEDIA_DRM_TAMPER_DETECTED         = AMEDIA_DRM_ERROR_BASE - 6,
+    AMEDIA_DRM_VERIFY_FAILED           = AMEDIA_DRM_ERROR_BASE - 7,
+    AMEDIA_DRM_NEED_KEY                = AMEDIA_DRM_ERROR_BASE - 8,
+    AMEDIA_DRM_LICENSE_EXPIRED         = AMEDIA_DRM_ERROR_BASE - 9,
+
+} media_status_t;
+
+
 #define MC_API_ERROR (-1)
 #define MC_API_INFO_TRYAGAIN (-11)
 #define MC_API_INFO_OUTPUT_FORMAT_CHANGED (-12)

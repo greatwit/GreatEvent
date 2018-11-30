@@ -66,6 +66,7 @@ class EventCall {
 		static void onAccept( int fd, short events, void * arg );
 		static void onRead( int fd, short events, void * arg );
 		static void onWrite( int fd, short events, void * arg );
+		static void onTimer( int fd, short events, void * arg );
 		static void addEvent( Session * session, short events, int fd );
 
 		static void onResponse( void * queueData, void * arg );

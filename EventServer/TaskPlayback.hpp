@@ -35,6 +35,7 @@ private:
 
 	FfmpegContext 		*mFfmpeg;
 	int 				mFrameRate;
+	int 				mFrameCount;
 	struct tagRecvBuffer mRecvBuffer;
 	struct tagSendBuffer mSendBuffer;
 	BufferCache 		* mInBuffer;

@@ -131,6 +131,7 @@ Session :: Session( Sid_t sid )
 {
 	mReadEvent  = (struct event*)malloc( sizeof( struct event ) );
 	mWriteEvent = (struct event*)malloc( sizeof( struct event ) );
+	mTimeEvent	= (struct event*)malloc( sizeof( struct event ) );
 
 	mStatus  	= eNormal;
 	mRunning 	= 0;
@@ -149,6 +150,7 @@ Session :: Session( Sid_t sid, short type)
 {
 	mReadEvent  = (struct event*)malloc( sizeof( struct event ) );
 	mWriteEvent = (struct event*)malloc( sizeof( struct event ) );
+	mTimeEvent	= (struct event*)malloc( sizeof( struct event ) );
 
 	mStatus  	= eNormal;
 	mRunning 	= 0;
@@ -170,6 +172,9 @@ Session :: ~Session()
 
 	free( mWriteEvent );
 	mWriteEvent = NULL;
+
+	free( mTimeEvent );
+	mTimeEvent = NULL;
 
 	if(mTaskBase!=NULL) {
 		delete mTaskBase;
@@ -283,6 +288,11 @@ struct event * Session :: getReadEvent()
 struct event * Session :: getWriteEvent()
 {
 	return mWriteEvent;
+}
+
+struct event * Session :: getTimeEvent()
+{
+	return mTimeEvent;
 }
 
 void Session :: setArg( void * arg )

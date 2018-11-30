@@ -2,6 +2,8 @@
 #include "basedef.h"
 
 #include "FileDeCodec.h"
+#include "GMediaExtractor.h"
+
 
 //#include <android/native_window.h>
 #include <android/native_window_jni.h>
@@ -10,6 +12,39 @@
 
 JavaVM*		g_javaVM		= NULL;
 FileDeCodec *mFileDec		= NULL;
+GMediaExtractor *mExtractor = NULL;
+
+
+
+/////////////////////////////////////////////////////extrator player///////////////////////////////////////////////////////////
+
+static jboolean StartExtratorPlayer(JNIEnv *env, jobject, jstring filepath) {
+	bool bRes = false;
+	GLOGW("StartExtatorPlayer 1");
+
+	mExtractor = new GMediaExtractor();
+
+	jboolean isOk = JNI_FALSE;
+	const char *path = env->GetStringUTFChars(filepath, &isOk);
+	mExtractor->startPlayer(path);
+	env->ReleaseStringUTFChars(filepath, path);
+
+	GLOGW("StartExtatorPlayer 4");
+
+	return bRes;
+}
+
+static jboolean StopExtratorPlayer(JNIEnv *env, jobject)
+{
+	 bool bRes = false;
+	 if(mExtractor){
+		 mExtractor->stopPlayer();
+		 delete mExtractor;
+		 mExtractor = NULL;
+		 return true;
+	 }
+	 return bRes;
+}
 
 /////////////////////////////////////////////////////decodec////////////////////////////////////////////////////////
 
@@ -39,6 +74,8 @@ static jboolean StopFileDecodec(JNIEnv *env, jobject)
 }
 
 static JNINativeMethod video_method_table[] = {
+		{"StartExtratorPlayer", "(Ljava/lang/String;)Z", (void*)StartExtratorPlayer },
+		{"StopExtratorPlayer", "()Z", (void*)StopExtratorPlayer },
 		{"StartFileDecodec", "(Landroid/view/Surface;)Z", (void*)StartFileDecodec },
 		{"StopFileDecodec", "()Z", (void*)StopFileDecodec },
 };
