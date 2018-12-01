@@ -9,12 +9,13 @@
 #include <stdbool.h>
 #endif
 
+
 #include "basedef.h"
 #include "mediacodec.h"
 #include "mediaextrator.h"
 
 
-//static struct symext symext;
+
 
 struct members
 {
@@ -22,6 +23,7 @@ struct members
     int offset;
     bool critical;
 };
+
 static struct members members[] =
 {
 	#define OFF(x) offsetof(struct symext, AMediaExtractor.x)
@@ -46,6 +48,27 @@ static struct members members[] =
 		{ "AMediaFormat_getInt32", OFF(getInt32), true },
 		{ "AMediaFormat_getString", OFF(getString), true },
 	#undef OFF
+
+	#define OFF(x) offsetof(struct symext, AMediaCodec.x)
+		{ "AMediaCodec_createCodecByName", OFF(createCodecByName), true },
+		{ "AMediaCodec_createDecoderByType", OFF(createDecoderByType), true },
+		{ "AMediaCodec_createEncoderByType", OFF(createEncoderByType), true },
+		{ "AMediaCodec_configure", OFF(configure), true },
+		{ "AMediaCodec_start", OFF(start), true },
+		{ "AMediaCodec_stop", OFF(stop), true },
+		{ "AMediaCodec_flush", OFF(flush), true },
+		{ "AMediaCodec_delete", OFF(deletemc), true },
+		{ "AMediaCodec_getOutputFormat", OFF(getOutputFormat), true },
+		{ "AMediaCodec_dequeueInputBuffer", OFF(dequeueInputBuffer), true },
+		{ "AMediaCodec_getInputBuffer", OFF(getInputBuffer), true },
+		{ "AMediaCodec_queueInputBuffer", OFF(queueInputBuffer), true },
+		{ "AMediaCodec_dequeueOutputBuffer", OFF(dequeueOutputBuffer), true },
+		{ "AMediaCodec_getOutputBuffer", OFF(getOutputBuffer), true },
+		{ "AMediaCodec_releaseOutputBuffer", OFF(releaseOutputBuffer), true },
+		{ "AMediaCodec_releaseOutputBufferAtTime", OFF(releaseOutputBufferAtTime), true },
+		{ "AMediaCodec_setOutputSurface", OFF(setOutputSurface), false },
+	#undef OFF
+
 		{ NULL, 0, false }
 };
 #undef OFF
@@ -95,4 +118,23 @@ end:
     //vlc_mutex_unlock(&lock);
     return ret;
 }
+
+/*****************************************************************************
+ * DequeueInput
+ *****************************************************************************/
+//int DequeueInput(AMediaCodec*pCodec, mtime_t i_timeout)
+//{
+//    ssize_t i_index;
+//
+//    i_index = symext.AMediaCodec.dequeueInputBuffer(pCodec, i_timeout);
+//    if (i_index >= 0)
+//        return i_index;
+//    else if (i_index == AMEDIACODEC_INFO_TRY_AGAIN_LATER)
+//        return MC_API_INFO_TRYAGAIN;
+//    else
+//    {
+//        //msg_Err(api->p_obj, "AMediaCodec.dequeueInputBuffer failed");
+//        return MC_API_ERROR;
+//    }
+//}
 

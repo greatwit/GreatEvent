@@ -18,15 +18,17 @@ GMediaExtractor *mExtractor = NULL;
 
 /////////////////////////////////////////////////////extrator player///////////////////////////////////////////////////////////
 
-static jboolean StartExtratorPlayer(JNIEnv *env, jobject, jstring filepath) {
+static jboolean StartExtratorPlayer(JNIEnv *env, jobject, jstring filepath, jobject surface) {
 	bool bRes = false;
 	GLOGW("StartExtatorPlayer 1");
+
+	ANativeWindow *pAnw = ANativeWindow_fromSurface(env, surface);
 
 	mExtractor = new GMediaExtractor();
 
 	jboolean isOk = JNI_FALSE;
 	const char *path = env->GetStringUTFChars(filepath, &isOk);
-	mExtractor->startPlayer(path);
+	mExtractor->startPlayer(path, pAnw);
 	env->ReleaseStringUTFChars(filepath, path);
 
 	GLOGW("StartExtatorPlayer 4");
@@ -74,7 +76,7 @@ static jboolean StopFileDecodec(JNIEnv *env, jobject)
 }
 
 static JNINativeMethod video_method_table[] = {
-		{"StartExtratorPlayer", "(Ljava/lang/String;)Z", (void*)StartExtratorPlayer },
+		{"StartExtratorPlayer", "(Ljava/lang/String;Landroid/view/Surface;)Z", (void*)StartExtratorPlayer },
 		{"StopExtratorPlayer", "()Z", (void*)StopExtratorPlayer },
 		{"StartFileDecodec", "(Landroid/view/Surface;)Z", (void*)StartFileDecodec },
 		{"StopFileDecodec", "()Z", (void*)StopFileDecodec },

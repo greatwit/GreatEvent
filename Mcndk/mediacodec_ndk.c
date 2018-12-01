@@ -111,6 +111,8 @@ typedef media_status_t (*pf_AMediaCodec_releaseOutputBufferAtTime)(AMediaCodec*,
 typedef media_status_t (*pf_AMediaCodec_setOutputSurface)(AMediaCodec*,
         ANativeWindow *surface);
 
+
+
 typedef AMediaFormat *(*pf_AMediaFormat_new)();
 typedef media_status_t (*pf_AMediaFormat_delete)(AMediaFormat*);
 

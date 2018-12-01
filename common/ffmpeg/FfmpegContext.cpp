@@ -96,6 +96,7 @@ int FfmpegContext::getPackageData(AVPacket &pkt, int &frameType) {
     if (ret >= 0) {
     	AVStream *stream = mFmt_ctx->streams[pkt.stream_index];
     	frameType 		 = stream->codec->codec_type;
+    	pkt.pts			 = (pkt.pts - stream->start_time)*1000*av_q2d(stream->time_base);
 //		if (stream->codec->codec_type==AVMEDIA_TYPE_VIDEO ) {
 //			char tag[4] = {0x00, 0x00, 0x00, 0x01};
 //			fwrite(tag, 1, 4, mwFile);
@@ -136,6 +137,10 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo, unsigned int &endTime
 				printf("len:%d\n",pCodec->extradata_size);
 				for(int i=0; i<pCodec->extradata_size; i++)
 					printf("v:0x%02X\n", (unsigned char)pCodec->extradata[i]);
+
+				if(mFmt_ctx->streams[i]->codec->codec_id == AV_CODEC_ID_H264) {
+
+				}
 
 //				int spsLength=pCodec->extradata[6]*0xFF+pCodec->extradata[7];
 //				int ppsLength=pCodec->extradata[8+spsLength+1]*0xFF+pCodec->extradata[8+spsLength+2];

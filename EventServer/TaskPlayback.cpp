@@ -212,7 +212,7 @@
 				cmd->dwIndex 	= 0;
 				cmd->dwLength 	= pkt.size+sizeof(AV_FRAME);
 				frame->nLength 		= pkt.size;//frame size
-				frame->dwTick 		= pkt.pts/mFrameRate;
+				frame->dwTick 		= pkt.pts;
 				frame->dwTm   		= pkt.pts/mFrameRate;
 
 				switch(frameType) {

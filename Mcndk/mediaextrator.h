@@ -1,6 +1,9 @@
 #ifndef MEDIA_EXTRATOR_H
 #define MEDIA_EXTRATOR_H
 
+#include <jni.h>
+#include <android/native_window.h>
+
 
 typedef enum {
     AMEDIAEXTRACTOR_SEEK_PREVIOUS_SYNC,
@@ -9,10 +12,22 @@ typedef enum {
 } SeekMode;
 
 
+struct AMediaCodecBufferInfo {
+    int32_t offset;
+    int32_t size;
+    int64_t presentationTimeUs;
+    uint32_t flags;
+};
+typedef struct AMediaCodecBufferInfo AMediaCodecBufferInfo;
+
 struct AMediaExtractor;
 typedef struct AMediaExtractor AMediaExtractor;
 struct AMediaFormat;
 typedef struct AMediaFormat AMediaFormat;
+struct AMediaCodec;
+typedef struct AMediaCodec AMediaCodec;
+struct AMediaCrypto;
+typedef struct AMediaCrypto AMediaCrypto;
 
 /////////////////////AMediaExtractor
 typedef AMediaExtractor* (*pf_AMediaExtractor_new)();
@@ -27,21 +42,37 @@ typedef ssize_t   		 (*pf_AMediaExtractor_readSampleData)(AMediaExtractor*, uint
 typedef int64_t   		 (*pf_AMediaExtractor_getSampleTime)(AMediaExtractor*);
 typedef media_status_t   (*pf_AMediaExtractor_seekTo)(AMediaExtractor*, int64_t seekPosUs, SeekMode mode);
 
+
 ////////////////AMediaFormat
 typedef AMediaFormat *(*pf_AMediaFormat_new)();
 typedef media_status_t (*pf_AMediaFormat_delete)(AMediaFormat*);
+typedef void (*pf_AMediaFormat_setString)(AMediaFormat*, const char* name, const char* value);
+typedef void (*pf_AMediaFormat_setInt32)(AMediaFormat*, const char* name, int32_t value);
+typedef bool (*pf_AMediaFormat_getInt32)(AMediaFormat*, const char *name, int32_t *out);
+typedef bool (*pf_AMediaFormat_getString)(AMediaFormat*, const char *name, const char **out);
 
-typedef void (*pf_AMediaFormat_setString)(AMediaFormat*,
-        const char* name, const char* value);
 
-typedef void (*pf_AMediaFormat_setInt32)(AMediaFormat*,
-        const char* name, int32_t value);
+////////////////AMediaCodec
+typedef AMediaCodec* (*pf_AMediaCodec_createCodecByName)(const char *name);
+typedef AMediaCodec* (*pf_AMediaCodec_createDecoderByType)(const char *mime_type);
+typedef AMediaCodec* (*pf_AMediaCodec_createEncoderByType)(const char *mime_type);
+typedef media_status_t (*pf_AMediaCodec_configure)(AMediaCodec*, const AMediaFormat* format, ANativeWindow* surface,
+        AMediaCrypto *crypto,
+        uint32_t flags);
+typedef media_status_t (*pf_AMediaCodec_start)(AMediaCodec*);
+typedef media_status_t (*pf_AMediaCodec_stop)(AMediaCodec*);
+typedef media_status_t (*pf_AMediaCodec_flush)(AMediaCodec*);
+typedef media_status_t (*pf_AMediaCodec_delete)(AMediaCodec*);
+typedef AMediaFormat* (*pf_AMediaCodec_getOutputFormat)(AMediaCodec*);
+typedef ssize_t (*pf_AMediaCodec_dequeueInputBuffer)(AMediaCodec*, int64_t timeoutUs);
+typedef uint8_t* (*pf_AMediaCodec_getInputBuffer)(AMediaCodec*, size_t idx, size_t *out_size);
+typedef media_status_t (*pf_AMediaCodec_queueInputBuffer)(AMediaCodec*, size_t idx, off_t offset, size_t size, uint64_t time, uint32_t flags);
+typedef ssize_t (*pf_AMediaCodec_dequeueOutputBuffer)(AMediaCodec*, AMediaCodecBufferInfo *info, int64_t timeoutUs);
+typedef uint8_t* (*pf_AMediaCodec_getOutputBuffer)(AMediaCodec*, size_t idx, size_t *out_size);
+typedef media_status_t (*pf_AMediaCodec_releaseOutputBuffer)(AMediaCodec*, size_t idx, bool render);
+typedef media_status_t (*pf_AMediaCodec_releaseOutputBufferAtTime)(AMediaCodec*, size_t idx, int64_t timestampNs);
+typedef media_status_t (*pf_AMediaCodec_setOutputSurface)(AMediaCodec*, ANativeWindow *surface);
 
-typedef bool (*pf_AMediaFormat_getInt32)(AMediaFormat*,
-        const char *name, int32_t *out);
-
-typedef bool (*pf_AMediaFormat_getString)(AMediaFormat*,
-		const char *name, const char **out);
 
 
 struct symext
@@ -68,6 +99,25 @@ struct symext
         pf_AMediaFormat_getInt32 getInt32;
         pf_AMediaFormat_getString getString;
     } AMediaFormat;
+    struct {
+        pf_AMediaCodec_createCodecByName createCodecByName;
+        pf_AMediaCodec_createDecoderByType createDecoderByType;//(const char *mime_type)
+        pf_AMediaCodec_createEncoderByType createEncoderByType;//(const char *name)
+        pf_AMediaCodec_configure configure;
+        pf_AMediaCodec_start start;
+        pf_AMediaCodec_stop stop;
+        pf_AMediaCodec_flush flush;
+        pf_AMediaCodec_delete deletemc;
+        pf_AMediaCodec_getOutputFormat getOutputFormat;
+        pf_AMediaCodec_dequeueInputBuffer dequeueInputBuffer;
+        pf_AMediaCodec_getInputBuffer getInputBuffer;
+        pf_AMediaCodec_queueInputBuffer queueInputBuffer;
+        pf_AMediaCodec_dequeueOutputBuffer dequeueOutputBuffer;
+        pf_AMediaCodec_getOutputBuffer getOutputBuffer;
+        pf_AMediaCodec_releaseOutputBuffer releaseOutputBuffer;
+        pf_AMediaCodec_releaseOutputBufferAtTime releaseOutputBufferAtTime;
+        pf_AMediaCodec_setOutputSurface setOutputSurface;
+    } AMediaCodec;
 };
 
 

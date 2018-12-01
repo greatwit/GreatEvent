@@ -11,16 +11,17 @@ class GMediaExtractor  : private GThread
 	public:
 	GMediaExtractor();
 		virtual ~GMediaExtractor();
-		int startPlayer(const char*filepath);
+		int startPlayer(const char*filepath, void *surface);
 		int stopPlayer();
 
 	protected:
 		void *Thread();
 
 	private:
-		struct symext mSymbols;
-		AMediaExtractor* mExtrator;
-	    AMediaFormat* mFormat;
+		struct symext 		mSymbols;
+		AMediaCodec*	 	mCodec;
+		AMediaExtractor* 	mExtrator;
+	    AMediaFormat* 		mFormat;
 
 	    bool		mbRunning;
 };
