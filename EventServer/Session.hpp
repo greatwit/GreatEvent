@@ -40,6 +40,8 @@ public:
 	void setStatus( int status );
 	int getStatus();
 
+	int setHeartBeat();
+
 	int readBuffer();
 	int writeBuffer();
 

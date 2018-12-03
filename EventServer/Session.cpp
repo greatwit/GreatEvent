@@ -182,6 +182,10 @@ Session :: ~Session()
 	}
 }
 
+int Session :: setHeartBeat() {
+	return mTaskBase!=NULL?mTaskBase->setHeartCount():0;
+}
+
 int Session :: recvEx(char*pData, int len) {
 	int recvCount = 0, recvRet = 0;
 	do{

@@ -3,7 +3,9 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <queue>
 
+#include "GQueue.h"
 #include "h264.h"
 #include "basedef.h"
 #include "TaskBase.hpp"
@@ -11,15 +13,13 @@
 
 class BufferCache;
 
-
-
 class TaskPlayback :public TaskBase {
-
 public:
 	TaskPlayback( Session*sess, Sid_t& sid, char*filename);
 	virtual ~TaskPlayback();
 	virtual int StartTask();
 	virtual int StopTask();
+	virtual int setHeartCount();
 	virtual int readBuffer();
 	virtual int writeBuffer();
 
@@ -32,6 +32,7 @@ public:
 private:
 	int recvPackData();
 	int sendEndfileCmd();
+	int sendHearbeatCmd();
 
 	FfmpegContext 		*mFfmpeg;
 	int 				mFrameRate;
@@ -43,7 +44,7 @@ private:
 	NALU_t 				*mNALU;
 	int					mSeqid;
 	Session				*mSess;
-
+	GQueue<int>		mMsgQueue;
 	const int 			mPackHeadLen;
 };
 

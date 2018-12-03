@@ -49,7 +49,7 @@
 		mSendBuffer.bSendCmd = true;
 		int ret = tcpSendData();
 
-		GLOGE("net_cmd len:%d send ret:%d", mPackHeadLen, ret);
+		//GLOGE("net_cmd len:%d send ret:%d", mPackHeadLen, mMsgQueue.getSize());
 		//StartTask();
 	}
 
@@ -67,6 +67,18 @@
 			delete mFfmpeg;
 			mFfmpeg = NULL;
 		}
+
+
+		GLOGE("queue size:%d", mMsgQueue.getSize());
+		mMsgQueue.clearQueue();
+//		int size = mMsgQueue.getSize();
+//		for(int i=0;i<size;i++) {
+//			int val = 0;
+//			mMsgQueue.try_pop(val);
+//			GLOGE("queue value:%d", val);
+//		}
+
+
 	}
 
 	int TaskPlayback::StartTask() {
@@ -95,8 +107,7 @@
 		PLAYER_INIT_INFO &playInfo = info.pi;
 		memcpy(lRet.lpData, &info, sizeof(FILE_INFO));
 
-		if(playInfo.nSampleRate>0)
-			mFrameRate = playInfo.nFps;
+		mFrameRate = playInfo.nFps;
 
 		GLOGE("getLoginRet w:%d h:%d size:%d framerate:%d extlen:%d\n",
 				playInfo.nWidth, playInfo.nHeigth,
@@ -145,6 +156,12 @@
 //		return iRet;
 //	}
 
+	int TaskPlayback::setHeartCount() {
+		if(mMsgQueue.getSize() < 10)
+			mMsgQueue.push(MODULE_MSG_PING);
+		return ++mHeartCount;
+	}
+
 	int TaskPlayback::tcpSendData()
 	{
 		int ret = 0;
@@ -191,6 +208,17 @@
 		return ret;
 	}
 
+	int TaskPlayback::sendHearbeatCmd() {
+		LPNET_CMD	cmd = (LPNET_CMD)mSendBuffer.cmd;
+		cmd->dwFlag 	= NET_FLAG;
+		cmd->dwCmd 		= MODULE_MSG_PING;
+		cmd->dwIndex 	= 0;
+		cmd->dwLength 	= 0;
+		mSendBuffer.totalLen = sizeof(NET_CMD);
+		mSendBuffer.bSendCmd = true;
+		int ret = tcpSendData();
+	}
+
 	int TaskPlayback::writeBuffer() {
 		static int count = 0;
 		int ret = 0;
@@ -213,7 +241,7 @@
 				cmd->dwLength 	= pkt.size+sizeof(AV_FRAME);
 				frame->nLength 		= pkt.size;//frame size
 				frame->dwTick 		= pkt.pts;
-				frame->dwTm   		= pkt.pts/mFrameRate;
+				frame->dwTm   		= pkt.pts;
 
 				switch(frameType) {
 					case AVMEDIA_TYPE_VIDEO:
@@ -245,13 +273,13 @@
 						break;
 				}
 
-				if(mFrameCount>=0) {
-					mFrameCount++;
-					if(mFrameCount>=300) {
-						mFrameCount = -1;
-						return 0;
-					}
-				}
+//				if(mFrameCount>=0) {
+//					mFrameCount++;
+//					if(mFrameCount>=300) {
+//						mFrameCount = -1;
+//						return 0;
+//					}
+//				}
 
 			}
 			else {

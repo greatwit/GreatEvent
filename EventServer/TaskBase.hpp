@@ -26,11 +26,13 @@ public:
 	virtual ~TaskBase();
 	virtual int StartTask();
 	virtual int StopTask();
+	virtual int setHeartCount();
 	virtual int readBuffer();
 	virtual int writeBuffer();
 
 protected:
 	Sid_t mSid;
+	int   mHeartCount;
 };
 
 

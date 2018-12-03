@@ -138,14 +138,14 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 		event_set( session->getReadEvent(),  clientFD, EV_READ,  onRead, session );
 		event_set( session->getWriteEvent(), clientFD, EV_WRITE, onWrite, session );
 		//event_set( session->getTimeEvent(), clientFD, EV_TIMEOUT, onTimer, session );
-		evtimer_set(session->getTimeEvent(), onTimer, session->getTimeEvent());
+		evtimer_set(session->getTimeEvent(), onTimer, session);
 		addEvent(  session, EV_READ, clientFD );
 		addEvent(  session, EV_TIMEOUT, clientFD );
 
 		struct timeval timeout;
 		memset( &timeout, 0, sizeof( timeout ) );
 		timeout.tv_sec = 0;
-		timeout.tv_usec = 500000;
+		timeout.tv_usec = 1000000;
 		evtimer_add( session->getTimeEvent(), &timeout );
 		//addEvent( session, EV_WRITE, clientFD );
 
@@ -295,14 +295,16 @@ void EventCall :: onWrite( int fd, short events, void * arg )
 
 void EventCall :: onTimer( int fd, short events, void * arg )
 {
-	GLOGE("------------onTimer fd:%d arg:%d \n", fd, arg);
-	 struct event* ev_time = (struct event*)arg;
+	Session * session = (Session*)arg;
+	int count = session->setHeartBeat();
+
+	GLOGE("------------onTimer sid:%d heartcount:%d\n", session->getSid().mKey, count);
+
 	struct timeval timeout;
 	memset( &timeout, 0, sizeof( timeout ) );
 	timeout.tv_sec = 0;
-	timeout.tv_usec = 500000;
-	 //event_add(ev_time, &tv);
-	 evtimer_add(ev_time, &timeout);
+	timeout.tv_usec = 1000000;
+	evtimer_add(session->getTimeEvent(), &timeout);
 	 //evtimer_set(session->getTimeEvent(), onTimer, session->getTimeEvent());
 }
 
