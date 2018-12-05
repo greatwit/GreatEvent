@@ -18,7 +18,7 @@
 
 void IOUtils :: inetNtoa( in_addr * addr, char * ip, int size )
 {
-	#if defined (linux) || defined (__sgi) || defined (__hpux) || defined (__FreeBSD__)
+	#if defined (linux) || defined (__ANDROID__) || defined (__sgi) || defined (__hpux) || defined (__FreeBSD__)
 		const unsigned char *p = ( const unsigned char *) addr;
 		snprintf( ip, size, "%i.%i.%i.%i", p[0], p[1], p[2], p[3] );
 	#else
