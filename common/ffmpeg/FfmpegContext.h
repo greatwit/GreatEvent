@@ -31,6 +31,7 @@ class FfmpegContext {
 		int getFileInfo(FILE_INFO &fileInfo);
 		int getPackageCall();
 		int getPackageData(AVPacket&pkt,int &frameType);
+		int seekFrame(unsigned int mlSecond);
 
 		bool startDemux();
 		bool stopDemux();
@@ -48,6 +49,7 @@ class FfmpegContext {
 		GThreadPool 	mPool;
 		IPkgCall		*mPkgcall;
 		bool 			mbRunning;
+		int 			mIndex;
 };
 
 

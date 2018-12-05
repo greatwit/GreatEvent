@@ -31,8 +31,8 @@ public:
 
 private:
 	int recvPackData();
-	int sendEndfileCmd();
-	int sendHearbeatCmd();
+	int sendVariedCmd(int iVal);
+	int pushSendCmd(int iVal);
 
 	FfmpegContext 		*mFfmpeg;
 	int 				mFrameRate;
@@ -44,8 +44,9 @@ private:
 	NALU_t 				*mNALU;
 	int					mSeqid;
 	Session				*mSess;
-	GQueue<int>		mMsgQueue;
+	GQueue<int>			mMsgQueue;
 	const int 			mPackHeadLen;
+	bool				mbSendingData;
 };
 
 

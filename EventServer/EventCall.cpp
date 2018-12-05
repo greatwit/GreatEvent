@@ -21,6 +21,8 @@
 #include "event.h"
 #include "basedef.h"
 
+#define TIMEOUT_US 1000000
+
 EventArg :: EventArg()
 		:mTimeout(0)
 		,mEventBase(NULL)
@@ -144,8 +146,8 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 
 		struct timeval timeout;
 		memset( &timeout, 0, sizeof( timeout ) );
-		timeout.tv_sec = 0;
-		timeout.tv_usec = 1000000;
+		timeout.tv_sec 	= 0;
+		timeout.tv_usec = TIMEOUT_US;
 		evtimer_add( session->getTimeEvent(), &timeout );
 		//addEvent( session, EV_WRITE, clientFD );
 
@@ -224,6 +226,7 @@ void EventCall :: onWrite( int fd, short events, void * arg )
 	if(ret != 0)
 		addEvent( session, EV_WRITE, -1 );
 
+
 /*
 	if( EV_WRITE & events ) {
 		int ret = 0;
@@ -298,14 +301,11 @@ void EventCall :: onTimer( int fd, short events, void * arg )
 	Session * session = (Session*)arg;
 	int count = session->setHeartBeat();
 
-	GLOGE("------------onTimer sid:%d heartcount:%d\n", session->getSid().mKey, count);
-
 	struct timeval timeout;
 	memset( &timeout, 0, sizeof( timeout ) );
-	timeout.tv_sec = 0;
-	timeout.tv_usec = 1000000;
+	timeout.tv_sec 	= 0;
+	timeout.tv_usec = TIMEOUT_US;
 	evtimer_add(session->getTimeEvent(), &timeout);
-	 //evtimer_set(session->getTimeEvent(), onTimer, session->getTimeEvent());
 }
 
 void EventCall :: onResponse( void * queueData, void * arg )
@@ -337,8 +337,6 @@ void EventCall :: addEvent( Session * session, short events, int fd )
 		memset( &timeout, 0, sizeof( timeout ) );
 		timeout.tv_sec = eventArg->getTimeout();
 		event_add( pEvent, &timeout );
-
-		//evtimer_add( session->getTimeEvent(), &timeout );
 	}
 
 	if( events & EV_READ && 0 == session->getReading() ) {
@@ -354,7 +352,6 @@ void EventCall :: addEvent( Session * session, short events, int fd )
 		memset( &timeout, 0, sizeof( timeout ) );
 		timeout.tv_sec = eventArg->getTimeout();
 		event_add( pEvent, &timeout );
-
 	}
 }
 

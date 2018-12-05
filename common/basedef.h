@@ -32,7 +32,7 @@
 								printf("\n");
 
 	#define GLOGE(...) printf(__VA_ARGS__); \
-								printf("\n");
+								printf("\r\n");
 	#define GLOGI GLOGE
 	#define GLOGW GLOGE
 	#define GLOGV GLOGE

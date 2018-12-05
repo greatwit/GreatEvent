@@ -15,8 +15,8 @@ FfmpegContext::FfmpegContext( string filename )
 			,mFmt_ctx(NULL)
 			,mPkgcall(NULL)
 			,mbRunning(false)
+			,mIndex(0)
 {
-
 	int ret = 0;
 
 	//Input
@@ -45,9 +45,22 @@ FfmpegContext::~FfmpegContext() {
 void FfmpegContext::demuxFunc( void *arg ) {
 	FfmpegContext* context = (FfmpegContext*)arg;
 	printf("demux run:%d\n", context->getRun());
-	int res = 0;
+	   FILE *fp=fopen("mp4.h264", "wb+");
+	int res = 0, count=0;
     while ((res = context->getPackageCall()) >= 0) {
+    	AVPacket pkt;
+    	memset(&pkt, 0, sizeof(AVPacket));
+		int frameType = -1;
+		int res = context->getPackageData(pkt, frameType);
+
+		if(pkt.size>0 && frameType == AVMEDIA_TYPE_VIDEO) {
+			printf("package size:%d count:%d\n", pkt.size, ++count);
+			fwrite(pkt.data, pkt.size, 1,fp);
+			av_packet_unref(&pkt);
+		}
     }
+	   fclose(fp);
+	   fp=NULL;
 }
 
 void FfmpegContext :: setPkgcall(IPkgCall* call) {
@@ -106,6 +119,20 @@ int FfmpegContext::getPackageData(AVPacket &pkt, int &frameType) {
 	return ret;
 }
 
+int FfmpegContext::seekFrame(unsigned int mlSecond) {
+
+	if(!mFmt_ctx)
+		return 0;
+
+	int num 	= 1,rest = 0;
+	int64_t tm 	= mlSecond/1000*1000;
+	num 		= mFmt_ctx->streams[mIndex]->codec->pkt_timebase.num;
+	num 		= (num!=0)?num:1;
+	tm 			= tm * mFmt_ctx->streams[mIndex]->codec->pkt_timebase.den/(1000*num)+mFmt_ctx->streams[mIndex]->start_time;
+	rest 		= av_seek_frame(mFmt_ctx, mIndex, tm, AVSEEK_FLAG_BACKWARD);
+	return rest;
+}
+
 int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo, unsigned int &endTime) {
 
 	int ret = 0;
@@ -141,6 +168,8 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo, unsigned int &endTime
 				if(mFmt_ctx->streams[i]->codec->codec_id == AV_CODEC_ID_H264) {
 
 				}
+
+				mIndex = i;
 
 //				int spsLength=pCodec->extradata[6]*0xFF+pCodec->extradata[7];
 //				int ppsLength=pCodec->extradata[8+spsLength+1]*0xFF+pCodec->extradata[8+spsLength+2];

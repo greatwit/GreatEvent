@@ -12,6 +12,7 @@
 #include "protocol.h"
 #include "net_protocol.h"
 
+#include "Session.hpp"
 
 #define	FILE_PATH	"h264/camera_640x480.h264"
 
@@ -24,6 +25,7 @@
 				,mSeqid(0)
 				,mFrameRate(30)
 				,mFrameCount(0)
+				,mbSendingData(true)
 	{
 		//GLOGD("TaskPlayback filename:%s.", FILE_PATH);
 		GLOGE("mPackHeadLen is :%d", mPackHeadLen);
@@ -49,7 +51,6 @@
 		mSendBuffer.bSendCmd = true;
 		int ret = tcpSendData();
 
-		//GLOGE("net_cmd len:%d send ret:%d", mPackHeadLen, mMsgQueue.getSize());
 		//StartTask();
 	}
 
@@ -61,28 +62,16 @@
 		if(mpFile != NULL)
 			fclose(mpFile);
 
-		//FreeNALU(mNALU);
-
 		if(mFfmpeg!=NULL) {
 			delete mFfmpeg;
 			mFfmpeg = NULL;
 		}
 
-
 		GLOGE("queue size:%d", mMsgQueue.getSize());
 		mMsgQueue.clearQueue();
-//		int size = mMsgQueue.getSize();
-//		for(int i=0;i<size;i++) {
-//			int val = 0;
-//			mMsgQueue.try_pop(val);
-//			GLOGE("queue value:%d", val);
-//		}
-
-
 	}
 
 	int TaskPlayback::StartTask() {
-
 		return 0;
 	}
 
@@ -91,14 +80,6 @@
 	}
 
 	int TaskPlayback::getLoginRet(LOGIN_RET& lRet) {
-//		LPNET_CMD lpRet = (LPNET_CMD)(*data);
-//		lpRet->dwFlag = NET_FLAG;
-//		lpRet->dwCmd = MODULE_MSG_LOGINRET;
-//		lpRet->dwLength = sizeof(LOGIN_RET);
-//		LPLOGIN_RET lpLR = (LPLOGIN_RET)lpRet->lpData;
-//		lpLR->nLength = sizeof(lpLR->lpData);
-
-		//LPFILE_INFO	  fileInfo = (LPFILE_INFO)lRet.lpData;
 
 		FILE_INFO info = {0};
 		lRet.nLength = sizeof(FILE_INFO);
@@ -140,26 +121,12 @@
 		return len - leftLen;
 	}
 
-//	void TaskPlayback::packetHead(int fid, short pid, int len, unsigned char type, LPPACK_HEAD lpPack) {
-//		memset(lpPack, 0, sizeof(PACK_HEAD));
-//		lpPack->type 		= type;
-//		lpPack->fid 		= htonl(fid);
-//		lpPack->pid			= htons(pid);
-//		lpPack->len 		= htonl(len);
-//	}
-//
-//	int TaskPlayback::tpcSendMsg(unsigned char msg) {
-//		int iRet = 0;
-//		char sendData[1500] = {0};
-//		packetHead(0, 0, mPackHeadLen, msg, (LPPACK_HEAD)sendData);
-//		iRet = sendEx(sendData, mPackHeadLen);
-//		return iRet;
-//	}
-
 	int TaskPlayback::setHeartCount() {
-		if(mMsgQueue.getSize() < 10)
 			mMsgQueue.push(MODULE_MSG_PING);
-		return ++mHeartCount;
+
+			if(mSess->getWriting() == 0 || !mbSendingData)
+				EventCall::addEvent( mSess, EV_WRITE, -1 );
+		return mMsgQueue.getSize();
 	}
 
 	int TaskPlayback::tcpSendData()
@@ -194,29 +161,43 @@
 		return ret;
 	}
 
-	int TaskPlayback::sendEndfileCmd() {
-		LPNET_CMD	cmd = (LPNET_CMD)mSendBuffer.cmd;
-		cmd->dwFlag 	= NET_FLAG;
-		cmd->dwCmd 		= MODULE_MSG_DATAEND;
-		cmd->dwIndex 	= 0;
-		cmd->dwLength 	= 0;
+	int TaskPlayback::pushSendCmd(int iVal) {
+		int ret = 0;
+		LPNET_CMD	pCmd = (LPNET_CMD)mSendBuffer.cmd;
+		switch(iVal) {
+			case MODULE_MSG_DATAEND:
+			case MODULE_MSG_SEEK_CMPD:
+			case MODULE_MSG_SECTION_END:
+				pCmd->dwFlag 	= NET_FLAG;
+				pCmd->dwCmd 	= iVal;
+				pCmd->dwIndex 	= 0;
+				pCmd->dwLength 	= 0;
 
-		mSendBuffer.totalLen = sizeof(NET_CMD);
-		mSendBuffer.bSendCmd = true;
-		int ret = tcpSendData();
+				mSendBuffer.totalLen = sizeof(NET_CMD);
+				mSendBuffer.bSendCmd = true;
+				ret = tcpSendData();
+				break;
 
+			case MODULE_MSG_PING:
+				if(mMsgQueue.getSize() < 10)
+					mMsgQueue.push(MODULE_MSG_PING);
+				break;
+		}
+		GLOGE("pushSendCmd*****************************:%d.", iVal);
 		return ret;
 	}
 
-	int TaskPlayback::sendHearbeatCmd() {
-		LPNET_CMD	cmd = (LPNET_CMD)mSendBuffer.cmd;
-		cmd->dwFlag 	= NET_FLAG;
-		cmd->dwCmd 		= MODULE_MSG_PING;
-		cmd->dwIndex 	= 0;
-		cmd->dwLength 	= 0;
+	int TaskPlayback::sendVariedCmd(int iVal) {
+		LPNET_CMD	pCmd = (LPNET_CMD)mSendBuffer.cmd;
+		pCmd->dwFlag 	= NET_FLAG;
+		pCmd->dwCmd 	= iVal;
+		pCmd->dwIndex 	= 0;
+		pCmd->dwLength 	= 0;
 		mSendBuffer.totalLen = sizeof(NET_CMD);
 		mSendBuffer.bSendCmd = true;
 		int ret = tcpSendData();
+		//GLOGE("-------------------sendVariedCmd:%d", iVal);
+		return ret;
 	}
 
 	int TaskPlayback::writeBuffer() {
@@ -225,6 +206,24 @@
 
 		if(mSendBuffer.totalLen==0) //take new data and send
 		{
+			if(mMsgQueue.getSize()>0) {
+				int val = 0;
+				mMsgQueue.try_pop(val);
+				return sendVariedCmd(val);
+			}
+
+			if(!mbSendingData)
+				return 0;
+
+			if(mFrameCount<500)
+				mFrameCount++;
+			else
+			{
+				mFrameCount = 0;
+				mbSendingData = false;
+				return pushSendCmd(MODULE_MSG_SECTION_END);
+			}
+
 			int frameType = -1;
 			AVPacket &pkt 	 = mSendBuffer.avpack;
 			int res = mFfmpeg->getPackageData(pkt, frameType);
@@ -249,13 +248,13 @@
 						if(frame->dwFrameType==FRAME_VIDEO_I && pkt.data[4]==0x67) {
 							int index = 0,len = 0;
 							char head[4] = {0,0,0,1};
-							for(int i=0;i<36;i++) {
+							for(int i=0; i<36; i++) {
 								char curDat = pkt.data[i];
 								if(curDat==0x67 || curDat==0x68) {
 									index 	= i;
 									len 	= (int)pkt.data[i-1];
 									memcpy(pkt.data+i-4, head, 4);
-									printf("---------------------index:%d len:%d\n", index, len);
+									//printf("---------------------index:%d len:%d\n", index, len);
 								}
 							}
 							memcpy(pkt.data+index+len, head, 4);
@@ -272,30 +271,20 @@
 						frame->dwFrameType = FRAME_AUDIO;
 						break;
 				}
-
-//				if(mFrameCount>=0) {
-//					mFrameCount++;
-//					if(mFrameCount>=300) {
-//						mFrameCount = -1;
-//						return 0;
-//					}
-//				}
-
+				GLOGE("TaskPlayback writeBuffer frame->dwTick:%d", frame->dwTick);
 			}
 			else {
-				ret = sendEndfileCmd();
-				GLOGE("TaskPlayback sendEndfileCmd ret:%d.", ret);
+				if(mbSendingData) {
+					mbSendingData = false;
+					ret = pushSendCmd(MODULE_MSG_DATAEND);
+					GLOGE("TaskPlayback sendEndfileCmd ret:%d.", ret);
+				}
 				return 0;
 			}
-		}
+		}//new data
 
-		//still have data
+		//send media frame data
 		ret = tcpSendData();
-
-		count++;
-		//if(count >= 2) return -1;
-		GLOGE("TaskPlayback writeBuffer len:%d ret:%d count:%d.", sizeof(NET_CMD) + sizeof(AV_FRAME), ret, count);
-		//usleep(10*1000);
 
 		return ret;
 	}
@@ -328,41 +317,50 @@
 	int TaskPlayback::recvPackData() {
 		int &hasRecvLen = mRecvBuffer.hasRecvLen;
 		int ret = recv(mSid.mKey, mRecvBuffer.buff+mPackHeadLen+hasRecvLen, mRecvBuffer.totalLen-hasRecvLen, 0);
-		GLOGE("-------------------recvPackData ret:%d",ret);
+		//GLOGE("-------------------recvPackData ret:%d",ret);
 		if(ret>0) {
 			hasRecvLen += ret;
 			if(hasRecvLen==mRecvBuffer.totalLen) {
 
 				int lValueLen;
 			    char acValue[256] = {0};//new char[256];
-			    memset(acValue,0, 256);
+			    memset(acValue, 0, 256);
 				LPNET_CMD pCmdbuf = (LPNET_CMD)mRecvBuffer.buff;
 				if(pCmdbuf->dwCmd == MODULE_MSG_CONTROL_PLAY) {
 					PROTO_GetValueByName(mRecvBuffer.buff, (char*)"name", acValue, &lValueLen);
+					GLOGE("====================acValue:%s",acValue);
 					if (strcmp(acValue, "start") == 0) {
-						memset(acValue,0, 256);
+						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"tmstart", acValue, &lValueLen);
 						GLOGE("tmstart:%d",atoi(acValue));
 
-						memset(acValue,0, 256);
+						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"tmend", acValue, &lValueLen);
 						GLOGE("tmend:%d",atoi(acValue));
 						EventCall::addEvent( mSess, EV_WRITE, -1 );
 					}
 					else if(strcmp(acValue, "setpause") == 0) {
-						memset(acValue,0, 256);
+						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"value", acValue, &lValueLen);
+						int value = atoi(acValue);
+						GLOGE("====================setpause value:%d", value);
+
+						if(value==0)
+							mbSendingData = true;
 					}
 					else if(strcmp(acValue, "seek") == 0) {
-						memset(acValue,0, 256);
+						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"value", acValue, &lValueLen);
+						int iPos = atoi(acValue);
+						GLOGE("seek value:%d", iPos);
 
-						char *lpRet   = mSendBuffer.cmd;
-						LPNET_CMD cmd = (LPNET_CMD)lpRet;
-						cmd->dwFlag   = NET_FLAG;
-						cmd->dwCmd    = MODULE_MSG_SEEK_CMPD;
-						cmd->dwIndex  = 0;
-						cmd->dwLength = sizeof(LOGIN_RET);
+						mFfmpeg->seekFrame(iPos);
+
+						mSendBuffer.reset();
+
+						pushSendCmd(MODULE_MSG_SEEK_CMPD);
+
+						mbSendingData = true;
 					}
 				}
 			    //GLOGE("recv total:%s", mRecvBuffer.buff);
