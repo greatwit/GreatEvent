@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
+#include <mutex>
 
 #include "protocol.h"
 
@@ -132,13 +132,15 @@ struct tagSendBuffer {
 	int  totalLen;
 	AVPacket avpack;
 	char cmd[1500];
+	mutable std::mutex mut;
 
 	tagSendBuffer() {
 		memset(&avpack, 0, sizeof(AVPacket));
 	}
 
 	void reset() {
-		if(bSendCmd) memset(cmd,0, 1500);
+		std::lock_guard<std::mutex> lk(mut);
+		if(bSendCmd) memset(cmd, 0, 1500);
 		hasSendLen 	= 0;
 		totalLen 	= 0;
 		//av_free_packet(&avpack);

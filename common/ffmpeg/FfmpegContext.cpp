@@ -25,27 +25,24 @@ FfmpegContext::FfmpegContext( string filename )
 		//return -1;
 	}
 
+	if(mFmt_ctx!=NULL)
 	if ((ret = avformat_find_stream_info(mFmt_ctx, 0)) < 0) {
 		printf( "Failed to retrieve input stream information");
 		//return -1;
 	}
 
-	mwFile = fopen(FILE_PATH, "wb+");
-	if(mwFile)
-		printf( "open input file %s success.\n", FILE_PATH);
-
 	mPool.initPara(2);
 }
 
 FfmpegContext::~FfmpegContext() {
-	if(mwFile != NULL)
-		fclose(mwFile);
+
 }
 
 void FfmpegContext::demuxFunc( void *arg ) {
 	FfmpegContext* context = (FfmpegContext*)arg;
 	printf("demux run:%d\n", context->getRun());
-	   FILE *fp=fopen("mp4.h264", "wb+");
+	FILE *fp=fopen("mp4.h264", "wb+");
+
 	int res = 0, count=0;
     while ((res = context->getPackageCall()) >= 0) {
     	AVPacket pkt;
@@ -59,8 +56,9 @@ void FfmpegContext::demuxFunc( void *arg ) {
 			av_packet_unref(&pkt);
 		}
     }
-	   fclose(fp);
-	   fp=NULL;
+
+	fclose(fp);
+	fp=NULL;
 }
 
 void FfmpegContext :: setPkgcall(IPkgCall* call) {

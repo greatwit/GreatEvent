@@ -32,8 +32,8 @@
 		mRecvBuffer.reset();
 		mSendBuffer.reset();
 
-		mInBuffer = new BufferCache();
 		mFfmpeg   = new FfmpegContext(filename);
+		mInBuffer = new BufferCache();
 
 		//char lpRet[sizeof(NET_CMD) + sizeof(LOGIN_RET)] = {0};
 		char *lpRet   = mSendBuffer.cmd;
@@ -170,7 +170,7 @@
 			case MODULE_MSG_SECTION_END:
 				pCmd->dwFlag 	= NET_FLAG;
 				pCmd->dwCmd 	= iVal;
-				pCmd->dwIndex 	= 0;
+				pCmd->dwIndex 	= 10000;
 				pCmd->dwLength 	= 0;
 
 				mSendBuffer.totalLen = sizeof(NET_CMD);
@@ -303,7 +303,6 @@
 					hasRecvLen = 0;
 
 					GLOGE("playback flag:%08x totalLen:%d ret:%d", head->dwFlag, mRecvBuffer.totalLen, ret);
-					//GLOGE("Session flag:%08x ret:%d data:%s", cmdbuf->dwFlag, ret, cmdbuf->lpData);
 					ret = recvPackData();
 				}
 			}

@@ -1,6 +1,6 @@
 
-#ifndef SAVE_QUEUE_H_
-#define SAVE_QUEUE_H_
+#ifndef SAFE_QUEUE_H_
+#define SAFE_QUEUE_H_
 
 
 #include <queue>
@@ -15,10 +15,12 @@ class GQueue
      mutable std::mutex mut;
      std::queue<T> data_queue;
      std::condition_variable data_cond;
+
   public:
+
      GQueue(){}
-     GQueue(GQueue const& other)
-     {
+
+     GQueue(GQueue const& other) {
          std::lock_guard<std::mutex> lk(other.mut);
          data_queue=other.data_queue;
      }
@@ -29,6 +31,7 @@ class GQueue
          data_queue.push(new_value);
          data_cond.notify_one();
      }
+
      void wait_and_pop(T& value)//直到有元素可以删除为止
      {
          std::unique_lock<std::mutex> lk(mut);
@@ -37,8 +40,7 @@ class GQueue
          data_queue.pop();
      }
 
-     std::shared_ptr<T> wait_and_pop()
-     {
+     std::shared_ptr<T> wait_and_pop() {
          std::unique_lock<std::mutex> lk(mut);
          data_cond.wait(lk,[this]{return !data_queue.empty();});
          std::shared_ptr<T> res(std::make_shared<T>(data_queue.front()));
@@ -56,23 +58,22 @@ class GQueue
          return true;
      }
 
-     std::shared_ptr<T> try_pop()
-     {
+     std::shared_ptr<T> try_pop() {
          std::lock_guard<std::mutex> lk(mut);
          if(data_queue.empty())
              return std::shared_ptr<T>();
+
          std::shared_ptr<T> res(std::make_shared<T>(data_queue.front()));
          data_queue.pop();
          return res;
      }
 
-     bool empty() const
-     {
+     bool empty() const {
          std::lock_guard<std::mutex> lk(mut);
          return data_queue.empty();
      }
 
-     int getSize() const{
+     int getSize() const {
     	 std::lock_guard<std::mutex> lk(mut);
     	 return data_queue.size();
      }

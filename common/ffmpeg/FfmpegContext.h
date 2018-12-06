@@ -45,7 +45,6 @@ class FfmpegContext {
 
 		string mFilename;
 		AVFormatContext *mFmt_ctx;
-		FILE			*mwFile;
 		GThreadPool 	mPool;
 		IPkgCall		*mPkgcall;
 		bool 			mbRunning;

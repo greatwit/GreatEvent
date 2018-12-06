@@ -206,31 +206,27 @@ int Session :: readBuffer() {
 	}
 	else
 	{
-//		ret = recv(mSid.mKey, mReadBuff+mHasRecvLen, 1500, 0);
-//		mHasRecvLen+=ret;
-//		LPNET_CMD pCmdbuf = (LPNET_CMD)mReadBuff;
-//		GLOGE("Session flag:%08x ret:%d data:%s", pCmdbuf->dwFlag, ret, pCmdbuf->lpData);
-
 		if(mbRecvHead) {
 			ret = recv(mSid.mKey, mReadBuff+mHasRecvLen, mHeadLenConst-mHasRecvLen, 0);
 			if(ret>0) {
-				mHasRecvLen+=ret;
+				mHasRecvLen  += ret;
 				if(mHasRecvLen==mHeadLenConst) {
 
 					LPNET_HEAD head = (LPNET_HEAD)mReadBuff;
-					mTotalDataLen = head->dwLength;
+					mTotalDataLen   = head->dwLength;
 					mHasRecvLen = 0;
-					mbRecvHead = false;
+					mbRecvHead  = false;
 
 					GLOGE("Session flag:%08x frameLen:%d ret:%d", head->dwFlag, mTotalDataLen, ret);
 					//GLOGE("Session flag:%08x ret:%d data:%s", cmdbuf->dwFlag, ret, cmdbuf->lpData);
 					ret = recvPackData();
 				}
 			}
-		}else{
-			ret = recvPackData();
 		}
-	}
+		else
+			ret = recvPackData();
+
+	}//mTaskBase==NULL
 
 	return ret;
 }
@@ -256,8 +252,10 @@ int Session ::recvPackData() {
 		    PROTO_GetValueByName(mReadBuff, "play path", acValue, &lValueLen);
 		    GLOGE("filename:%s",acValue);
 
-		    if(access(acValue, F_OK)!=0)
+		    if(access(acValue, F_OK)!=0) {
 		    	GLOGE("filename %s is no exist.",acValue);
+		    	return 0;
+		    }
 
 			short type = pCmdbuf->dwIndex;
 			switch(type) {
