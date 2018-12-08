@@ -14,6 +14,8 @@
 
 #include "Session.hpp"
 
+#define SEG_FRAME_COUNT 500
+
 #define	FILE_PATH	"h264/camera_640x480.h264"
 
 	TaskPlayback::TaskPlayback( Session* sess, Sid_t& sid, char*filename )
@@ -28,7 +30,7 @@
 				,mbSendingData(true)
 	{
 		//GLOGD("TaskPlayback filename:%s.", FILE_PATH);
-		GLOGE("mPackHeadLen is :%d", mPackHeadLen);
+		GLOGE("mPackHeadLen is :%d\n", mPackHeadLen);
 		mRecvBuffer.reset();
 		mSendBuffer.reset();
 
@@ -67,7 +69,7 @@
 			mFfmpeg = NULL;
 		}
 
-		GLOGE("queue size:%d", mMsgQueue.getSize());
+		GLOGE("queue size:%d\n", mMsgQueue.getSize());
 		mMsgQueue.clearQueue();
 	}
 
@@ -138,6 +140,7 @@
 				mSendBuffer.hasSendLen += ret;
 			else
 				GLOGE("tcpSendData cmd errno:%d ret:%d.", errno, ret);
+
 			if(mSendBuffer.hasSendLen == mSendBuffer.totalLen)
 			{
 				if(mSendBuffer.avpack.size>0)
@@ -152,7 +155,7 @@
 			if(ret>0)
 				mSendBuffer.hasSendLen += ret;
 			else
-				GLOGE("tcpSendData dta errno:%d ret:%d.", errno, ret);
+				GLOGE("tcpSendData dta errno:%d ret:%d.\n", errno, ret);
 
 			if(mSendBuffer.hasSendLen == mSendBuffer.totalLen) {
 				mSendBuffer.reset();
@@ -161,16 +164,17 @@
 		return ret;
 	}
 
-	int TaskPlayback::pushSendCmd(int iVal) {
+	int TaskPlayback::pushSendCmd(int iVal, int index) {
 		int ret = 0;
 		LPNET_CMD	pCmd = (LPNET_CMD)mSendBuffer.cmd;
 		switch(iVal) {
 			case MODULE_MSG_DATAEND:
 			case MODULE_MSG_SEEK_CMPD:
 			case MODULE_MSG_SECTION_END:
+			case MODULE_MSG_EXERET:
 				pCmd->dwFlag 	= NET_FLAG;
 				pCmd->dwCmd 	= iVal;
-				pCmd->dwIndex 	= 10000;
+				pCmd->dwIndex 	= index;
 				pCmd->dwLength 	= 0;
 
 				mSendBuffer.totalLen = sizeof(NET_CMD);
@@ -183,7 +187,7 @@
 					mMsgQueue.push(MODULE_MSG_PING);
 				break;
 		}
-		GLOGE("pushSendCmd*****************************:%d.", iVal);
+		GLOGE("pushSendCmd********************cmd:%d ret:%d.\n", iVal, ret);
 		return ret;
 	}
 
@@ -201,7 +205,6 @@
 	}
 
 	int TaskPlayback::writeBuffer() {
-		static int count = 0;
 		int ret = 0;
 
 		if(mSendBuffer.totalLen==0) //take new data and send
@@ -215,11 +218,11 @@
 			if(!mbSendingData)
 				return 0;
 
-			if(mFrameCount<500)
+			if(mFrameCount < SEG_FRAME_COUNT)
 				mFrameCount++;
 			else
 			{
-				mFrameCount = 0;
+				mFrameCount   = 0;
 				mbSendingData = false;
 				return pushSendCmd(MODULE_MSG_SECTION_END);
 			}
@@ -238,13 +241,13 @@
 				cmd->dwCmd 		= MODULE_MSG_VIDEO;
 				cmd->dwIndex 	= 0;
 				cmd->dwLength 	= pkt.size+sizeof(AV_FRAME);
-				frame->nLength 		= pkt.size;//frame size
+				frame->nLength 		= pkt.size;	//frame size
 				frame->dwTick 		= pkt.pts;
 				frame->dwTm   		= pkt.pts;
 
 				switch(frameType) {
 					case AVMEDIA_TYPE_VIDEO:
-						frame->dwFrameType = (pkt.flags == 0)?FRAME_VIDEO_P:FRAME_VIDEO_I;
+						frame->dwFrameType = (pkt.flags & AV_PKT_FLAG_KEY)?FRAME_VIDEO_I:FRAME_VIDEO_P;
 						if(frame->dwFrameType==FRAME_VIDEO_I && pkt.data[4]==0x67) {
 							int index = 0,len = 0;
 							char head[4] = {0,0,0,1};
@@ -271,13 +274,13 @@
 						frame->dwFrameType = FRAME_AUDIO;
 						break;
 				}
-				GLOGE("TaskPlayback writeBuffer frame->dwTick:%d", frame->dwTick);
+				//GLOGE("TaskPlayback writeBuffer frame->dwTick:%d", frame->dwTick);
 			}
 			else {
 				if(mbSendingData) {
 					mbSendingData = false;
 					ret = pushSendCmd(MODULE_MSG_DATAEND);
-					GLOGE("TaskPlayback sendEndfileCmd ret:%d.", ret);
+					GLOGE("TaskPlayback sendEndfileCmd ret:%d.\n", ret);
 				}
 				return 0;
 			}
@@ -302,7 +305,7 @@
 					mRecvBuffer.bRecvHead = false;
 					hasRecvLen = 0;
 
-					GLOGE("playback flag:%08x totalLen:%d ret:%d", head->dwFlag, mRecvBuffer.totalLen, ret);
+					GLOGE("playback flag:%08x totalLen:%d ret:%d\n", head->dwFlag, mRecvBuffer.totalLen, ret);
 					ret = recvPackData();
 				}
 			}
@@ -322,27 +325,27 @@
 			if(hasRecvLen==mRecvBuffer.totalLen) {
 
 				int lValueLen;
-			    char acValue[256] = {0};//new char[256];
+			    char acValue[256] = {0};	//new char[256];
 			    memset(acValue, 0, 256);
 				LPNET_CMD pCmdbuf = (LPNET_CMD)mRecvBuffer.buff;
 				if(pCmdbuf->dwCmd == MODULE_MSG_CONTROL_PLAY) {
 					PROTO_GetValueByName(mRecvBuffer.buff, (char*)"name", acValue, &lValueLen);
-					GLOGE("====================acValue:%s",acValue);
+					GLOGE("====================acValue:%s\n",acValue);
 					if (strcmp(acValue, "start") == 0) {
 						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"tmstart", acValue, &lValueLen);
-						GLOGE("tmstart:%d",atoi(acValue));
+						GLOGE("tmstart:%d\n",atoi(acValue));
 
 						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"tmend", acValue, &lValueLen);
-						GLOGE("tmend:%d",atoi(acValue));
+						GLOGE("tmend:%d\n",atoi(acValue));
 						EventCall::addEvent( mSess, EV_WRITE, -1 );
 					}
 					else if(strcmp(acValue, "setpause") == 0) {
 						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"value", acValue, &lValueLen);
 						int value = atoi(acValue);
-						GLOGE("====================setpause value:%d", value);
+						GLOGE("====================setpause value:%d\n", value);
 
 						if(value==0)
 							mbSendingData = true;
@@ -351,13 +354,17 @@
 						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"value", acValue, &lValueLen);
 						int iPos = atoi(acValue);
-						GLOGE("seek value:%d", iPos);
+						GLOGE("seek value:%d\n", iPos);
 
 						mFfmpeg->seekFrame(iPos);
 
 						mSendBuffer.reset();
 
-						pushSendCmd(MODULE_MSG_SEEK_CMPD);
+						//here maybe some problems
+						int rest = pushSendCmd(MODULE_MSG_SEEK_CMPD);
+						pushSendCmd(MODULE_MSG_EXERET, pCmdbuf->dwIndex);
+						if(rest != sizeof(NET_CMD))
+							mMsgQueue.push(MODULE_MSG_SEEK_CMPD);
 
 						mbSendingData = true;
 					}

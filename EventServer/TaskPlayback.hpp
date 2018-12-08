@@ -32,7 +32,7 @@ public:
 private:
 	int recvPackData();
 	int sendVariedCmd(int iVal);
-	int pushSendCmd(int iVal);
+	int pushSendCmd(int iVal, int index=0);
 
 	FfmpegContext 		*mFfmpeg;
 	int 				mFrameRate;

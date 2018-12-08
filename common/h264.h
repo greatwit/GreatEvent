@@ -150,9 +150,11 @@ struct tagSendBuffer {
 		avpack.size = 0;
 		bSendCmd 	= true;
 	}
+
 	bool isSendVideo() {
 		return avpack.size>0;
 	}
+
 	void setToVideo() {
 		bSendCmd	= false;
 		hasSendLen 	= 0;

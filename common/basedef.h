@@ -31,8 +31,7 @@
 								printf(__VA_ARGS__); \
 								printf("\n");
 
-	#define GLOGE(...) printf(__VA_ARGS__); \
-								printf("\r\n");
+	#define GLOGE(...) printf(__VA_ARGS__);
 	#define GLOGI GLOGE
 	#define GLOGW GLOGE
 	#define GLOGV GLOGE

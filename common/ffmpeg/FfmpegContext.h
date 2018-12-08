@@ -33,6 +33,9 @@ class FfmpegContext {
 		int getPackageData(AVPacket&pkt,int &frameType);
 		int seekFrame(unsigned int mlSecond);
 
+		int parseExtraDataMp4(AVCodecContext *pCont, const char*szFitler);
+		int changeExtraData(AVCodecContext *pCont);
+
 		bool startDemux();
 		bool stopDemux();
 

@@ -131,6 +131,34 @@ int FfmpegContext::seekFrame(unsigned int mlSecond) {
 	return rest;
 }
 
+int FfmpegContext::parseExtraDataMp4(AVCodecContext *pCont, const char*szFitler) {
+	unsigned char *dummy = NULL;
+	int dummy_size;
+	AVBitStreamFilterContext *pfc =  av_bitstream_filter_init(szFitler);
+	if(pfc==NULL)
+		return -1;
+	av_bitstream_filter_filter(pfc, pCont, NULL, &dummy, &dummy_size, NULL, 0, 0);
+	av_bitstream_filter_close(pfc);
+	return 0;
+}
+
+int FfmpegContext::changeExtraData(AVCodecContext *pCont) {
+	int rest = 0;
+	if(pCont->extradata && pCont->extradata_size>0) {
+		switch(pCont->codec_id) {
+		case AV_CODEC_ID_H264:
+			rest = parseExtraDataMp4(pCont, "h264_mp4toannexb");
+			break;
+		case AV_CODEC_ID_MPEG4:
+			rest = parseExtraDataMp4(pCont, "mpeg4_unpack_bframes");
+			break;
+		case AV_CODEC_ID_AAC:
+			break;
+		}
+	}
+	return rest;
+}
+
 int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo, unsigned int &endTime) {
 
 	int ret = 0;
@@ -146,7 +174,7 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo, unsigned int &endTime
 			AVMediaType codecType = mFmt_ctx->streams[i]->codec->codec_type;
 			if(codecType==AVMEDIA_TYPE_VIDEO) {
 				//out_stream=avformat_new_stream(ofmt_ctx_v, in_stream->codec->codec);
-
+				changeExtraData(pCodec);
 				playinfo.nCodeID					= pCodec->codec_id+1;
 				playinfo.nFps						= (pStream->r_frame_rate.den==0)?25:(pStream->r_frame_rate.num / pStream->r_frame_rate.den);
 				playinfo.nWidth						= pCodec->width;
