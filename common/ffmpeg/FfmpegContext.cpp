@@ -32,6 +32,7 @@ FfmpegContext::FfmpegContext( string filename )
 	}
 
 	mPool.initPara(2);
+
 }
 
 FfmpegContext::~FfmpegContext() {
@@ -51,8 +52,12 @@ void FfmpegContext::demuxFunc( void *arg ) {
 		int res = context->getPackageData(pkt, frameType);
 
 		if(pkt.size>0 && frameType == AVMEDIA_TYPE_VIDEO) {
-			printf("package size:%d count:%d\n", pkt.size, ++count);
-			fwrite(pkt.data, pkt.size, 1,fp);
+			//printf("package size:0x%08X count:%d flag::%d\n", pkt.size, ++count, pkt.flags);
+			printf("head:0x%02X 0x%02X 0x%02X 0x%02X flag:%d\n", pkt.data[4],pkt.data[5],pkt.data[6],pkt.data[7],pkt.flags);
+			//fwrite(pkt.data, pkt.size, 1,fp);
+			char tag[4] = {0x00, 0x00, 0x00, 0x01};
+			fwrite(tag, 1, 4, fp);
+			fwrite(pkt.data+4, 1, pkt.size-4, fp);
 			av_packet_unref(&pkt);
 		}
     }
@@ -103,11 +108,11 @@ int FfmpegContext::getPackageCall() {
 int FfmpegContext::getPackageData(AVPacket &pkt, int &frameType) {
 
 	int ret = av_read_frame(mFmt_ctx, &pkt);//0 is ok,<0 is error or end of file
-
     if (ret >= 0) {
     	AVStream *stream = mFmt_ctx->streams[pkt.stream_index];
     	frameType 		 = stream->codec->codec_type;
     	pkt.pts			 = (pkt.pts - stream->start_time)*1000*av_q2d(stream->time_base);
+
 //		if (stream->codec->codec_type==AVMEDIA_TYPE_VIDEO ) {
 //			char tag[4] = {0x00, 0x00, 0x00, 0x01};
 //			fwrite(tag, 1, 4, mwFile);
@@ -118,7 +123,6 @@ int FfmpegContext::getPackageData(AVPacket &pkt, int &frameType) {
 }
 
 int FfmpegContext::seekFrame(unsigned int mlSecond) {
-
 	if(!mFmt_ctx)
 		return 0;
 
@@ -137,6 +141,7 @@ int FfmpegContext::parseExtraDataMp4(AVCodecContext *pCont, const char*szFitler)
 	AVBitStreamFilterContext *pfc =  av_bitstream_filter_init(szFitler);
 	if(pfc==NULL)
 		return -1;
+
 	av_bitstream_filter_filter(pfc, pCont, NULL, &dummy, &dummy_size, NULL, 0, 0);
 	av_bitstream_filter_close(pfc);
 	return 0;
@@ -174,7 +179,7 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo, unsigned int &endTime
 			AVMediaType codecType = mFmt_ctx->streams[i]->codec->codec_type;
 			if(codecType==AVMEDIA_TYPE_VIDEO) {
 				//out_stream=avformat_new_stream(ofmt_ctx_v, in_stream->codec->codec);
-				changeExtraData(pCodec);
+				//changeExtraData(pCodec);
 				playinfo.nCodeID					= pCodec->codec_id+1;
 				playinfo.nFps						= (pStream->r_frame_rate.den==0)?25:(pStream->r_frame_rate.num / pStream->r_frame_rate.den);
 				playinfo.nWidth						= pCodec->width;
@@ -187,12 +192,11 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo, unsigned int &endTime
 					memcpy(playinfo.videoExtData, pCodec->extradata, pCodec->extradata_size);
 				}
 
-				printf("len:%d\n",pCodec->extradata_size);
+				printf("len:%d codec_id:%d\n",pCodec->extradata_size, pCodec->codec_id);
 				for(int i=0; i<pCodec->extradata_size; i++)
 					printf("v:0x%02X\n", (unsigned char)pCodec->extradata[i]);
 
 				if(mFmt_ctx->streams[i]->codec->codec_id == AV_CODEC_ID_H264) {
-
 				}
 
 				mIndex = i;

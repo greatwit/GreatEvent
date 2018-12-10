@@ -97,7 +97,7 @@ void PlayerServer :: shutdown() {
 	if(mListenFD>0) {
 		close(mListenFD);
 		mListenFD = 0;
-		GLOGW("close listenid:%d", mListenFD);
+		GLOGW("Player close listenid:%d\n", mListenFD);
 	}
 }
 

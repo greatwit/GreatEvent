@@ -244,13 +244,12 @@
 				frame->nLength 		= pkt.size;	//frame size
 				frame->dwTick 		= pkt.pts;
 				frame->dwTm   		= pkt.pts;
-
+				char head[4] = {0, 0, 0, 1};
 				switch(frameType) {
 					case AVMEDIA_TYPE_VIDEO:
 						frame->dwFrameType = (pkt.flags & AV_PKT_FLAG_KEY)?FRAME_VIDEO_I:FRAME_VIDEO_P;
 						if(frame->dwFrameType==FRAME_VIDEO_I && pkt.data[4]==0x67) {
 							int index = 0,len = 0;
-							char head[4] = {0,0,0,1};
 							for(int i=0; i<36; i++) {
 								char curDat = pkt.data[i];
 								if(curDat==0x67 || curDat==0x68) {
@@ -263,10 +262,9 @@
 							memcpy(pkt.data+index+len, head, 4);
 						}
 						if(pkt.size>=4) {
-							pkt.data[0] = 0x00;
-							pkt.data[1] = 0x00;
-							pkt.data[2] = 0x00;
-							pkt.data[3] = 0x01;
+							char head2[4] = {0, 0, 0, 2};
+							if(memcmp(head2, pkt.data, 4)!=0)
+								memcpy(pkt.data, head, 4);
 						}
 						break;
 

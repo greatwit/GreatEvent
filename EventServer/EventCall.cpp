@@ -120,7 +120,7 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 	}
 
 	if( IOUtils::setNonblock( clientFD ) < 0 ) {
-		GLOGE("failed to set client socket non-blocking" );
+		GLOGE("failed to set client socket non-blocking\n" );
 	}
 
 	Sid_t sid;
@@ -171,7 +171,7 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 		}
 	} else {
 		close( clientFD );
-		GLOGE("Out of memory, cannot allocate session object!" );
+		GLOGE("Out of memory, cannot allocate session object!\n" );
 	}
 
 }
@@ -446,7 +446,7 @@ void EventHelper :: error( void * arg )
 //	session->getHandler()->close();
 	close( EVENT_FD( session->getWriteEvent() ) );
 	delete session;
-	syslog( LOG_WARNING, "session(%d.%d) error, exit", sid.mKey, sid.mSeq );
+	syslog( LOG_WARNING, "session(%d.%d) error, exit\n", sid.mKey, sid.mSeq );
 
 }
 

@@ -217,7 +217,7 @@ int Session :: readBuffer() {
 					mHasRecvLen = 0;
 					mbRecvHead  = false;
 
-					GLOGE("Session flag:%08x frameLen:%d ret:%d", head->dwFlag, mTotalDataLen, ret);
+					GLOGE("Session flag:%08x frameLen:%d ret:%d\n", head->dwFlag, mTotalDataLen, ret);
 					//GLOGE("Session flag:%08x ret:%d data:%s", cmdbuf->dwFlag, ret, cmdbuf->lpData);
 					ret = recvPackData();
 				}
@@ -250,10 +250,10 @@ int Session ::recvPackData() {
 		    memset(acValue,0, 256);
 			LPNET_CMD pCmdbuf = (LPNET_CMD)mReadBuff;
 		    PROTO_GetValueByName(mReadBuff, "play path", acValue, &lValueLen);
-		    GLOGE("filename:%s",acValue);
+		    GLOGE("filename:%s\n",acValue);
 
 		    if(access(acValue, F_OK)!=0) {
-		    	GLOGE("filename %s is no exist.",acValue);
+		    	GLOGE("filename %s is no exist.\n",acValue);
 		    	return 0;
 		    }
 
