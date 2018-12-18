@@ -30,6 +30,7 @@ NAREFL_PATH  = ../common/NalBareflow
 include $(CLEAR_VARS)
 
 LOCAL_CFLAGS := -D__ANDROID__ 
+LOCAL_CPPFLAGS 	+= -std=c++11
 #LOCAL_CFLAGS += -std=c99
 
 LOCAL_MODULE    := mcndk

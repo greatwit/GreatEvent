@@ -9,7 +9,15 @@
 
 using namespace std;
 
-int startFileRecv(char*ipaddr, char*port, char*needFile, char*saveFile);
-int stopFileRecv();
+#ifdef __cplusplus
+	  extern "C"{
+#endif
+
+	int startFileRecv(char*ipaddr, char*port, char*needFile, char*saveFile);
+	int stopFileRecv();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

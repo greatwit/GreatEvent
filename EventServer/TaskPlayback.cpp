@@ -359,7 +359,7 @@
 						mSendBuffer.reset();
 
 						//here maybe some problems
-						int rest = pushSendCmd(MODULE_MSG_SEEK_CMPD);
+						int rest = pushSendCmd(MODULE_MSG_SEEK_CMPD, pCmdbuf->dwIndex);
 						pushSendCmd(MODULE_MSG_EXERET, pCmdbuf->dwIndex);
 						if(rest != sizeof(NET_CMD))
 							mMsgQueue.push(MODULE_MSG_SEEK_CMPD);

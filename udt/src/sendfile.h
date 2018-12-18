@@ -8,8 +8,15 @@
 
 using namespace std;
 
+#ifdef __cplusplus
+	  extern "C"{
+#endif
 
-int startFileSend(char*port);
-int stopFileSend();
+	int startFileSend(char*port);
+	int stopFileSend();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

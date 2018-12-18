@@ -3,13 +3,9 @@
 
 
 #include "basedef.h"
-
 #include "mediacodec.h"
-
 #include "GMediaExtractor.h"
-
 #include <unistd.h>
-
 
 
 GMediaExtractor::GMediaExtractor()
@@ -30,9 +26,11 @@ void* GMediaExtractor::Thread() {
 	GThread::ThreadStarted();
 	GLOGW("FileDeCodec::Thread");
 
+	FILE *mFile = fopen("/sdcard/extra.h264", "wb");
+
 	uint8_t buffer[100000] = {0};
 	ssize_t size = 0;
-	while(mbRunning&&size>=0){
+	while(mbRunning&&size>=0) {
 			media_status_t status;
 			GLOGW("AMediaCodec.dequeueInputBuffer begin.");
 			int index = mSymbols.AMediaCodec.dequeueInputBuffer(mCodec, 10000);
@@ -45,11 +43,12 @@ void* GMediaExtractor::Thread() {
 				size = mSymbols.AMediaExtractor.readSampleData(mExtrator, p_mc_buf, i_mc_size);
 
 				if(size<0) {
-					status = mSymbols.AMediaCodec.queueInputBuffer(mCodec, index, 0, 0, 0, 4);
+					status = mSymbols.AMediaCodec.queueInputBuffer(mCodec, index, 0, 0, 0, 4);//end
 				}else
 				{
 					status = mSymbols.AMediaCodec.queueInputBuffer(mCodec, index, 0, size,
 				    		 mSymbols.AMediaExtractor.getSampleTime(mExtrator), 0);
+					fwrite(p_mc_buf, size, 1, mFile);
 				}
 				GLOGW("readSampleData size:%d timestamp:%lld status:%d", size, mSymbols.AMediaExtractor.getSampleTime(mExtrator), status);
 				mSymbols.AMediaExtractor.advance(mExtrator);
@@ -68,6 +67,8 @@ void* GMediaExtractor::Thread() {
 		    GLOGW("AMediaCodec.releaseOutputBuffer status:%d", status);
 		    usleep(10*1000);
 	}
+
+	fclose(mFile);
 
 	return 0;
 }

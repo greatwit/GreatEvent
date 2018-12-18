@@ -31,13 +31,12 @@ LOCAL_SRC_FILES := \
 		packet.cpp \
 		queue.cpp \
 		window.cpp \
-		recvvideo.cpp \
-		sendvideo.cpp \
 		NALDecoder.cpp \
-		NativeApi.cpp
-
-		#recvfile.cpp \
-		#sendfile.cpp \
+		NativeApi.cpp \
+		recvfile.cpp \
+		sendfile.cpp 
+		#recvvideo.cpp \
+		#sendvideo.cpp \
 
 #LOCAL_STATIC_LIBRARIES := libMediaStream
 
