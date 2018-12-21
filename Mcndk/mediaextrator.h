@@ -46,6 +46,7 @@ typedef media_status_t   (*pf_AMediaExtractor_seekTo)(AMediaExtractor*, int64_t 
 ////////////////AMediaFormat
 typedef AMediaFormat *(*pf_AMediaFormat_new)();
 typedef media_status_t (*pf_AMediaFormat_delete)(AMediaFormat*);
+typedef const char* (*pf_AMediaFormat_toString)(AMediaFormat *);
 typedef void (*pf_AMediaFormat_setString)(AMediaFormat*, const char* name, const char* value);
 typedef void (*pf_AMediaFormat_setInt32)(AMediaFormat*, const char* name, int32_t value);
 typedef bool (*pf_AMediaFormat_getInt32)(AMediaFormat*, const char *name, int32_t *out);
@@ -57,8 +58,7 @@ typedef AMediaCodec* (*pf_AMediaCodec_createCodecByName)(const char *name);
 typedef AMediaCodec* (*pf_AMediaCodec_createDecoderByType)(const char *mime_type);
 typedef AMediaCodec* (*pf_AMediaCodec_createEncoderByType)(const char *mime_type);
 typedef media_status_t (*pf_AMediaCodec_configure)(AMediaCodec*, const AMediaFormat* format, ANativeWindow* surface,
-        AMediaCrypto *crypto,
-        uint32_t flags);
+        										   AMediaCrypto *crypto, uint32_t flags);//flag: encode is 1, decode is 0;
 typedef media_status_t (*pf_AMediaCodec_start)(AMediaCodec*);
 typedef media_status_t (*pf_AMediaCodec_stop)(AMediaCodec*);
 typedef media_status_t (*pf_AMediaCodec_flush)(AMediaCodec*);
@@ -94,6 +94,7 @@ struct symext
     struct {
         pf_AMediaFormat_new newfmt;
         pf_AMediaFormat_delete deletefmt;
+        pf_AMediaFormat_toString toString;
         pf_AMediaFormat_setString setString;
         pf_AMediaFormat_setInt32 setInt32;
         pf_AMediaFormat_getInt32 getInt32;

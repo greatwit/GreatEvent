@@ -51,6 +51,7 @@ int main(int argc, char**argv) {
 	printf("nAudioFormat:%d nChannel:%d nSampleRate:%d bit_rate:%d\n",
 			playInfo.nAudioFormat, playInfo.nChannel,
 			playInfo.nSampleRate, playInfo.bit_rate);
+	printf("endtime:%d\n", fileInfo->tmEnd);
 
 	//memcpy(lpLR->lpData, (void*)fileInfo, sizeof(fileInfo));
 

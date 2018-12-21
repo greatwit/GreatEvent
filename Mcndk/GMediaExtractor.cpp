@@ -33,17 +33,17 @@ void* GMediaExtractor::Thread() {
 	while(mbRunning&&size>=0) {
 			media_status_t status;
 			GLOGW("AMediaCodec.dequeueInputBuffer begin.");
-			int index = mSymbols.AMediaCodec.dequeueInputBuffer(mCodec, 10000);
+			int index = mSymbols.AMediaCodec.dequeueInputBuffer(mCodec, 10000);//int64_t timeoutUs
 			GLOGW("AMediaCodec.dequeueInputBuffer value:%d", index);
 			if(index>=0) {
 				uint8_t *p_mc_buf;
 				size_t i_mc_size;
-				p_mc_buf = mSymbols.AMediaCodec.getInputBuffer(mCodec, index, &i_mc_size);
+				p_mc_buf = mSymbols.AMediaCodec.getInputBuffer(mCodec, index, &i_mc_size);//size_t idx, size_t *out_size
 				GLOGW("AMediaCodec.getInputBuffer mcSize:%d", i_mc_size);
 				size = mSymbols.AMediaExtractor.readSampleData(mExtrator, p_mc_buf, i_mc_size);
 
 				if(size<0) {
-					status = mSymbols.AMediaCodec.queueInputBuffer(mCodec, index, 0, 0, 0, 4);//end
+					status = mSymbols.AMediaCodec.queueInputBuffer(mCodec, index, 0, 0, 0, 4);//flag=4 is end; size_t idx, off_t offset, size_t size, uint64_t time, uint32_t flags
 				}else
 				{
 					status = mSymbols.AMediaCodec.queueInputBuffer(mCodec, index, 0, size,
@@ -52,7 +52,7 @@ void* GMediaExtractor::Thread() {
 				}
 				GLOGW("readSampleData size:%d timestamp:%lld status:%d", size, mSymbols.AMediaExtractor.getSampleTime(mExtrator), status);
 				mSymbols.AMediaExtractor.advance(mExtrator);
-			}else {
+			} else {
 				//index = mSymbols.AMediaCodec.dequeueInputBuffer(mCodec, 10000);
 				//			GLOGW("AMediaCodec.dequeueInputBuffer value99:%d", index);
 				usleep(20*1000);
@@ -60,7 +60,7 @@ void* GMediaExtractor::Thread() {
 			}
 
 			AMediaCodecBufferInfo info;
-		    ssize_t out_index = mSymbols.AMediaCodec.dequeueOutputBuffer(mCodec, &info, 10000);
+		    ssize_t out_index = mSymbols.AMediaCodec.dequeueOutputBuffer(mCodec, &info, 10000);//AMediaCodecBufferInfo *info, int64_t timeoutUs
 		    GLOGW("AMediaCodec.dequeueOutputBuffer out_index:%d", out_index);
 		    usleep(10*1000);
 		    status = mSymbols.AMediaCodec.releaseOutputBuffer(mCodec, out_index, true);
@@ -93,14 +93,19 @@ int GMediaExtractor::startPlayer(const char*filepath, void *surface) {
 			int32_t iout = 0;
 			if(i==0) {
 				AMediaFormat*format = mSymbols.AMediaExtractor.getTrackFormat(mExtrator, i);
-				mSymbols.AMediaFormat.getInt32(format, "width", &iout);
-				GLOGW("AMediaFormat.getInt32 width:%d", iout);
+//				const char *csd = new char[100];
+//				memset((void*)csd, 0, 100);
+//				mSymbols.AMediaFormat.getString(format, "csd-0", &csd);
+//				GLOGW("AMediaFormat.get csd-0:%s, len:%d", csd, strlen(csd));
+//				delete[] csd;
 
+				GLOGW("format string:%s\n", mSymbols.AMediaFormat.toString(format));
 			    if (mSymbols.AMediaCodec.configure(mCodec, format, (ANativeWindow*)surface, NULL, 0) != AMEDIA_OK)
 			    {
 			        GLOGE("AMediaCodec.configure failed");
 			    }else
 			    	GLOGW("AMediaCodec.configure successful.");
+
 			}
 		}
 

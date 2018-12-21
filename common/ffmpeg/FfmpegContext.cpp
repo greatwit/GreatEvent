@@ -52,8 +52,9 @@ void FfmpegContext::demuxFunc( void *arg ) {
 		int res = context->getPackageData(pkt, frameType);
 
 		if(pkt.size>0 && frameType == AVMEDIA_TYPE_VIDEO) {
+			printf("package size:%d count:%d\n",pkt.size, count++);
 			//printf("package size:0x%08X count:%d flag::%d\n", pkt.size, ++count, pkt.flags);
-			printf("head:0x%02X 0x%02X 0x%02X 0x%02X flag:%d\n", pkt.data[4],pkt.data[5],pkt.data[6],pkt.data[7],pkt.flags);
+			//printf("head:0x%02X 0x%02X 0x%02X 0x%02X flag:%d\n", pkt.data[4],pkt.data[5],pkt.data[6],pkt.data[7],pkt.flags);
 			//fwrite(pkt.data, pkt.size, 1,fp);
 			char tag[4] = {0x00, 0x00, 0x00, 0x01};
 			fwrite(tag, 1, 4, fp);
@@ -168,7 +169,7 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo, unsigned int &endTime
 
 	int ret = 0;
 	endTime = (mFmt_ctx->duration - mFmt_ctx->start_time)/1000;
-
+	printf( "duration0:%d\n", endTime);
 	for (int i = 0; i < mFmt_ctx->nb_streams; i++) {
 			//Create output AVStream according to input AVStream
 			//AVFormatContext *ofmt_ctx;
@@ -273,7 +274,7 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo, unsigned int &endTime
 
 				printf( "nAudioFormat:%d nSampleRate:%d nChannel:%d bits_per_sample:%d bit_rate:%d bit_ratetolerance:%d frame_size:%d sample_fmt:%d\n",
 						playinfo.nAudioFormat, playinfo.nSampleRate, playinfo.nChannel, playinfo.bits_per_sample, playinfo.bit_rate,
-						playinfo.bit_ratetolerance, playinfo.frame_size, playinfo.sample_fmt);
+						playinfo.bit_ratetolerance, playinfo.frame_size, playinfo.sample_fmt);//
 			}
 	}
 

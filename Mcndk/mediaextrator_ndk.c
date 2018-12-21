@@ -37,16 +37,17 @@ static struct members members[] =
 		{ "AMediaExtractor_advance", OFF(advance), true },
 		{ "AMediaExtractor_readSampleData", OFF(readSampleData), true },
 		{ "AMediaExtractor_getSampleTime", OFF(getSampleTime), true },
-		{ "AMediaExtractor_seekTo", OFF(seekTo), true },
+		{ "AMediaExtractor_seekTo", OFF(seekTo), true },//11
 	#undef OFF
 
 	#define OFF(x) offsetof(struct symext, AMediaFormat.x)
 		{ "AMediaFormat_new", OFF(newfmt), true },
 		{ "AMediaFormat_delete", OFF(deletefmt), true },
+		{ "AMediaFormat_toString", OFF(toString), true },
 		{ "AMediaFormat_setString", OFF(setString), true },
 		{ "AMediaFormat_setInt32", OFF(setInt32), true },
 		{ "AMediaFormat_getInt32", OFF(getInt32), true },
-		{ "AMediaFormat_getString", OFF(getString), true },
+		{ "AMediaFormat_getString", OFF(getString), true },//7
 	#undef OFF
 
 	#define OFF(x) offsetof(struct symext, AMediaCodec.x)
@@ -66,7 +67,7 @@ static struct members members[] =
 		{ "AMediaCodec_getOutputBuffer", OFF(getOutputBuffer), true },
 		{ "AMediaCodec_releaseOutputBuffer", OFF(releaseOutputBuffer), true },
 		{ "AMediaCodec_releaseOutputBufferAtTime", OFF(releaseOutputBufferAtTime), true },
-		{ "AMediaCodec_setOutputSurface", OFF(setOutputSurface), false },
+		{ "AMediaCodec_setOutputSurface", OFF(setOutputSurface), false },//17
 	#undef OFF
 
 		{ NULL, 0, false }

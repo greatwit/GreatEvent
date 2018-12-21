@@ -1,7 +1,3 @@
-/*
- * Copyright 2007 Stephen Liu
- * For license terms, see the file COPYING along with this library.
- */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,11 +30,13 @@ int main( int argc, char ** argv )
 		GLOGE("open file:%s failed.", argv[1]);
 		return 0;
 	}
-	mNALU  = AllocNALU(8000000);
 
+	mNALU  = AllocNALU(8000000);
+	int count = 0;
 	do{
+		count++;
 		int size=GetAnnexbNALU(mwFile, mNALU);//每执行一次，文件的指针指向本次找到的NALU的末尾，下一个位置即为下个NALU的起始码0x000001
-		GLOGE("GetAnnexbNALU size:%d", size);
+		GLOGE("GetAnnexbNALU type:0x%02X size:%d count:%d\n", mNALU->buf[0], size, count);
 		if(size<4) {
 			GLOGE("get nul error!\n");
 			continue;
@@ -49,6 +47,7 @@ int main( int argc, char ** argv )
 		fclose(mwFile);
 
 	FreeNALU(mNALU);
+
 	return 0;
 }
 
