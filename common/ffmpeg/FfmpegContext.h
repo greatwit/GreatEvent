@@ -45,6 +45,7 @@ class FfmpegContext {
 
 	private:
 		static void demuxFunc( void *arg );
+		int getHDAWavDuration(const char* filename);
 
 		string mFilename;
 		AVFormatContext *mFmt_ctx;
@@ -52,6 +53,7 @@ class FfmpegContext {
 		IPkgCall		*mPkgcall;
 		bool 			mbRunning;
 		int 			mIndex;
+		int 			mAudioFormat;
 };
 
 

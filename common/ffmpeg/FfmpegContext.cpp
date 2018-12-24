@@ -10,12 +10,15 @@
 #endif
 
 
+
+
 FfmpegContext::FfmpegContext( string filename )
 			:mFilename(filename)
 			,mFmt_ctx(NULL)
 			,mPkgcall(NULL)
 			,mbRunning(false)
 			,mIndex(0)
+			,mAudioFormat(-1)
 {
 	int ret = 0;
 
@@ -124,15 +127,23 @@ int FfmpegContext::getPackageData(AVPacket &pkt, int &frameType) {
 }
 
 int FfmpegContext::seekFrame(unsigned int mlSecond) {
-	if(!mFmt_ctx)
-		return 0;
+	int rest = 0;
 
-	int num 	= 1,rest = 0;
-	int64_t tm 	= mlSecond/1000*1000;
-	num 		= mFmt_ctx->streams[mIndex]->codec->pkt_timebase.num;
-	num 		= (num!=0)?num:1;
-	tm 			= tm * mFmt_ctx->streams[mIndex]->codec->pkt_timebase.den/(1000*num)+mFmt_ctx->streams[mIndex]->start_time;
-	rest 		= av_seek_frame(mFmt_ctx, mIndex, tm, AVSEEK_FLAG_BACKWARD);
+	if(!mFmt_ctx)
+		return rest;
+
+	if(mAudioFormat	!= AV_CODEC_ID_ADPCM_IMA_WAV)
+	{
+		int num 	= 1;
+		int64_t tm 	= mlSecond/1000*1000;
+		num 		= mFmt_ctx->streams[mIndex]->codec->pkt_timebase.num;
+		num 		= (num!=0)?num:1;
+		tm 			= tm * mFmt_ctx->streams[mIndex]->codec->pkt_timebase.den/(1000*num)+mFmt_ctx->streams[mIndex]->start_time;
+		rest 		= av_seek_frame(mFmt_ctx, mIndex, tm, AVSEEK_FLAG_BACKWARD);
+	}
+	else
+		rest 		= av_seek_frame(mFmt_ctx, mIndex, mlSecond*48, AVSEEK_FLAG_FRAME);
+
 	return rest;
 }
 
@@ -145,6 +156,7 @@ int FfmpegContext::parseExtraDataMp4(AVCodecContext *pCont, const char*szFitler)
 
 	av_bitstream_filter_filter(pfc, pCont, NULL, &dummy, &dummy_size, NULL, 0, 0);
 	av_bitstream_filter_close(pfc);
+
 	return 0;
 }
 
@@ -215,8 +227,13 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo, unsigned int &endTime
 			else if(codecType==AVMEDIA_TYPE_AUDIO)
 			{
 				playinfo.nAudioFormat				= pCodec->codec_id;//86018;//
-				//if(playinfo.nAudioFormat == AV_CODEC_ID_NONE || playinfo.nAudioFormat == AV_CODEC_ID_ADPCM_IMA_WAV)
-				//	playinfo.nAudioFormat = AV_CODEC_ID_IMA;
+				if( playinfo.nAudioFormat == AV_CODEC_ID_NONE || playinfo.nAudioFormat == AV_CODEC_ID_ADPCM_IMA_WAV) //
+				{
+					endTime 		= getHDAWavDuration(mFilename.c_str());
+					mAudioFormat	= AV_CODEC_ID_ADPCM_IMA_WAV;
+					mIndex  		= i;
+				}
+
 				playinfo.nCodecFlag					= pCodec->codec_tag;
 				playinfo.bit_rate					= pCodec->bit_rate;
 				playinfo.bit_ratetolerance			= pCodec->bit_rate_tolerance;
@@ -456,4 +473,32 @@ int FfmpegContext::GetH264Stream()
    av_write_trailer(oc);
    return 0;
 }
+
+int FfmpegContext::getHDAWavDuration(const char* filename)
+{
+	double len = 0.0;
+
+	if (filename != NULL)
+	{
+		FILE* fp;
+		fp = fopen(filename, "rb");
+		if (fp != NULL)
+		{
+			int i;
+			int j;
+			fseek(fp, 4, SEEK_SET);
+			fread(&i, sizeof(i), 1, fp);
+			fseek(fp, 28, SEEK_SET);
+			fread(&j, sizeof(j), 1, fp);
+
+			fclose(fp);
+			fp = NULL;
+
+			len = (double)i/(double)j;
+		}
+	}
+
+	return len*1000;
+}
+
 
