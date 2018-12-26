@@ -25,11 +25,12 @@ public:
 
 //	void packetHead(int fid, short pid, int len, unsigned char type, LPPACK_HEAD lpPack);
 //	int tpcSendMsg(unsigned char msg);
+
+private:
 	int tcpSendData();
 	int sendEx(char*data,int len);
 	int getLoginRet(LOGIN_RET&lRet);
 
-private:
 	int recvPackData();
 	int sendVariedCmd(int iVal);
 	int pushSendCmd(int iVal, int index=0);
@@ -39,7 +40,7 @@ private:
 	int 				mFrameCount;
 	struct tagRecvBuffer mRecvBuffer;
 	struct tagSendBuffer mSendBuffer;
-	BufferCache 		* mInBuffer;
+	BufferCache 		*mInBuffer;
 	FILE				*mpFile;
 	NALU_t 				*mNALU;
 	int					mSeqid;

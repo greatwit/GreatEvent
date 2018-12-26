@@ -256,6 +256,12 @@ typedef struct tagLOGIN_RET
 }LOGIN_RET,*LPLOGIN_RET;
 //#pragma   pack()
 
+typedef struct tagFILE_GET
+{
+	unsigned int lRet;
+	int nLength;
+}FILE_GET,*LPFILE_GET;
+
 //#pragma   pack(1)
 typedef struct tagAV_FRAME
 {

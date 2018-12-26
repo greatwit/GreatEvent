@@ -110,6 +110,15 @@ typedef struct
   unsigned short lost_packets;  //! true, if packet loss is detected
 } NALU_t;
 
+
+#ifndef  MAX_LEN
+#define  MAX_LEN 1300
+#endif
+
+#ifndef  MAX_MTU
+const int  MAX_MTU  = MAX_LEN+sizeof(PACK_HEAD);
+#endif
+
 //recv data struct
 struct tagRecvBuffer {
 	char buff[1500];
@@ -121,6 +130,44 @@ struct tagRecvBuffer {
 		hasRecvLen 	= 0;
 		totalLen 	= sizeof(NET_CMD);
 		memset(buff,0, 1500);
+	}
+};
+
+struct tagFileSendBuffer {
+	bool bSendCmd;
+	int  hasSendLen;
+	int  totalLen;
+	char cmd[1500];
+	int  dataLen;
+	char *data;
+
+	tagFileSendBuffer() {
+		data 		= NULL;
+		totalLen 	= 0;
+		dataLen 	= 0;
+		hasSendLen 	= 0;
+		bSendCmd 	= true;
+	}
+
+	void reset() {
+		//std::lock_guard<std::mutex> lk(mut);
+		memset(cmd, 0, 1500);
+		if(data) {
+			free(data);
+			data=NULL;
+		}
+		hasSendLen 	= 0;
+		totalLen 	= 0;
+		dataLen		= 0;
+		bSendCmd 	= true;
+	}
+	bool isSendVideo() {
+		return bSendCmd==false;
+	}
+	void setToVideo() {
+		bSendCmd	= false;
+		hasSendLen 	= 0;
+		totalLen 	= dataLen;
 	}
 };
 
@@ -162,15 +209,6 @@ struct tagSendBuffer {
 		memset(cmd,0, 1500);
 	}
 };
-#endif
-
-
-#ifndef  MAX_LEN
-#define  MAX_LEN 1300
-#endif
-
-#ifndef  MAX_MTU
-const int  MAX_MTU  = MAX_LEN+sizeof(PACK_HEAD);
 #endif
 
 //extern FILE *bits;

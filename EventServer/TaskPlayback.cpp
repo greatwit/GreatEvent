@@ -105,7 +105,7 @@
 
 	int TaskPlayback::sendEx(char*data, int len) {
 		int leftLen = len, iRet = 0;
-		fd_set fdSend;
+
 		struct timeval timeout;
 		int sockId = mSid.mKey;
 		do {

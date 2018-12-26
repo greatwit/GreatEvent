@@ -14,6 +14,7 @@
 #include "TaskVideoRecv.hpp"
 #include "TaskVideoSend.hpp"
 #include "TaskPlayback.hpp"
+#include "TaskFileSend.hpp"
 #include "Session.hpp"
 
 
@@ -158,7 +159,6 @@ Session :: Session( Sid_t sid, short type)
 	mReading 	= 0;
 	switch(type) {
 		case VIDEO_SEND_MSG:
-			mTaskBase = new TaskVideoSend( mSid );
 			break;
 		case FILE_SEND_MSG:
 			break;
@@ -245,26 +245,38 @@ int Session ::recvPackData() {
 		mHasRecvLen += ret;
 		if(mHasRecvLen==mTotalDataLen) {
 
-		    int lValueLen;
+//			if(ret>0){
+//				for(int i=0;i<mTotalDataLen;i++)
+//					printf("%c",mReadBuff[i]);
+//				printf("\n\n");
+//			}
+
+		    int lValueLen,dataType=-1;
 		    char acValue[256] = {0};//new char[256];
 		    memset(acValue,0, 256);
 			LPNET_CMD pCmdbuf = (LPNET_CMD)mReadBuff;
 		    PROTO_GetValueByName(mReadBuff, "play path", acValue, &lValueLen);
-		    GLOGE("filename:%s\n",acValue);
+		    if(lValueLen>0)
+		    	dataType 	= 0;
+		    else {
+		    	PROTO_GetValueByName(mReadBuff, "get path", acValue, &lValueLen);
+		    	if(lValueLen>0)
+		    		dataType = 1;
+		    }
+		    GLOGE("filename:%s dataType:%d\n", acValue, dataType);
 
 		    if(access(acValue, F_OK)!=0) {
 		    	GLOGE("filename %s is no exist.\n",acValue);
 		    	return 0;
 		    }
 
-			short type = pCmdbuf->dwIndex;
-			switch(type) {
+			switch(dataType) {
 				case 0:
 					mTaskBase = new TaskPlayback( this, mSid, acValue );
 					break;
 
-				case VIDEO_RECV_MSG:
-					mTaskBase = new TaskVideoRecv( mSid );
+				case 1:
+					mTaskBase = new TaskFileSend( this, mSid, acValue );
 					break;
 
 				case FILE_RECV_MSG:

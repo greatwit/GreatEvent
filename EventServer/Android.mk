@@ -60,8 +60,7 @@ LOCAL_SRC_FILES := net/buffer.c \
 				IOUtils.cpp \
 				Session.cpp \
 				TaskBase.cpp \
-				TaskVideoRecv.cpp \
-				TaskVideoSend.cpp \
+				TaskFileSend.cpp \
 				TaskPlayback.cpp \
 				TcpClient.cpp \
 				TcpServer.cpp \
