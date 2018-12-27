@@ -37,7 +37,7 @@ private:
 
 	int  	mRecvDataLen;
 	int  	mRecvHeadLen;
-	int  	mTotalLen;
+	int     mHasReadLen;
 	bool	mbSendingData;
 };
 

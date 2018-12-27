@@ -12,6 +12,8 @@
 #include "protocol.h"
 #include "net_protocol.h"
 
+#define	 BUFFER_LEN  1000000  //ref max value 1040000
+
 
 	TaskFileSend::TaskFileSend( Session*sess, Sid_t& sid, char*filename )
 				:mPackHeadLen(sizeof(NET_CMD))
@@ -19,8 +21,8 @@
 				,mSess(sess)
 				,mRecvDataLen(0)
 				,mRecvHeadLen(0)
-				,mTotalLen(0)
 				,mFileLen(0)
+				,mHasReadLen(0)
 				,mbSendingData(true)
 	{
 		mRecvBuffer.reset();
@@ -80,7 +82,9 @@
 
 		if(mSendBuffer.totalLen==0) //take new data and send,totalLen is cmd len first
 		{
-			if(!feof(mpFile)&&mbSendingData) {
+			if(mHasReadLen<mFileLen) {
+				int iLeftLen = mFileLen - mHasReadLen;
+				int iBuffLen = (iLeftLen > BUFFER_LEN)?BUFFER_LEN:iLeftLen;
 				mSendBuffer.totalLen = sizeof(NET_CMD) + sizeof(FILE_GET);
 				mSendBuffer.bSendCmd = true;
 				LPNET_CMD	 cmd = (LPNET_CMD)mSendBuffer.cmd;
@@ -88,16 +92,15 @@
 				cmd->dwFlag 	= NET_FLAG;
 				cmd->dwCmd 		= MODULE_MSG_VIDEO;
 				cmd->dwIndex 	= 0;
-				cmd->dwLength 	= mFileLen+sizeof(FILE_GET); 	//cmd incidental length
-				frame->nLength  = mFileLen;
+				cmd->dwLength 	= iBuffLen+sizeof(FILE_GET); 	//cmd incidental length
+				frame->nLength  = iBuffLen;
 
+				mSendBuffer.data = (char*)malloc(iBuffLen);
+				memset(mSendBuffer.data, 0, iBuffLen);
+				mSendBuffer.dataLen  = fread(mSendBuffer.data, 1, iBuffLen, mpFile);
+				mHasReadLen 		+= mSendBuffer.dataLen;
 
-				mSendBuffer.data = (char*)malloc(mFileLen);
-				memset(mSendBuffer.data, 0, mFileLen);
-				mSendBuffer.dataLen  = fread(mSendBuffer.data, 1, mFileLen, mpFile);
 				GLOGE("fread data len:%d cmd len:%d\n", mSendBuffer.dataLen, cmd->dwLength);
-
-				mbSendingData = (mFileLen==mSendBuffer.dataLen)?false:true;
 			}
 			else{
 				ret = pushSendCmd(MODULE_MSG_DATAEND);
@@ -120,6 +123,7 @@
 				iRet = send(sockId, data+len-leftLen, leftLen, 0);
 			else
 				iRet = send(sockId, data+len-leftLen, MAX_MTU, 0);
+
 			if(iRet<0) {
 				//GLOGE("send data errno:%d ret:%d.", errno, iRet);
 				return iRet;
@@ -178,6 +182,7 @@
 				break;
 		}
 		GLOGE("pushSendCmd value:%d ret:%d.\n", iVal, ret);
+
 		return ret;
 	}
 
