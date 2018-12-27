@@ -74,6 +74,7 @@
 		return 0;
 	}
 
+	//Here further processing is needed.
 	int TaskFileSend::writeBuffer() {
 		int ret = 0;
 
@@ -176,7 +177,7 @@
 				ret = tcpSendData();
 				break;
 		}
-		GLOGE("pushSendCmd********************cmd:%d ret:%d.\n", iVal, ret);
+		GLOGE("pushSendCmd value:%d ret:%d.\n", iVal, ret);
 		return ret;
 	}
 
@@ -218,7 +219,7 @@
 				LPNET_CMD pCmdbuf = (LPNET_CMD)mRecvBuffer.buff;
 				if(pCmdbuf->dwCmd == MODULE_MSG_CONTROL_PLAY) {
 					PROTO_GetValueByName(mRecvBuffer.buff, (char*)"name", acValue, &lValueLen);
-					GLOGE("====================acValue:%s\n",acValue);
+					GLOGE("recv control commond acValue:%s\n",acValue);
 					if (strcmp(acValue, "start") == 0) {
 						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"tmstart", acValue, &lValueLen);
@@ -233,7 +234,7 @@
 						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"value", acValue, &lValueLen);
 						int value = atoi(acValue);
-						GLOGE("====================setpause value:%d\n", value);
+						GLOGE("control setpause value:%d\n", value);
 					}
 				}
 			    //GLOGE("recv total:%s", mRecvBuffer.buff);
