@@ -11,7 +11,7 @@ class BufferCache;
 class TaskVideoRecv :public TaskBase {
 
 public:
-	TaskVideoRecv( Sid_t sid );
+	TaskVideoRecv( Session*sess, Sid_t &sid );
 	virtual ~TaskVideoRecv();
 	virtual int StartTask();
 	virtual int StopTask();
@@ -20,8 +20,9 @@ public:
 
 private:
 	char mReadBuff[1500];
-	BufferCache * mInBuffer;
+	BufferCache 	*mInBuffer;
 	FILE			*mwFile;
+	Session			*mSess;
 
 	int mPackHeadLen;
 

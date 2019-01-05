@@ -14,10 +14,11 @@
 #include "TcpClient.hpp"
 #include "ActorStation.hpp"
 
+#define PORT 31000
 
 int main( int argc, char * argv[] )
 {
-	int port = 8080, maxThreads = 10;
+	int port = PORT, maxThreads = 10;
 	//const char * serverType = "hahs";
 
 	extern char *optarg ;
@@ -38,6 +39,7 @@ int main( int argc, char * argv[] )
 			case 'v' :
 				printf( "Usage: %s [-p <port>] [-t <threads>] [-s <hahs|lf>]\n", argv[0] );
 				exit( 0 );
+				break;
 		}
 	}
 
@@ -46,7 +48,7 @@ int main( int argc, char * argv[] )
 	statiion.startup();
 
 	TcpClient client;
-	client.connect("127.0.0.1", 8080);			//127.0.0.1 192.168.1.108
+	client.connect("127.0.0.1", port);			//127.0.0.1 192.168.1.108
 	client.registerEvent(statiion.getEventArg());
 
 	getchar();

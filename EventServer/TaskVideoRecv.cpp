@@ -15,9 +15,10 @@
 #define	FILE_PATH	"w.h264"
 #endif
 
-	TaskVideoRecv::TaskVideoRecv( Sid_t sid )
+	TaskVideoRecv::TaskVideoRecv( Session*sess, Sid_t &sid )
 				:mPackHeadLen(sizeof(PACK_HEAD))
 				,TaskBase(sid)
+				,mSess(sess)
 				,mRecvDataLen(0)
 				,mRecvHeadLen(0)
 				,mTotalLen(0)
@@ -29,7 +30,6 @@
 			GLOGE("fopen filename:%s failed.", FILE_PATH);
 	}
 
-
 	TaskVideoRecv::~TaskVideoRecv() {
 		delete mInBuffer;
 		mInBuffer = NULL;
@@ -37,7 +37,6 @@
 		if(mwFile != NULL)
 			fclose(mwFile);
 	}
-
 
 	int TaskVideoRecv::StartTask() {
 		return 0;
@@ -90,6 +89,7 @@
 	}
 
 	int TaskVideoRecv::writeBuffer() {
+		GLOGE("TaskVideoRecv write event\n");
 		return 0;
 	}
 

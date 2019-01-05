@@ -12,8 +12,8 @@
 class Session;
 
 typedef struct tagSid {
-	uint16_t mKey;//sockid
-	uint16_t mSeq;
+	uint16_t mKey;//sockid like
+	uint16_t mSeq;//index like
 
 	enum {
 		eTimerKey = 0,

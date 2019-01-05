@@ -24,17 +24,17 @@ TcpClient :: ~TcpClient()
 	}
 
 	if(mSession != NULL) {
-		//delete mSession;
-		//mSession = NULL;
+		delete mSession;
+		mSession = NULL;
 	}
 }
 
 int TcpClient :: connect(const char* destIp, unsigned short destPort) {
 	int ret = IOUtils::tcpConnect(destIp, destPort, &mSockId, 0);
-	GLOGW("connect ret:%d sockid:%d.",ret, mSockId);
+	GLOGW("connect ret:%d sockid:%d.\n",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
-		mSession = new Session( mSid, VIDEO_SEND_MSG );
+		mSession = new Session( mSid, VIDEO_RECV_MSG );
 	}
 	return ret;
 }
@@ -48,7 +48,7 @@ int TcpClient :: disConnect() {
 
 		close(mSockId);
 		mSockId = 0;
-		GLOGW("disConnect sockid:%d.", mSockId);
+		GLOGW("disConnect sockid:%d.\n", mSockId);
 	}
 	return 0;
 }
@@ -62,16 +62,13 @@ int TcpClient :: registerEvent(const EventArg& evarg) {
 		mSession->setArg( (void*)&evarg );
 
 		event_set( mSession->getReadEvent(), mSockId, EV_READ, EventCall::onRead, mSession );
-		event_set( mSession->getWriteEvent(), mSockId, EV_WRITE, EventCall::onWrite, mSession );
 		EventCall::addEvent( mSession, EV_READ, mSockId );
+
+		event_set( mSession->getWriteEvent(), mSockId, EV_WRITE, EventCall::onWrite, mSession );
 		EventCall::addEvent( mSession, EV_WRITE, mSockId );
-
-		evarg.getSessionManager()->get( mSid.mKey, &mSid.mSeq );
-		evarg.getSessionManager()->put( mSid.mKey, mSession, &mSid.mSeq );
-
 	}
 	else
-		GLOGE("tcpclient registerEvent mSession is NULL.");
+		GLOGE("tcpclient registerEvent mSession is NULL.\n");
 
 	return 0;
 }

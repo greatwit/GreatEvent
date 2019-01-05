@@ -158,8 +158,11 @@ Session :: Session( Sid_t sid, short type)
 	mWriting 	= 0;
 	mReading 	= 0;
 	switch(type) {
-		case VIDEO_SEND_MSG:
+		case VIDEO_RECV_MSG:
+			if(!mTaskBase)
+				mTaskBase = new TaskVideoRecv( this, mSid );
 			break;
+
 		case FILE_SEND_MSG:
 			break;
 	}
