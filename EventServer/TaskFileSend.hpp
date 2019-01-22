@@ -5,6 +5,7 @@
 #include "h264.h"
 
 #include "TaskBase.hpp"
+#include "GQueue.h"
 
 
 class BufferCache;
@@ -16,6 +17,7 @@ public:
 	virtual ~TaskFileSend();
 	virtual int StartTask();
 	virtual int StopTask();
+	virtual int setHeartCount();
 	virtual int readBuffer();
 	virtual int writeBuffer();
 
@@ -25,12 +27,17 @@ private:
 	int recvPackData();
 	int pushSendCmd(int iVal, int index=0);
 
+	int sendVariedCmd(int iVal);
+
 private:
 	struct tagRecvBuffer 		mRecvBuffer;
 	struct tagFileSendBuffer 	mSendBuffer;
 	BufferCache 		 		*mInBuffer;
 	FILE						*mpFile;
 	Session						*mSess;
+	GQueue<int>					mMsgQueue;
+
+	int     mFrameCount;
 	int		mFileLen;
 
 	int 	mPackHeadLen;

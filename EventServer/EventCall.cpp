@@ -140,7 +140,7 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 		event_set( session->getReadEvent(),  clientFD, EV_READ,  onRead, session );
 		event_set( session->getWriteEvent(), clientFD, EV_WRITE, onWrite, session );
 		//event_set( session->getTimeEvent(), clientFD, EV_TIMEOUT, onTimer, session );
-		evtimer_set(session->getTimeEvent(), onTimer, session);
+		evtimer_set(session->getTimeEvent(), onTimer, session);//useful
 		addEvent(  session, EV_READ, clientFD );
 		addEvent(  session, EV_TIMEOUT, clientFD );
 
@@ -224,15 +224,15 @@ void EventCall :: onWrite( int fd, short events, void * arg )
 
 	//>0 need listen,<=0 not do that
 	if(ret==OWN_SOCK_EXIT) {
-		EventArg * eventArg = (EventArg*)session->getArg();
-		eventArg->getSessionManager()->remove( fd );
-		event_del( session->getReadEvent() );
-		event_del( session->getWriteEvent() );
-		event_del( session->getTimeEvent() );
-
-		delete session;
-		session = NULL;
-		close( fd );
+//		EventArg * eventArg = (EventArg*)session->getArg();
+//		eventArg->getSessionManager()->remove( fd );
+//		event_del( session->getReadEvent() );
+//		event_del( session->getWriteEvent() );
+//		event_del( session->getTimeEvent() );
+//
+//		delete session;
+//		session = NULL;
+//		close( fd );
 	}
 	else if(ret != 0)
 		addEvent( session, EV_WRITE, -1 );

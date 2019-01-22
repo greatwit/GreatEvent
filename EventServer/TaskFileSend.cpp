@@ -1,5 +1,5 @@
 
-
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
@@ -12,7 +12,8 @@
 #include "protocol.h"
 #include "net_protocol.h"
 
-#define	 BUFFER_LEN  1000000  //ref max value 1040000
+const int	 BUFFER_LEN  = 1024*1024;//1m  //ref max value 1040000
+#define SEG_FRAME_COUNT 10
 
 
 	TaskFileSend::TaskFileSend( Session*sess, Sid_t& sid, char*filename )
@@ -23,6 +24,7 @@
 				,mRecvHeadLen(0)
 				,mFileLen(0)
 				,mHasReadLen(0)
+				,mFrameCount(0)
 				,mbSendingData(true)
 	{
 		mRecvBuffer.reset();
@@ -65,6 +67,9 @@
 
 		if(mpFile != NULL)
 			fclose(mpFile);
+
+		mMsgQueue.clearQueue();
+		mSendBuffer.releaseMem();
 	}
 
 
@@ -76,6 +81,19 @@
 		return 0;
 	}
 
+	int TaskFileSend::sendVariedCmd(int iVal) {
+		LPNET_CMD	pCmd = (LPNET_CMD)mSendBuffer.cmd;
+		pCmd->dwFlag 	= NET_FLAG;
+		pCmd->dwCmd 	= iVal;
+		pCmd->dwIndex 	= 0;
+		pCmd->dwLength 	= 0;
+		mSendBuffer.totalLen = sizeof(NET_CMD);
+		mSendBuffer.bSendCmd = true;
+		int ret = tcpSendData();
+		//GLOGE("-------------------sendVariedCmd:%d", iVal);
+		return ret;
+	}
+
 	//Here further processing is needed.
 	int TaskFileSend::writeBuffer() {
 		int ret = 0;
@@ -83,24 +101,37 @@
 		if(mSendBuffer.totalLen==0) //take new data and send,totalLen is cmd len first
 		{
 			if(mHasReadLen<mFileLen) {
+
+				if(mMsgQueue.getSize()>0) {
+					int val = 0;
+					mMsgQueue.try_pop(val);
+					return sendVariedCmd(val);
+				}
+
+				if(!mbSendingData)
+					return 0;
+
 				int iLeftLen = mFileLen - mHasReadLen;
 				int iBuffLen = (iLeftLen > BUFFER_LEN)?BUFFER_LEN:iLeftLen;
-				mSendBuffer.totalLen = sizeof(NET_CMD) + sizeof(FILE_GET);
-				mSendBuffer.bSendCmd = true;
-				LPNET_CMD	 cmd = (LPNET_CMD)mSendBuffer.cmd;
-				LPFILE_GET frame = (LPFILE_GET)(cmd->lpData);
-				cmd->dwFlag 	= NET_FLAG;
-				cmd->dwCmd 		= MODULE_MSG_VIDEO;
-				cmd->dwIndex 	= 0;
-				cmd->dwLength 	= iBuffLen+sizeof(FILE_GET); 	//cmd incidental length
-				frame->nLength  = iBuffLen;
+				mSendBuffer.totalLen 	= sizeof(NET_CMD) + sizeof(FILE_GET);
+				mSendBuffer.bSendCmd 	= true;
+				LPNET_CMD	 cmd 		= (LPNET_CMD)mSendBuffer.cmd;
+				LPFILE_GET frame 		= (LPFILE_GET)(cmd->lpData);
+				cmd->dwFlag 			= NET_FLAG;
+				cmd->dwCmd 				= MODULE_MSG_VIDEO;
+				cmd->dwIndex 			= 0;
 
-				mSendBuffer.data = (char*)malloc(iBuffLen);
+				mSendBuffer.createMem(iBuffLen);
 				memset(mSendBuffer.data, 0, iBuffLen);
-				mSendBuffer.dataLen  = fread(mSendBuffer.data, 1, iBuffLen, mpFile);
-				mHasReadLen 		+= mSendBuffer.dataLen;
+				mSendBuffer.dataLen  	= fread(mSendBuffer.data, 1, iBuffLen, mpFile);
 
-				GLOGE("fread data len:%d cmd len:%d\n", mSendBuffer.dataLen, cmd->dwLength);
+				cmd->dwLength 			= mSendBuffer.dataLen+sizeof(FILE_GET); 	//cmd incidental length
+				frame->nLength  		= mSendBuffer.dataLen;
+
+				mHasReadLen 			+= mSendBuffer.dataLen;
+
+				mFrameCount++;
+				GLOGE("fread data len:%d cmd mFrameCount:%d\n", mSendBuffer.dataLen, mFrameCount);
 			}
 			else{
 				ret = pushSendCmd(MODULE_MSG_DATAEND);
@@ -113,22 +144,42 @@
 		return ret;
 	}
 
+	int TaskFileSend::setHeartCount() {
+//			mMsgQueue.push(MODULE_MSG_PING);
+//
+//			if( !mbSendingData)
+//				EventCall::addEvent( mSess, EV_WRITE, -1 );
+//
+//			//GLOGE("setHeart----------------\n");
+//
+//		return mMsgQueue.getSize();
+		return 0;
+	}
+
 	int TaskFileSend::sendEx(char*data, int len) {
 		int leftLen = len, iRet = 0;
 
 		struct timeval timeout;
 		int sockId = mSid.mKey;
 		do {
-			if(leftLen <= MAX_MTU)
-				iRet = send(sockId, data+len-leftLen, leftLen, 0);
-			else
-				iRet = send(sockId, data+len-leftLen, MAX_MTU, 0);
+
+			iRet = send(sockId, data+len-leftLen, leftLen, 0);
 
 			if(iRet<0) {
 				//GLOGE("send data errno:%d ret:%d.", errno, iRet);
+				switch(errno) {
+				case EAGAIN:
+					usleep(2000);
+					continue;
+
+				case EPIPE:
+					break;
+				}
 				return iRet;
 			}
+
 			leftLen -= iRet;
+
 		}while(leftLen>0);
 
 		return len - leftLen;
@@ -179,6 +230,11 @@
 				mSendBuffer.totalLen = sizeof(NET_CMD);
 				mSendBuffer.bSendCmd = true;
 				ret = tcpSendData();
+				break;
+
+			case MODULE_MSG_PING:
+				if(mMsgQueue.getSize() < 10)
+					mMsgQueue.push(MODULE_MSG_PING);
 				break;
 		}
 		GLOGE("pushSendCmd value:%d ret:%d.\n", iVal, ret);
@@ -240,6 +296,10 @@
 						PROTO_GetValueByName(mRecvBuffer.buff, (char*)"value", acValue, &lValueLen);
 						int value = atoi(acValue);
 						GLOGE("control setpause value:%d\n", value);
+					}
+					else if(strcmp(acValue, "send") == 0) {
+						mbSendingData = true;
+						EventCall::addEvent( mSess, EV_WRITE, -1 );
 					}
 				}
 			    //GLOGE("recv total:%s", mRecvBuffer.buff);

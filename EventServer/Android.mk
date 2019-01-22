@@ -62,6 +62,7 @@ LOCAL_SRC_FILES := net/buffer.c \
 				TaskBase.cpp \
 				TaskFileSend.cpp \
 				TaskPlayback.cpp \
+				TaskVideoRecv.cpp \
 				TcpClient.cpp \
 				TcpServer.cpp \
 				NativeApi.cpp
