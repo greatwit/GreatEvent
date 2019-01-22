@@ -20,7 +20,7 @@ int main(int argc, char**argv) {
 	ZeroMemory(lpRet,sizeof(lpRet));
 
 	((LPNET_CMD)lpRet)->dwFlag = NET_FLAG;
-	((LPNET_CMD)lpRet)->dwCmd = MODULE_MSG_LOGINRET;
+	((LPNET_CMD)lpRet)->dwCmd  = MODULE_MSG_LOGINRET;
 	((LPNET_CMD)lpRet)->dwLength = sizeof(LOGIN_RET);
 	LPLOGIN_RET lpLR = (LPLOGIN_RET)((LPNET_CMD)lpRet)->lpData;
 	lpLR->nLength = sizeof(lpLR->lpData);

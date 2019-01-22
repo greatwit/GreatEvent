@@ -137,7 +137,7 @@ struct tagFileSendBuffer {
 	bool bSendCmd;
 	int  hasSendLen;
 	int  totalLen;
-	char cmd[1500];
+	char cmd[1500];//1500 is cmd len
 	int  dataLen;
 	char *data;
 
@@ -153,14 +153,26 @@ struct tagFileSendBuffer {
 		//std::lock_guard<std::mutex> lk(mut);
 		memset(cmd, 0, 1500);
 		if(data) {
-			free(data);
-			data=NULL;
+
 		}
 		hasSendLen 	= 0;
 		totalLen 	= 0;
 		dataLen		= 0;
 		bSendCmd 	= true;
 	}
+
+	void createMem(int len) {
+		if(data==NULL)
+			data = (char*)malloc(len);
+	}
+
+	void releaseMem() {
+		if(data) {
+			free(data);
+			data=NULL;
+		}
+	}
+
 	bool isSendVideo() {
 		return bSendCmd==false;
 	}

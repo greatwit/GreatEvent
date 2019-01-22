@@ -258,9 +258,17 @@ typedef struct tagLOGIN_RET
 
 typedef struct tagFILE_GET
 {
-	unsigned int lRet;
+	unsigned int dwPos;
 	int nLength;
+	char lpData[];
 }FILE_GET,*LPFILE_GET;
+
+//typedef struct tagFILE_DATA
+//{
+//	DWORD dwPos;
+//	int nLength;
+//	char lpData[];
+//}FILE_DATA,*LPFILE_DATA;
 
 //#pragma   pack(1)
 typedef struct tagAV_FRAME
