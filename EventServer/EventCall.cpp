@@ -139,9 +139,10 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 
 		event_set( session->getReadEvent(),  clientFD, EV_READ,  onRead, session );
 		event_set( session->getWriteEvent(), clientFD, EV_WRITE, onWrite, session );
+		addEvent(  session, EV_READ, clientFD );
+
 		//event_set( session->getTimeEvent(), clientFD, EV_TIMEOUT, onTimer, session );
 		evtimer_set(session->getTimeEvent(), onTimer, session);//useful
-		addEvent(  session, EV_READ, clientFD );
 		addEvent(  session, EV_TIMEOUT, clientFD );
 
 		struct timeval timeout;
@@ -183,6 +184,7 @@ void EventCall :: onRead( int fd, short events, void * arg )
 	Sid_t sid = session->getSid();
 
 	if( EV_READ & events ) {
+
 		int ret = session->readBuffer();
 		if(ret==0)
 		{
@@ -201,9 +203,9 @@ void EventCall :: onRead( int fd, short events, void * arg )
 
 				return;
 		}
-	}
+	}//if
 
-	addEvent( session, EV_READ, -1 );
+	addEvent( session, EV_READ, fd );
 }
 
 void EventCall :: onWrite( int fd, short events, void * arg )
@@ -235,7 +237,7 @@ void EventCall :: onWrite( int fd, short events, void * arg )
 //		close( fd );
 	}
 	else if(ret != 0)
-		addEvent( session, EV_WRITE, -1 );
+		addEvent( session, EV_WRITE, fd );
 
 
 /*
@@ -333,7 +335,7 @@ void EventCall :: addEvent( Session * session, short events, int fd )
 {
 	EventArg * eventArg = (EventArg*)session->getArg();
 
-	if( ( events & EV_WRITE ) && 0 == session->getWriting() ) {
+	if( ( events & EV_WRITE ) && (0 == session->getWriting()) ) {
 		session->setWriting( 1 );
 
 		struct event*pEvent=session->getWriteEvent();
@@ -350,7 +352,7 @@ void EventCall :: addEvent( Session * session, short events, int fd )
 		event_add( pEvent, &timeout );
 	}
 
-	if( events & EV_READ && 0 == session->getReading() ) {
+	if( (events & EV_READ) && (0 == session->getReading()) ) {
 		session->setReading( 1 );
 
 		if( fd < 0 ) fd = EVENT_FD( session->getWriteEvent() );

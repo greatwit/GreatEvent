@@ -21,6 +21,11 @@ int main( int argc, char * argv[] )
 	int port = PORT, maxThreads = 10;
 	//const char * serverType = "hahs";
 
+	if(argc<2) {
+		printf("Usage: %s filepath\n", argv[0]);
+		return 0;
+	}
+
 	extern char *optarg ;
 	int c ;
 
@@ -44,17 +49,17 @@ int main( int argc, char * argv[] )
 	}
 
 
-	ActorStation statiion;
-	statiion.startup();
+	ActorStation station;
+	station.startup();
 
 	TcpClient client;
-	client.connect("127.0.0.1", port);			//127.0.0.1 192.168.1.108
-	client.registerEvent(statiion.getEventArg());
+	client.connect("127.0.0.1", port, argv[1]);			//127.0.0.1 192.168.1.108
+	client.registerEvent(station.getEventArg());
 
 	getchar();
 
 	client.disConnect();
-	statiion.shutdown();
+	station.shutdown();
 
 	return 0;
 }

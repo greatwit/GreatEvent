@@ -293,14 +293,14 @@
 	int TaskPlayback::readBuffer() {
 		int ret = -1;
 		int &hasRecvLen = mRecvBuffer.hasRecvLen;
-		if(mRecvBuffer.bRecvHead) {
+		if(mRecvBuffer.bProcHead) {
 			ret = recv(mSid.mKey, mRecvBuffer.buff+hasRecvLen, mPackHeadLen-hasRecvLen, 0);
 			if(ret>0) {
 				hasRecvLen+=ret;
 				if(hasRecvLen==mPackHeadLen) {
 					LPNET_CMD head = (LPNET_CMD)mRecvBuffer.buff;
 					mRecvBuffer.totalLen  = head->dwLength;
-					mRecvBuffer.bRecvHead = false;
+					mRecvBuffer.bProcHead = false;
 					hasRecvLen = 0;
 
 					GLOGE("playback flag:%08x totalLen:%d ret:%d\n", head->dwFlag, mRecvBuffer.totalLen, ret);

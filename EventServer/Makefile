@@ -22,8 +22,8 @@ TARGET = EventServer EventClient FfmpegTest
 all: $(TARGET)
 
 OBJECTS = net/buffer.o net/epoll.o net/epoll_sub.o net/event.o net/evbuffer.o net/signal.o net/log.o net/net_protocol.o \
-		  TaskBase.o TaskVideoRecv.o TaskVideoSend.o TaskFileSend.o TaskPlayback.o BufferCache.o DataUtils.o IOUtils.o \
-		  Session.o EventCall.o  ActorStation.o \
+		  BufferCache.o DataUtils.o IOUtils.o Session.o EventCall.o  ActorStation.o \
+		  TaskBase.o TaskVideoRecv.o TaskVideoSend.o TaskFileSend.o TaskFileRecv.o TaskPlayback.o \
 		  $(FFMPEG_PATH)/FfmpegContext.o $(THREAD_PATH)/gthreadpool.o $(NAREDEC_PATH)/NALDecoder.o
 
 EventServer=$(OBJECTS) EventServer.o PlayerServer.o

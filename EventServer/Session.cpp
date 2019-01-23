@@ -15,6 +15,7 @@
 #include "TaskVideoSend.hpp"
 #include "TaskPlayback.hpp"
 #include "TaskFileSend.hpp"
+#include "TaskFileRecv.hpp"
 #include "Session.hpp"
 
 
@@ -163,7 +164,37 @@ Session :: Session( Sid_t sid, short type)
 				mTaskBase = new TaskVideoRecv( this, mSid );
 			break;
 
-		case FILE_SEND_MSG:
+		case FILE_RECV_MSG:
+				mTaskBase = new TaskFileRecv( this, mSid );
+			break;
+	}
+}
+
+Session :: Session( Sid_t sid, short type, char*filepath)
+			:mHeadLenConst(sizeof(NET_HEAD))
+			,mSid(sid)
+			,mTaskBase(NULL)
+			,mArg(NULL)
+			,mTotalDataLen(0)
+			,mHasRecvLen(0)
+			,mbRecvHead(true)
+{
+	mReadEvent  = (struct event*)malloc( sizeof( struct event ) );
+	mWriteEvent = (struct event*)malloc( sizeof( struct event ) );
+	mTimeEvent	= (struct event*)malloc( sizeof( struct event ) );
+
+	mStatus  	= eNormal;
+	mRunning 	= 0;
+	mWriting 	= 0;
+	mReading 	= 0;
+	switch(type) {
+		case VIDEO_RECV_MSG:
+			if(!mTaskBase)
+				mTaskBase = new TaskVideoRecv( this, mSid, filepath );
+			break;
+
+		case FILE_RECV_MSG:
+				mTaskBase = new TaskFileRecv( this, mSid, filepath );
 			break;
 	}
 }
@@ -266,7 +297,7 @@ int Session ::recvPackData() {
 		    	if(lValueLen>0)
 		    		dataType = 1;
 		    }
-		    GLOGE("filename:%s dataType:%d\n", acValue, dataType);
+		    GLOGE("filename:%s cmd:%d dataType:%d\n", acValue, pCmdbuf->dwCmd, dataType);
 
 		    if(access(acValue, F_OK)!=0) {
 		    	GLOGE("filename %s is no exist.\n",acValue);

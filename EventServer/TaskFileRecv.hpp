@@ -4,13 +4,15 @@
 
 #include <stdio.h>
 
+#include "h264.h"
 #include "TaskBase.hpp"
 
 class BufferCache;
 
 class TaskFileRecv :public TaskBase {
 public:
-	TaskFileRecv( Sid_t sid );
+	TaskFileRecv( Session*sess, Sid_t &sid );
+	TaskFileRecv( Session*sess, Sid_t &sid, char*filepath );
 	virtual ~TaskFileRecv();
 	virtual int StartTask();
 	virtual int StopTask();
@@ -18,15 +20,21 @@ public:
 	virtual int writeBuffer();
 
 private:
-	char mReadBuff[1500];
-	BufferCache * mInBuffer;
+	int sendEx(void*data, int len);
+	int SendCmd(int dwCmd, int dwIndex, void* lpData, int nLength);
+
+	int recvPackData();
+
+	struct tagCmdBuffer 		mCmdBuffer;
+	struct tagFileProcBuffer 	mRecvBuffer;
+	Session			*mSess;
 	FILE			*mwFile;
 
-	int mPackHeadLen;
+	int 	mPackHeadLen;
 
-	int  mRecvDataLen;
-	int  mRecvHeadLen;
-	int  mTotalLen;
+	int  	mRecvDataLen;
+	int  	mRecvHeadLen;
+	int  	mTotalLen;
 };
 
 

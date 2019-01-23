@@ -30,6 +30,21 @@
 			GLOGE("fopen filename:%s failed.", FILE_PATH);
 	}
 
+	TaskVideoRecv::TaskVideoRecv( Session*sess, Sid_t &sid, char*filepath )
+				:mPackHeadLen(sizeof(PACK_HEAD))
+				,TaskBase(sid)
+				,mSess(sess)
+				,mRecvDataLen(0)
+				,mRecvHeadLen(0)
+				,mTotalLen(0)
+	{
+		memset(mReadBuff, 1500, 0);
+		mInBuffer = new BufferCache();
+		mwFile = fopen(filepath, "w");
+		if(mwFile==NULL)
+			GLOGE("fopen filename:%s failed.", filepath);
+	}
+
 	TaskVideoRecv::~TaskVideoRecv() {
 		delete mInBuffer;
 		mInBuffer = NULL;

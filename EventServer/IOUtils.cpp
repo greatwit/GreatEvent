@@ -62,6 +62,7 @@ int IOUtils :: tcpConnect(const char *destip, int destport, int * fd, int tcpdel
     	}
 
 
+
 	if( 0 == tcpdelay ) {
 		int flags = 1;
 		if( setsockopt( sockid, IPPROTO_TCP, TCP_NODELAY, (char*)&flags, sizeof(flags) ) < 0 ) {
@@ -84,6 +85,7 @@ int IOUtils :: tcpConnect(const char *destip, int destport, int * fd, int tcpdel
 	if( 0 == ret ) {
 		* fd = sockid;
 	}
+
 	return ret;
 }
 

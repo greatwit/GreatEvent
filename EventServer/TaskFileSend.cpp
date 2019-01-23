@@ -123,15 +123,17 @@ const int	 BUFFER_LEN  = 1024*1024;//1m  //ref max value 1040000
 
 				mSendBuffer.createMem(iBuffLen);
 				memset(mSendBuffer.data, 0, iBuffLen);
+				frame->dwPos 			= ftell(mpFile);
 				mSendBuffer.dataLen  	= fread(mSendBuffer.data, 1, iBuffLen, mpFile);
 
 				cmd->dwLength 			= mSendBuffer.dataLen+sizeof(FILE_GET); 	//cmd incidental length
 				frame->nLength  		= mSendBuffer.dataLen;
 
+
 				mHasReadLen 			+= mSendBuffer.dataLen;
 
 				mFrameCount++;
-				GLOGE("fread data len:%d cmd mFrameCount:%d\n", mSendBuffer.dataLen, mFrameCount);
+				GLOGE("fread data len:%d pos:%d cmd mFrameCount:%d\n", mSendBuffer.dataLen, frame->dwPos, mFrameCount);
 			}
 			else{
 				ret = pushSendCmd(MODULE_MSG_DATAEND);
@@ -245,14 +247,14 @@ const int	 BUFFER_LEN  = 1024*1024;//1m  //ref max value 1040000
 	int TaskFileSend::readBuffer() {
 		int ret = -1;
 		int &hasRecvLen = mRecvBuffer.hasRecvLen;
-		if(mRecvBuffer.bRecvHead) {
+		if(mRecvBuffer.bProcHead) {
 			ret = recv(mSid.mKey, mRecvBuffer.buff+hasRecvLen, mPackHeadLen-hasRecvLen, 0);
 			if(ret>0) {
 				hasRecvLen+=ret;
 				if(hasRecvLen==mPackHeadLen) {
 					LPNET_CMD head = (LPNET_CMD)mRecvBuffer.buff;
 					mRecvBuffer.totalLen  = head->dwLength;
-					mRecvBuffer.bRecvHead = false;
+					mRecvBuffer.bProcHead = false;
 					hasRecvLen = 0;
 
 					GLOGE("playback flag:%08x totalLen:%d ret:%d\n", head->dwFlag, mRecvBuffer.totalLen, ret);

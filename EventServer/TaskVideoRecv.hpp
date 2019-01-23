@@ -12,6 +12,7 @@ class TaskVideoRecv :public TaskBase {
 
 public:
 	TaskVideoRecv( Session*sess, Sid_t &sid );
+	TaskVideoRecv( Session*sess, Sid_t &sid, char*filepath );
 	virtual ~TaskVideoRecv();
 	virtual int StartTask();
 	virtual int StopTask();
