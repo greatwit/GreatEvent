@@ -51,7 +51,7 @@ typedef enum MSG_TYPE {
 	FILE_RECV_MSG,
 	FILE_RECV_STREAM,
 	FILE_SEND_MSG,
-	FILE_SEND_STREAM
+	FILE_SEND_STREAM,
 }MSG_TYPE_t;
 
 typedef struct {
@@ -119,17 +119,83 @@ typedef struct
 const int  MAX_MTU  = MAX_LEN+sizeof(PACK_HEAD);
 #endif
 
+#ifndef  CMD_LEN
+#define  CMD_LEN 1500
+#endif
+
 //recv data struct
 struct tagRecvBuffer {
-	char buff[1500];
-	bool bRecvHead;
+	char buff[CMD_LEN];
+	bool bProcHead;
 	int  hasRecvLen;
 	int  totalLen;
 	void reset() {
-		bRecvHead 	= true;
+		bProcHead 	= true;
 		hasRecvLen 	= 0;
 		totalLen 	= sizeof(NET_CMD);
-		memset(buff,0, 1500);
+		memset(buff,0, CMD_LEN);
+	}
+};
+
+struct tagCmdBuffer {
+	char buff[CMD_LEN];
+	bool bProcHead;
+	int  hasProcLen;
+	int  totalLen;
+	void reset() {
+		bProcHead 	= true;
+		hasProcLen 	= 0;
+		totalLen 	= sizeof(NET_CMD);
+		memset(buff,0, CMD_LEN);
+	}
+};
+
+struct tagFileProcBuffer {
+	bool bProcHead;
+	int  hasProcLen;
+	int  totalLen;
+	char cmd[CMD_LEN];//1500 is cmd len
+	int  dataLen;
+	char *buff;
+
+	tagFileProcBuffer() {
+		buff 		= NULL;
+		totalLen 	= 0;
+		dataLen 	= 0;
+		hasProcLen 	= 0;
+		bProcHead 	= true;
+	}
+
+	void reset() {
+		//std::lock_guard<std::mutex> lk(mut);
+		memset(cmd, 0, CMD_LEN);
+		if(buff) {
+		}
+		hasProcLen 	= 0;
+		totalLen 	= 0;
+		dataLen		= 0;
+		bProcHead 	= true;
+	}
+
+	void createMem(int len) {
+		if(buff==NULL)
+			buff = (char*)malloc(len);
+	}
+
+	void releaseMem() {
+		if(buff) {
+			free(buff);
+			buff=NULL;
+		}
+	}
+
+	bool isSendVideo() {
+		return bProcHead==false;
+	}
+	void setToVideo() {
+		bProcHead	= false;
+		hasProcLen 	= 0;
+		totalLen 	= dataLen;
 	}
 };
 
@@ -137,7 +203,7 @@ struct tagFileSendBuffer {
 	bool bSendCmd;
 	int  hasSendLen;
 	int  totalLen;
-	char cmd[1500];//1500 is cmd len
+	char cmd[CMD_LEN];//1500 is cmd len
 	int  dataLen;
 	char *data;
 
@@ -151,7 +217,7 @@ struct tagFileSendBuffer {
 
 	void reset() {
 		//std::lock_guard<std::mutex> lk(mut);
-		memset(cmd, 0, 1500);
+		memset(cmd, 0, CMD_LEN);
 		if(data) {
 
 		}
@@ -182,6 +248,7 @@ struct tagFileSendBuffer {
 		totalLen 	= dataLen;
 	}
 };
+
 
 #ifdef HAV_FFMPEG
 //send data struct
