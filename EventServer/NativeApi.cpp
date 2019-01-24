@@ -58,9 +58,10 @@ static jboolean StartSend(JNIEnv *env, jobject, jstring destip, jint destport)
 	if(mpClient==NULL) {
 
 		jboolean isOk = JNI_FALSE;
+		const char*filepath = "/sdcrad/tmp.mp4";
 		const char *ip = env->GetStringUTFChars(destip, &isOk);
 		mpClient = new TcpClient();
-		ret = mpClient->connect( ip, destport );
+		ret = mpClient->connect( ip, destport, filepath );
 
 		if(ret < 0) {
 			delete mpClient;

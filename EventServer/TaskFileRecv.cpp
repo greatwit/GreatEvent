@@ -69,7 +69,7 @@ const int	 BUFFER_LEN  = 1024*1024+1500;
 
 	TaskFileRecv::~TaskFileRecv() {
 
-		GLOGW("file seek:%d\n", ftell(mwFile));
+		GLOGW("file seek:%ld\n", ftell(mwFile));
 
 		if(mwFile != NULL)
 			fclose(mwFile);
@@ -83,7 +83,7 @@ const int	 BUFFER_LEN  = 1024*1024+1500;
 		struct timeval timeout;
 		int sockId = mSid.mKey;
 		do {
-			iRet = send(sockId, data+len-leftLen, leftLen, 0);
+			iRet = send(sockId, (char*)data+len-leftLen, leftLen, 0);
 
 			if(iRet<0) {
 				//GLOGE("send data errno:%d ret:%d.", errno, iRet);

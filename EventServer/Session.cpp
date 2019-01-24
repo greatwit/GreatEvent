@@ -289,11 +289,11 @@ int Session ::recvPackData() {
 		    char acValue[256] = {0};//new char[256];
 		    memset(acValue,0, 256);
 			LPNET_CMD pCmdbuf = (LPNET_CMD)mReadBuff;
-		    PROTO_GetValueByName(mReadBuff, "play path", acValue, &lValueLen);
+		    PROTO_GetValueByName(mReadBuff, (char*)"play path", acValue, &lValueLen);
 		    if(lValueLen>0)
 		    	dataType 	= 0;
 		    else {
-		    	PROTO_GetValueByName(mReadBuff, "get path", acValue, &lValueLen);
+		    	PROTO_GetValueByName(mReadBuff, (char*)"get path", acValue, &lValueLen);
 		    	if(lValueLen>0)
 		    		dataType = 1;
 		    }

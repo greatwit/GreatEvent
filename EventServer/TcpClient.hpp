@@ -15,7 +15,7 @@ public:
 	TcpClient( );
 	virtual ~TcpClient();
 
-	int connect(const char* destIp, unsigned short destPort, char*filepath);
+	int connect(const char* destIp, unsigned short destPort, const char*filepath);
 	int disConnect();
 	int registerEvent(const EventArg& evarg);
 

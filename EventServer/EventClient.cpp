@@ -53,7 +53,7 @@ int main( int argc, char * argv[] )
 	station.startup();
 
 	TcpClient client;
-	client.connect("127.0.0.1", port, argv[1]);			//127.0.0.1 192.168.1.108
+	client.connect("127.0.0.1", port, (const char*)argv[1]);			//127.0.0.1 192.168.1.108
 	client.registerEvent(station.getEventArg());
 
 	getchar();
