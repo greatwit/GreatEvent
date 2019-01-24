@@ -37,15 +37,15 @@ private:
 	Session						*mSess;
 	GQueue<int>					mMsgQueue;
 
-	int     mFrameCount;
-	int		mFileLen;
+	int     		mFrameCount;
+	unsigned int	mFileLen;
 
-	int 	mPackHeadLen;
+	int 			mPackHeadLen;
 
-	int  	mRecvDataLen;
-	int  	mRecvHeadLen;
-	int     mHasReadLen;
-	bool	mbSendingData;
+	int  			mRecvDataLen;
+	int  			mRecvHeadLen;
+	unsigned int    mHasReadLen;
+	bool			mbSendingData;
 };
 
 

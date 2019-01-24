@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "TaskFileSend.hpp"
 #include "BufferCache.hpp"
@@ -57,7 +59,7 @@ const int	 BUFFER_LEN  = 1024*1024;//1m  //ref max value 1040000
 		mSendBuffer.bSendCmd = true;
 		int ret = tcpSendData();
 
-		//GLOGE("file len:%d totallen:%d\n", mFileLen, mSendBuffer.totalLen);
+		GLOGE("file %s len:%d\n", filename, mFileLen);//get_filesize(filename)
 	}
 
 
@@ -111,8 +113,8 @@ const int	 BUFFER_LEN  = 1024*1024;//1m  //ref max value 1040000
 				if(!mbSendingData)
 					return 0;
 
-				int iLeftLen = mFileLen - mHasReadLen;
-				int iBuffLen = (iLeftLen > BUFFER_LEN)?BUFFER_LEN:iLeftLen;
+				unsigned int iLeftLen = mFileLen - mHasReadLen;
+				unsigned int iBuffLen = (iLeftLen > BUFFER_LEN)?BUFFER_LEN:iLeftLen;
 				mSendBuffer.totalLen 	= sizeof(NET_CMD) + sizeof(FILE_GET);
 				mSendBuffer.bSendCmd 	= true;
 				LPNET_CMD	 cmd 		= (LPNET_CMD)mSendBuffer.cmd;

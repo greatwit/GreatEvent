@@ -3,7 +3,7 @@ CXXFLAGS += -std=c++11
 CC 	= gcc
 CPP = g++
 CFLAGS 		= -Wall -DHAVE_CONFIG_H -g -fPIC #-DHAVE_SYS_TIME_H
-CXXFLAGS 	+= -Dlinux -DHAV_FFMPEG
+CXXFLAGS 	+= -Dlinux -DHAV_FFMPEG -D_FILE_OFFSET_BITS=64 -D_LARGE_FILE
 
 FFMPEG_PATH  = ../common/ffmpeg
 THREAD_PATH  = ../common/gthread
