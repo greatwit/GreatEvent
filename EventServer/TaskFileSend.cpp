@@ -14,8 +14,11 @@
 #include "protocol.h"
 #include "net_protocol.h"
 
-const int	 BUFFER_LEN  = 1024*1024;//1m  //ref max value 1040000
-#define SEG_FRAME_COUNT 10
+#undef   _FILE_OFFSET_BITS
+#define  _FILE_OFFSET_BITS	64
+
+const int	BUFFER_LEN  	= 1024*1024;//1m  //ref max value 1040000
+#define 	SEG_FRAME_COUNT 10
 
 
 	TaskFileSend::TaskFileSend( Session*sess, Sid_t& sid, char*filename )
@@ -35,10 +38,13 @@ const int	 BUFFER_LEN  = 1024*1024;//1m  //ref max value 1040000
 		mInBuffer = new BufferCache();
 
 		mpFile = fopen(filename, "rb");
-		fseek( mpFile, 0, SEEK_END );
-		mFileLen = ftell( mpFile );
-		fseek( mpFile, 0, SEEK_END );
-		rewind( mpFile );
+	    struct stat buf;
+	    stat(filename, &buf);
+	    mFileLen = buf.st_size;
+//		fseek( mpFile, 0, SEEK_END );
+//		mFileLen = ftell( mpFile );
+//		fseek( mpFile, 0, SEEK_END );
+//		rewind( mpFile );
 
 		char *lpRet   = mSendBuffer.cmd;
 		LPNET_CMD cmd = (LPNET_CMD)lpRet;
@@ -59,7 +65,7 @@ const int	 BUFFER_LEN  = 1024*1024;//1m  //ref max value 1040000
 		mSendBuffer.bSendCmd = true;
 		int ret = tcpSendData();
 
-		GLOGE("file %s len:%d\n", filename, mFileLen);//get_filesize(filename)
+		GLOGE("file %s len:%u\n", filename, mFileLen);//get_filesize(filename)
 	}
 
 
