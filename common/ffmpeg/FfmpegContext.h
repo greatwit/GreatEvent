@@ -52,6 +52,7 @@ class FfmpegContext {
 		GThreadPool 	mPool;
 		IPkgCall		*mPkgcall;
 		bool 			mbRunning;
+		bool			mbWavFile;
 		int 			mIndex;
 		int 			mAudioFormat;
 };

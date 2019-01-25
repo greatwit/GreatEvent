@@ -10,17 +10,27 @@
 #endif
 
 
-
+//get suffix name
+string getFileExtendName(string filename) {
+	return filename.substr(filename.find_last_of('.') + 1);
+}
 
 FfmpegContext::FfmpegContext( string filename )
 			:mFilename(filename)
 			,mFmt_ctx(NULL)
 			,mPkgcall(NULL)
 			,mbRunning(false)
+			,mbWavFile(false)
 			,mIndex(0)
 			,mAudioFormat(-1)
 {
 	int ret = 0;
+
+	string sufix = getFileExtendName(filename);
+	for (int j = 0; j < sufix.length(); j++)
+		sufix[j] = tolower(sufix[j]);
+	if( strcmp(sufix.c_str(), "wav")==0 )
+		mbWavFile = true;
 
 	//Input
 	if ((ret = avformat_open_input(&mFmt_ctx, mFilename.c_str(), 0, 0)) < 0) {
@@ -229,9 +239,10 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo, unsigned int &endTime
 				playinfo.nAudioFormat				= pCodec->codec_id;//86018;//
 				if( playinfo.nAudioFormat == AV_CODEC_ID_NONE || playinfo.nAudioFormat == AV_CODEC_ID_ADPCM_IMA_WAV) //
 				{
-					endTime 		= getHDAWavDuration(mFilename.c_str());
 					mAudioFormat	= AV_CODEC_ID_ADPCM_IMA_WAV;
 					mIndex  		= i;
+					if(mbWavFile)
+						endTime 	= getHDAWavDuration(mFilename.c_str());
 				}
 
 				playinfo.nCodecFlag					= pCodec->codec_tag;
@@ -289,9 +300,9 @@ int FfmpegContext::getPlayInfo(PLAYER_INIT_INFO &playinfo, unsigned int &endTime
 				playinfo.qblur						= pCodec->qblur;	//float
 				memcpy(playinfo.extdata, pCodec->extradata, pCodec->extradata_size);
 
-				printf( "nAudioFormat:%d nSampleRate:%d nChannel:%d bits_per_sample:%d bit_rate:%d bit_ratetolerance:%d frame_size:%d sample_fmt:%d\n",
+				printf( "nAudioFormat:%d nSampleRate:%d nChannel:%d bits_per_sample:%d bit_rate:%d bit_ratetolerance:%d frame_size:%d sample_fmt:%d endtime:%u\n",
 						playinfo.nAudioFormat, playinfo.nSampleRate, playinfo.nChannel, playinfo.bits_per_sample, playinfo.bit_rate,
-						playinfo.bit_ratetolerance, playinfo.frame_size, playinfo.sample_fmt);//
+						playinfo.bit_ratetolerance, playinfo.frame_size, playinfo.sample_fmt, endTime);//
 			}
 	}
 
