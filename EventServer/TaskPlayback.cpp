@@ -109,15 +109,24 @@
 		struct timeval timeout;
 		int sockId = mSid.mKey;
 		do {
-			if(leftLen <= MAX_MTU)
-				iRet = send(sockId, data+len-leftLen, leftLen, 0);
-			else
-				iRet = send(sockId, data+len-leftLen, MAX_MTU, 0);
+
+			iRet = send(sockId, data+len-leftLen, leftLen, 0);
+
 			if(iRet<0) {
 				//GLOGE("send data errno:%d ret:%d.", errno, iRet);
+				switch(errno) {
+				case EAGAIN:
+					usleep(2000);
+					continue;
+
+				case EPIPE:
+					break;
+				}
 				return iRet;
 			}
+
 			leftLen -= iRet;
+
 		}while(leftLen>0);
 
 		return len - leftLen;
